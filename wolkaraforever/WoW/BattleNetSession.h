@@ -12,6 +12,7 @@ NS_ASSUME_NONNULL_BEGIN
 //   3. The launch preferences (WEB_TOKEN, REGION, LOCALE, GAME_ACCOUNT, ACCOUNT_TS)
 //      are cleared as soon as the game removes WEB_TOKEN, when the game returns,
 //      when the ticket's lifetime ends, and on every process start.
+NSURL * _Nullable TKBattleNetLoginURL(NSString *region);
 BOOL TKBattleNetTrustedURL(NSURL *url);
 // Federated identity pages may be outside Blizzard's domains. They are allowed only in the
 // opt-in browser; only a Blizzard-origin page may deliver the game callback.

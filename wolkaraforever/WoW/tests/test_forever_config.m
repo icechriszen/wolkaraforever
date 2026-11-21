@@ -154,6 +154,11 @@ int main(void) {
                                               "SET accountName \"ACC\"\r\n"
                                               "SET audioLocale \"deDE\"\n"
                                               "SET textLocale \"deDE\"\n"]);
+        assert([TKForeverUI setLocale:@"zhCN" inWorkingDirectory:root error:&error]);
+        assert([Read(ConfigPath(root)) containsString:@"SET textLocale \"zhCN\""]);
+        assert([Read(ConfigPath(root)) containsString:@"SET audioLocale \"zhCN\""]);
+        assert([Read(ConfigPath(root)) containsString:@"SET portal \"eu\""]);
+        assert([Read(ConfigPath(root)) containsString:@"SET accountName \"ACC\""]);
         NSString *localeConfig = Read(ConfigPath(root));
         assert(![localeConfig containsString:@"enUS"] && ![localeConfig containsString:@"esES"]);
         assert(![TKForeverUI setLocale:@"invalid" inWorkingDirectory:root error:&error]);

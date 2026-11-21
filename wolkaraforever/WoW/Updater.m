@@ -183,7 +183,7 @@ static BOOL ValidCapacity(NSNumber *capacity) {
 - (BOOL)updatePlan:(NSDictionary *)plan root:(NSString *)root progress:(void (^)(NSString *,uint64_t,uint64_t))progress error:(NSError **)error {
     _verificationBytesRead=0;_verificationBytesReused=0;
     NSString *folder=nil;for(NSDictionary *p in TKWoWProducts())if([p[@"id"] isEqual:plan[@"product"]])folder=p[@"folder"];
-    if(!folder || ![@[@"eu",@"us",@"kr",@"tw"] containsObject:plan[@"region"]] || ![@[@"enUS",@"esES",@"deDE",@"frFR",@"itIT",@"esMX",@"ptBR",@"ruRU",@"koKR",@"zhTW"] containsObject:plan[@"locale"]] || !root.isAbsolutePath || !TKWoWHashValid(plan[@"version"][@"BuildConfig"]) || !TKWoWHashValid(plan[@"version"][@"CDNConfig"]))return Fail(error,@"Invalid update target.");
+    if(!folder || ![@[@"eu",@"us",@"kr",@"tw",@"cn"] containsObject:plan[@"region"]] || ![@[@"enUS",@"esES",@"deDE",@"frFR",@"itIT",@"esMX",@"ptBR",@"ruRU",@"koKR",@"zhTW",@"zhCN"] containsObject:plan[@"locale"]] || !root.isAbsolutePath || !TKWoWHashValid(plan[@"version"][@"BuildConfig"]) || !TKWoWHashValid(plan[@"version"][@"CDNConfig"]))return Fail(error,@"Invalid update target.");
     root=root.stringByResolvingSymlinksInPath;NSString *parent=root.stringByDeletingLastPathComponent;
     NSString *work=Join(parent,@".tolkara-updates");
     int lock=TKWoWAcquireUpdateLock(root,error);

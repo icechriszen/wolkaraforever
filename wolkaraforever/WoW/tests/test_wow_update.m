@@ -539,6 +539,19 @@ int main(void){@autoreleasepool{
     // The released product writes the selected region as the portal. The `_beta`
     // product suffix is the old beta hook and is not what this fixture installs.
     assert([freshConfig containsString:@"SET portal \"EU\""] && [freshConfig containsString:@"SET textLocale \"enUS\""]);
+    // A fresh China installation preserves the CN branch and both Chinese locales.
+    NSMutableDictionary *chinaPlan=[plan mutableCopy];chinaPlan[@"region"]=@"cn";chinaPlan[@"locale"]=@"zhCN";
+    NSData *euVersions=resume.responses[@"versions"];
+    resume.responses[@"versions"]=Text([[[NSString alloc] initWithData:euVersions encoding:NSUTF8StringEncoding]
+        stringByReplacingOccurrencesOfString:@"\neu|" withString:@"\ncn|"]);
+    NSString *chinaRoot=[base stringByAppendingPathComponent:@"china-parent/World of Warcraft"];error=nil;
+    assert([[[TKWoWUpdater alloc] initWithClient:resume] updatePlan:chinaPlan root:chinaRoot progress:^(NSString *phase,uint64_t done,uint64_t total){(void)phase;(void)done;(void)total;} error:&error]);
+    NSString *chinaConfig=[NSString stringWithContentsOfFile:[chinaRoot stringByAppendingPathComponent:@"_forever_/WTF/Config.wtf"] encoding:NSUTF8StringEncoding error:&error];
+    assert([chinaConfig containsString:@"SET portal \"CN\""]);
+    assert([chinaConfig containsString:@"SET textLocale \"zhCN\""] && [chinaConfig containsString:@"SET audioLocale \"zhCN\""]);
+    NSString *chinaInfo=[NSString stringWithContentsOfFile:[chinaRoot stringByAppendingPathComponent:@".build.info"] encoding:NSUTF8StringEncoding error:&error];
+    assert([chinaInfo containsString:@"zhCN"] && [chinaInfo containsString:@"CN"]);
+    resume.responses[@"versions"]=euVersions;
     // Reject oversized local metadata before cloning or allocating its contents.
     NSData *oversized=[NSMutableData dataWithLength:2*1024*1024+1];
     assert([oversized writeToFile:[freshRoot stringByAppendingPathComponent:@".build.info"] atomically:YES]);

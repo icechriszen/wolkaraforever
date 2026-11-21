@@ -896,3 +896,16 @@
 "login.savedPassword.failed.title" = "The password was not saved";
 "login.savedPassword.failed" = "This device did not keep the password: it needs a passcode, and the key needs this build's keychain access. The sign-in still happened, but the password will be asked for again.";
 "touch.key.savedPassword" = "Saved password";
+
+"region.cn" = "China";
+"locale.zhCN" = "Simplified Chinese · 简体中文";
+
+"login.external" = "Use Safari…";
+"login.externalHelp" = "Sign in in your browser. The final localhost page cannot open. Copy its full address, return here and paste it below. Keep that address private: it grants access to your account.";
+"login.open" = "Open browser to sign in";
+"login.paste" = "Paste the final browser address";
+"login.privateAddress" = "Private address from the browser";
+"login.continue" = "Continue";
+"login.openFailed" = "The browser could not open. Try again or cancel to use Battle.net email login.";
+"login.invalidPaste" = "Paste the complete final address from your browser. It must start with http://localhost:0/?ST=.";
+"login.configFailed" = "Could not apply the China login region. Please try again.";

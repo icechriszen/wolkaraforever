@@ -896,3 +896,16 @@
 "login.savedPassword.failed.title" = "Le mot de passe n'a pas été enregistré";
 "login.savedPassword.failed" = "Cet appareil n'a pas conservé le mot de passe : il faut un code, et la clé a besoin de l'accès au trousseau de cette compilation. La connexion a bien eu lieu, mais le mot de passe sera redemandé.";
 "touch.key.savedPassword" = "Mot de passe enregistré";
+
+"region.cn" = "Chine";
+"locale.zhCN" = "Chinois simplifié · 简体中文";
+
+"login.external" = "Utiliser Safari…";
+"login.externalHelp" = "Connectez-vous dans votre navigateur. La dernière page localhost ne peut pas s’ouvrir. Copiez son adresse complète, revenez ici et collez-la ci-dessous. Gardez cette adresse privée : elle donne accès à votre compte.";
+"login.open" = "Ouvrir le navigateur";
+"login.paste" = "Coller l’adresse finale du navigateur";
+"login.privateAddress" = "Adresse privée du navigateur";
+"login.continue" = "Continuer";
+"login.openFailed" = "Impossible d’ouvrir le navigateur. Réessayez ou annulez.";
+"login.invalidPaste" = "Collez l’adresse finale complète du navigateur. Elle doit commencer par http://localhost:0/?ST=.";
+"login.configFailed" = "Impossible d’appliquer la région de connexion Chine. Réessayez.";

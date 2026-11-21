@@ -41,7 +41,7 @@ static UIColor *Muted(void) { return [UIColor colorWithRed:0.66 green:0.72 blue:
 // is the same row in the same language.
 static NSString *TKWoWLocaleName(NSString *locale) {
     static NSArray<NSString *> *known; static dispatch_once_t once;
-    dispatch_once(&once, ^{ known = @[@"enUS", @"frFR", @"esES", @"deDE"]; });
+    dispatch_once(&once, ^{ known = @[@"enUS", @"frFR", @"esES", @"deDE", @"zhCN"]; });
     return WKLocalized([@"locale." stringByAppendingString:[known containsObject:locale] ? locale : @"enUS"]);
 }
 // No saved choice yet: start from the language the installed game is already in (a copy
@@ -49,7 +49,7 @@ static NSString *TKWoWLocaleName(NSString *locale) {
 // English. Starting from English would make the first check plan an English download
 // over a French or German installation.
 static NSString *TKWoWDefaultLocale(NSDictionary *product) {
-    NSArray<NSString *> *supported=@[@"enUS", @"frFR", @"esES", @"deDE"];
+    NSArray<NSString *> *supported=@[@"enUS", @"frFR", @"esES", @"deDE", @"zhCN"];
     NSString *documents=NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES).firstObject;
     NSString *folder=[product[@"folder"] isKindOfClass:NSString.class] ? product[@"folder"] : nil;
     if (documents.length && folder.length) {
@@ -75,7 +75,7 @@ static NSString *TKWoWDefaultLocale(NSDictionary *product) {
 }
 static NSString *TKWoWRegionName(NSString *region) {
     static NSArray<NSString *> *known; static dispatch_once_t once;
-    dispatch_once(&once, ^{ known = @[@"eu", @"us", @"kr", @"tw"]; });
+    dispatch_once(&once, ^{ known = @[@"eu", @"us", @"kr", @"tw", @"cn"]; });
     return WKLocalized([@"region." stringByAppendingString:[known containsObject:region] ? region : @"eu"]);
 }
 static UILabel *Label(CGFloat size, UIFontWeight weight, UIColor *color) {
@@ -298,9 +298,13 @@ static dispatch_queue_t TKForeverUIQueue(void) {
     _product=TKWoWProducts()[0];
     for (NSDictionary *p in TKWoWProducts()) if ([p[@"id"] isEqual:[defaults stringForKey:@"WoWProduct"]]) _product=p;
     _region=[defaults stringForKey:@"WoWRegion"]?:@"eu";
-    if (![@[@"eu",@"us",@"kr",@"tw"] containsObject:_region]) _region=@"eu";
+    if (![@[@"eu",@"us",@"kr",@"tw",@"cn"] containsObject:_region]) _region=@"eu";
+    // The previous China build used browser login for CN without a separate switch.
+    // Preserve that existing choice on upgrade; an explicit Off is never overwritten.
+    if ([_region isEqual:@"cn"] && ![defaults objectForKey:@"WoWBrowserLogin"])
+        [defaults setBool:YES forKey:@"WoWBrowserLogin"];
     _locale=[defaults stringForKey:@"WoWLocale"]?:TKWoWDefaultLocale(_product);
-    if (![@[@"enUS",@"frFR",@"esES",@"deDE"] containsObject:_locale]) _locale=@"enUS";
+    if (![@[@"enUS",@"frFR",@"esES",@"deDE",@"zhCN"] containsObject:_locale]) _locale=@"enUS";
     return self;
 }
 - (UIButton *)button:(NSString *)identifier action:(SEL)action {
@@ -833,6 +837,16 @@ static dispatch_queue_t TKForeverUIQueue(void) {
         [self browserSignIn];
         return;
     }
+    if ([_region isEqual:@"cn"] && [TKBattleNetSession isReady]) {
+        NSError *error=nil;
+        NSString *directory=[_library workingDirectoryForApp:app error:&error];
+        if (!directory || ![TKForeverUI setCVars:@{@"portal":@"CN",@"textLocale":_locale,@"audioLocale":_locale}
+            inWorkingDirectory:directory error:&error]) {
+            [TKBattleNetSession clear];
+            [self finishStartupWithMessage:WKLocalized(@"login.configFailed") failed:YES];
+            return;
+        }
+    }
     if (self.startApp) self.startApp(app);
 }
 - (void)primaryAction {
@@ -1288,7 +1302,7 @@ static dispatch_queue_t TKForeverUIQueue(void) {
 }
 - (void)choosePreference:(BOOL)region {
     UIAlertController *sheet=[UIAlertController alertControllerWithTitle:region?WKLocalized(@"home.preferences.region"):WKLocalized(@"home.preferences.downloadLanguage") message:nil preferredStyle:UIAlertControllerStyleActionSheet];
-    NSArray *values=region?@[@"eu",@"us",@"kr",@"tw"]:@[@"enUS",@"frFR",@"esES",@"deDE"];
+    NSArray *values=region?@[@"eu",@"us",@"kr",@"tw",@"cn"]:@[@"enUS",@"frFR",@"esES",@"deDE",@"zhCN"];
     for (NSString *value in values) [sheet addAction:[UIAlertAction actionWithTitle:region?TKWoWRegionName(value):TKWoWLocaleName(value) style:UIAlertActionStyleDefault handler:^(UIAlertAction *action) {
         (void)action;
         if (region) { self->_region=value; [NSUserDefaults.standardUserDefaults setObject:value forKey:@"WoWRegion"]; [self refresh]; }
@@ -1402,6 +1416,7 @@ static dispatch_queue_t TKForeverUIQueue(void) {
         self->_browserSignInPresented=NO;
         if (received && generation==self->_generation && [self inFront] && self.view.window &&
             self.navigationController.topViewController==self) [self primaryAction];
+        else [TKBattleNetSession clear];
     };
     UINavigationController *navigation=[[UINavigationController alloc] initWithRootViewController:browser];
     navigation.modalInPresentation=YES;

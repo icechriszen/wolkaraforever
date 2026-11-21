@@ -893,3 +893,16 @@
 "login.savedPassword.failed.title" = "Das Passwort wurde nicht gesichert";
 "login.savedPassword.failed" = "Dieses Gerät hat das Passwort nicht behalten: Es braucht einen Code, und der Schlüssel braucht den Schlüsselbund-Zugriff dieses Builds. Die Anmeldung ist trotzdem erfolgt, das Passwort wird aber erneut abgefragt.";
 "touch.key.savedPassword" = "Gesichertes Passwort";
+
+"region.cn" = "China";
+"locale.zhCN" = "Chinesisch (vereinfacht) · 简体中文";
+
+"login.external" = "Safari verwenden …";
+"login.externalHelp" = "Melden Sie sich im Browser an. Die abschließende localhost-Seite kann nicht geöffnet werden. Kopieren Sie ihre vollständige Adresse, kehren Sie hierher zurück und fügen Sie sie unten ein. Halten Sie diese Adresse geheim: Sie gewährt Zugriff auf Ihr Konto.";
+"login.open" = "Browser zur Anmeldung öffnen";
+"login.paste" = "Letzte Browser-Adresse einfügen";
+"login.privateAddress" = "Private Adresse aus dem Browser";
+"login.continue" = "Weiter";
+"login.openFailed" = "Der Browser konnte nicht geöffnet werden. Versuchen Sie es erneut oder brechen Sie ab.";
+"login.invalidPaste" = "Fügen Sie die vollständige letzte Adresse aus dem Browser ein. Sie muss mit http://localhost:0/?ST= beginnen.";
+"login.configFailed" = "Die chinesische Anmelderegion konnte nicht gesetzt werden. Versuchen Sie es erneut.";

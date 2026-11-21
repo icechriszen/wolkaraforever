@@ -199,6 +199,7 @@ def main():
     # decision, and a lazy translation is a failure.
     identical_is_fine = {
         "home.preferences.region": "Region is the German word",
+        "region.cn": "China is the German country name as well",
         "region.kr": "proper noun",
         "region.tw": "proper noun",
         "addons.column.name": "Name is the German word",

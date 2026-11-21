@@ -12,6 +12,12 @@ Use the launcher to prepare Forever, configure the interface, and recover safely
 2. Start the download. The launcher can resume, verify, repair, and update recorded game data.
 3. Wait for the ready state before selecting **Play**.
 
+China (`cn`) and Simplified Chinese (`zhCN`) are supported by this local build. China uses
+the official China metadata service and its advertised NetEase WoW HTTPS CDN. Fresh China
+installs write `portal "CN"` and the selected text/audio locale; changing language alone preserves
+the existing login portal and account settings. Updating WolkaraForever under the same bundle ID
+keeps the game directory and resumes verified downloaded data. Do not uninstall it to update.
+
 Changing game language can require additional files. App language and game language are separate settings.
 
 ## Choose how a game starts
@@ -25,6 +31,16 @@ In **Game Settings Manager**, open **Battle.net Login (Experimental)**. It is of
 When enabled, **Play** completes its usual readiness checks, then opens Battle.net's official sign-in page. Battle.net may hand the browser to your chosen HTTPS identity provider; verify that provider's address before entering credentials. Cancel leaves the game unstarted. A successful result is used once for the immediately following Forever launch. Passwords and authenticators remain on Battle.net's site; WolkaraForever does not save browser sessions or launch tickets. **Disable experimental login** and **Clear sign-in data** both remove the in-memory browser session and any pending result immediately.
 
 **Saving the game password.** The same feature can keep one game password on the device, so a launch on a phone does not mean typing it on a phone keyboard. While the game's own password field has the keyboard, a yellow key appears first on the keyboard's row: tapping it reads the password behind Face ID (or the device passcode), types it into that field and presses Return, and holding the key offers to forget it. The first tap offers to save one. The password is a Keychain item on this device only - it is never synchronised, never written to a log or to the game's files, and it is deleted when experimental login is turned off or **Clear sign-in data** is used. The login row says **password saved** while one is kept, and **Sign in with the saved password** in the same sheet starts the game without opening the browser; **Play** still opens Battle.net's sign-in page unless you choose that row.
+
+For China, the browser opens `account.battlenet.com.cn` in Chinese. Existing China selections
+from the earlier local build retain browser login on upgrade unless it was explicitly disabled.
+For a new setup, enable it in **Game Settings Manager**. Complete login and verification yourself.
+If the embedded page cannot finish, choose **Use Safari…**, open the official page, then paste
+its final localhost return address only into the app's masked return field. The app never reads
+Safari cookies or the clipboard automatically. Never share that address in chat or logs.
+A successful handoff sets the game portal to CN and retains the selected text/audio language.
+The China account/device flow still needs a real login check; synthetic tests do not prove login
+or entry into the game world. Launcher language remains English, German or French.
 
 This feature can stop working without notice. Do not include credentials, tickets, callback URLs, or account details in reports.
 

@@ -16,7 +16,7 @@ static void SetValue(NSString *domain, NSString *name, id value) {
     CFPreferencesAppSynchronize((__bridge CFStringRef)domain);
 }
 static BOOL Empty(NSString *domain) {
-    for (NSString *name in @[@"WEB_TOKEN",@"REGION",@"LOCALE",@"GAME_ACCOUNT",@"ACCOUNT_TS"])
+    for (NSString *name in @[@"WEB_TOKEN",@"REGION",@"LOCALE",@"GAME_ACCOUNT",@"ACCOUNT_TS",@"CONNECTION_STRING"])
         if (Value(domain,name)) return NO;
     return YES;
 }
@@ -55,6 +55,29 @@ int main(void) { @autoreleasepool {
         assert(TKBattleNetFederatedURL([NSURL URLWithString:good]));
     for (NSString *bad in @[@"http://accounts.google.com", @"https://user@accounts.google.com", @"https://accounts.google.com:8443", @"file:///provider"])
         assert(!TKBattleNetFederatedURL([NSURL URLWithString:bad]));
+
+    assert([TKBattleNetLoginURL(@"cn").absoluteString isEqual:@"https://account.battlenet.com.cn/login/zh/?externalChallenge=login&app=WOW"]);
+    assert([TKBattleNetLoginURL(@"CN") isEqual:TKBattleNetLoginURL(@"cn")]);
+    assert([TKBattleNetLoginURL(@"eu").host isEqual:@"eu.battle.net"]);
+    assert(!TKBattleNetLoginURL(@"cn.evil.test"));
+    for (NSString *host in @[@"account.battlenet.com.cn",@"www.battlenet.com.cn",@"blizzard.cn",@"www.blizzard.cn"])
+        assert(TKBattleNetTrustedURL([NSURL URLWithString:[@"https://" stringByAppendingString:host]]));
+    for (NSString *url in @[@"https://battlenet.com.cn.evil.test",@"https://evilbattlenet.com.cn",
+        @"http://account.battlenet.com.cn",@"https://account.battlenet.com.cn:8443",@"https://blizzard.cn.evil.test"])
+        assert(!TKBattleNetTrustedURL([NSURL URLWithString:url]));
+    // China tickets use the same one-use lifecycle and retain CN / zhCN at handoff.
+    NSString *chinaTicket=@"CN-0123456789abcdef0123456789abcdef-123456789";
+    assert([TKBattleNetCallbackTicket([NSURL URLWithString:[@"http://localhost:0/?ST=" stringByAppendingString:chinaTicket]]) isEqual:chinaTicket]);
+    NSString *chinaDomain=Domain();
+    SetValue(chinaDomain,@"CONNECTION_STRING",@"synthetic stale connection");
+    SetValue(chinaDomain,@"GAME_ACCOUNT",@"synthetic stale account");
+    assert([TKBattleNetSession acceptTicket:chinaTicket region:@"cn" locale:@"zhCN"]);
+    assert([TKBattleNetSession handOffForProfile:@"wow-forever" domain:chinaDomain clearAfter:30].count==3);
+    assert([Value(chinaDomain,@"REGION") isEqual:@"CN"] && [Value(chinaDomain,@"LOCALE") isEqual:@"zhCN"]);
+    assert(!Value(chinaDomain,@"CONNECTION_STRING") && !Value(chinaDomain,@"GAME_ACCOUNT"));
+    assert([TKBattleNetSession handOffForProfile:@"wow-forever" domain:chinaDomain clearAfter:30].count==0);
+    [TKBattleNetSession gameEnded];
+    assert(Empty(chinaDomain));
 
     // Wire-format fixtures (the game decodes exactly this; not a security boundary).
     NSData *encoded=TKBattleNetEncodeLaunchTicket(ticket,@"testuser");

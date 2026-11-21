@@ -298,7 +298,7 @@ inWorkingDirectory:(NSString *)directory
     static dispatch_once_t once;
     dispatch_once(&once, ^{
         supported = [NSSet setWithArray:@[@"enUS", @"esES", @"deDE", @"frFR", @"itIT",
-                                            @"esMX", @"ptBR", @"ruRU", @"koKR", @"zhTW"]];
+                                            @"esMX", @"ptBR", @"ruRU", @"koKR", @"zhTW", @"zhCN"]];
     });
     if (![supported containsObject:locale]) {
         if (error) *error = TKError(WKLocalized(@"forever.error.unsupportedLanguage"));

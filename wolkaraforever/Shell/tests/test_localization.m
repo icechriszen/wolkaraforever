@@ -43,6 +43,8 @@ static void TestResolution(void) {
           @"English is English on a German iPad");
     CHECK([WKLocalization resolveLanguage:WKAppLanguageGerman fromPreferredLanguages:@[@"en-US"]] == WKAppLanguageGerman,
           @"German is German on an English iPad");
+    CHECK(([WKLocalization resolveLanguage:WKAppLanguageSystem fromPreferredLanguages:@[@"fr-FR", @"de-DE"]] == WKAppLanguageFrench),
+          @"the shipped French language takes precedence when preferred");
     // System follows the list, in its order, and only for a language we ship.
     CHECK(([WKLocalization resolveLanguage:WKAppLanguageSystem fromPreferredLanguages:@[@"de-DE", @"en-US"]] == WKAppLanguageGerman),
           @"a German first choice resolves to German");

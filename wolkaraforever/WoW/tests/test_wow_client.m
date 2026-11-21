@@ -12,10 +12,13 @@
 @interface TKFixtureClient : TKWoWClient
 @property(nonatomic) NSMutableDictionary<NSString *,NSData *> *responses;
 @property(nonatomic) NSUInteger calls;
+@property(nonatomic) NSMutableArray<NSURL *> *urls;
 @end
 @implementation TKFixtureClient
 - (NSData *)fetch:(NSURL *)url limit:(NSUInteger)limit error:(NSError **)error {
     self.calls++;
+    if (!self.urls) self.urls=[NSMutableArray new];
+    [self.urls addObject:url];
     assert([url.scheme isEqual:@"https"]);
     NSData *data=self.responses[url.lastPathComponent];
     if (!data || data.length>limit) { if (error) *error=TKWoWError(@"Synthetic transport failure."); return nil; }
@@ -99,7 +102,8 @@ static dispatch_group_t ProtocolDeliveries;
 // this binary can reach the network even with a synthetic server list.
 + (BOOL)canInitWithRequest:(NSURLRequest *)request {
     NSString *host=request.URL.host.lowercaseString;
-    return [host isEqual:@"fixture.invalid"] || [host hasSuffix:@".battle.net"] || [host hasSuffix:@".blizzard.com"];
+    return [host isEqual:@"fixture.invalid"] || [host hasSuffix:@".battle.net"] || [host hasSuffix:@".blizzard.com"] ||
+        [host hasSuffix:@".battlenet.com.cn"] || [host isEqual:@"blzdist-wow.necdn.leihuo.netease.com"];
 }
 + (NSURLRequest *)canonicalRequestForRequest:(NSURLRequest *)request { return request; }
 - (void)finishCount:(BOOL)stopped {
@@ -740,6 +744,30 @@ int main(void) {
         assert([error.localizedDescription containsString:@"transport"]);
         client.responses[@"versions"]=Text(versions);
         client.responses[@"cdns"]=Text(@"Name|Path|Servers\neu|tpr/wow|http://level3.blizzard.com/\n");
+        assert(![client planForProduct:@"wowf" region:@"eu" locale:@"enUS" error:&error]);
+        assert([error.localizedDescription containsString:@"HTTPS"]);
+        // China uses its own metadata service and the exact HTTPS NetEase WoW CDN.
+        client.responses[@"versions"]=Text([versions stringByReplacingOccurrencesOfString:@"\neu|" withString:@"\ncn|"]);
+        NSString *chinaHost=@"blzdist-wow.necdn.leihuo.netease.com";
+        client.responses[@"cdns"]=Text([NSString stringWithFormat:@"Name|Path|Servers\ncn|tpr/wow|http://%@/ https://%@/?fallback=1\n",chinaHost,chinaHost]);
+        [client.urls removeAllObjects];error=nil;
+        NSDictionary *china=[client planForProduct:@"wowf" region:@"cn" locale:@"zhCN" error:&error];
+        assert(china && !error && [china[@"locale"] isEqual:@"zhCN"]);
+        assert([client.urls[0].absoluteString isEqual:@"https://cn.version.battlenet.com.cn/v2/products/wowf/versions"]);
+        assert([client.urls[1].absoluteString isEqual:@"https://cn.version.battlenet.com.cn/v2/products/wowf/cdns"]);
+        assert([client.urls[2].host isEqual:chinaHost]);
+        for (NSString *server in @[@"http://blzdist-wow.necdn.leihuo.netease.com/",
+                                  @"https://blzdist-wow.necdn.leihuo.netease.com.evil.invalid/",
+                                  @"https://other.netease.com/",
+                                  @"https://user@blzdist-wow.necdn.leihuo.netease.com/",
+                                  @"https://blzdist-wow.necdn.leihuo.netease.com:444/"]) {
+            client.responses[@"cdns"]=Text([NSString stringWithFormat:@"Name|Path|Servers\ncn|tpr/wow|%@\n",server]);error=nil;
+            assert(![client planForProduct:@"wowf" region:@"cn" locale:@"zhCN" error:&error]);
+            assert([error.localizedDescription containsString:@"HTTPS"]);
+        }
+        // The China exception must not expand other regions' CDN allowlists.
+        client.responses[@"versions"]=Text(versions);
+        client.responses[@"cdns"]=Text([NSString stringWithFormat:@"Name|Path|Servers\neu|tpr/wow|https://%@/\n",chinaHost]);error=nil;
         assert(![client planForProduct:@"wowf" region:@"eu" locale:@"enUS" error:&error]);
         assert([error.localizedDescription containsString:@"HTTPS"]);
         assert([NSFileManager.defaultManager removeItemAtPath:directory error:&error]);

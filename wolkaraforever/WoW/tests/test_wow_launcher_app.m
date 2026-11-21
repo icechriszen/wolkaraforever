@@ -2481,6 +2481,9 @@ static int backupsBeforePerformance;
     assert([accepted[@"WolkaraForeverAppLanguage"] isEqual:@"fr"]);
     assert([accepted[@"WoWLocale"] isEqual:@"frFR"]);
     assert(problem == nil);
+    accepted = [TKWolkaraForeverConfig validatedSettingsFromFile:@{@"version": @1,
+        @"settings": @{@"WoWRegion": @"cn", @"WoWLocale": @"zhCN"}} problem:&problem];
+    assert(problem == nil && [accepted[@"WoWRegion"] isEqual:@"cn"] && [accepted[@"WoWLocale"] isEqual:@"zhCN"]);
     // An invented language is refused, and the rest of the file still stands.
     problem = nil;
     accepted = [TKWolkaraForeverConfig
@@ -2888,16 +2891,16 @@ static NSArray<NSString *> *VisibleTexts(UIView *view) {
     assert(regions != nil);
     assert(CancelActions(regions) == 1);
     assert([[regions.actions valueForKey:@"title"]
-        isEqualToArray:(@[@"Europe", @"Americas", @"Korea", @"Taiwan", @"Cancel"])]);
-    UIAlertAction *americas = nil;
-    for (UIAlertAction *action in regions.actions) if ([action.title isEqual:@"Americas"]) americas = action;
-    assert(americas != nil);
+        isEqualToArray:(@[@"Europe", @"Americas", @"Korea", @"Taiwan", @"China", @"Cancel"])]);
+    UIAlertAction *china = nil;
+    for (UIAlertAction *action in regions.actions) if ([action.title isEqual:@"China"]) china = action;
+    assert(china != nil);
     beforeCheck = atomic_load(&requests);
     [self.controller dismissViewControllerAnimated:NO completion:nil];
-    RunAction(americas);
+    RunAction(china);
     Pump(1.2);
-    assert([[NSUserDefaults.standardUserDefaults stringForKey:@"WoWRegion"] isEqual:@"us"]);
-    assert([[self row:@"wow.preferences"].configuration.title isEqual:@"Region / Locale: US English"]);
+    assert([[NSUserDefaults.standardUserDefaults stringForKey:@"WoWRegion"] isEqual:@"cn"]);
+    assert([[self row:@"wow.preferences"].configuration.title isEqual:@"Region / Locale: CN English"]);
     assert(atomic_load(&requests) == beforeCheck + 1);
     // Back to Europe through the same two sheets, so every later step runs where the
     // page started. The row's title follows the change both ways.
@@ -2920,6 +2923,26 @@ static NSArray<NSString *> *VisibleTexts(UIView *view) {
     Pump(1.2);
     assert([[NSUserDefaults.standardUserDefaults stringForKey:@"WoWRegion"] isEqual:@"eu"]);
     assert([[self row:@"wow.preferences"].configuration.title isEqual:@"Region / Locale: EU English"]);
+
+    // The Language picker exposes zhCN and routes it through the validated writer.
+    NSString *previousLocale=[NSUserDefaults.standardUserDefaults stringForKey:@"WoWLocale"]?:@"enUS";
+    [[self row:@"wow.preferences"] sendActionsForControlEvents:UIControlEventTouchUpInside];Pump(0.6);
+    preferences=(id)self.controller.presentedViewController;
+    UIAlertAction *gameLanguage=nil;
+    for (UIAlertAction *action in preferences.actions) if ([action.title isEqual:@"Language"]) gameLanguage=action;
+    assert(gameLanguage);
+    [self.controller dismissViewControllerAnimated:NO completion:nil];RunAction(gameLanguage);Pump(0.7);
+    UIAlertController *languages=(id)self.controller.presentedViewController;
+    UIAlertAction *simplified=nil;
+    for (UIAlertAction *action in languages.actions) if ([action.title isEqual:@"Simplified Chinese · 简体中文"]) simplified=action;
+    assert(simplified);
+    [self.controller dismissViewControllerAnimated:NO completion:nil];RunAction(simplified);Pump(1.2);
+    assert([[NSUserDefaults.standardUserDefaults stringForKey:@"WoWLocale"] isEqual:@"zhCN"]);
+    assert([[self configText] containsString:@"SET textLocale \"zhCN\""]);
+    assert([[self configText] containsString:@"SET audioLocale \"zhCN\""]);
+    assert([[self configText] containsString:@"SET portal \"eu\""]);
+    assert([[self row:@"wow.preferences"].configuration.title containsString:@"简体中文"]);
+    [self.controller setGameLocale:previousLocale];Pump(1.2);
 
     // --- Open Add-on Directory: the file browser opens on the game's Interface/AddOns
     assert([self row:@"wow.addons.directory"].enabled);
