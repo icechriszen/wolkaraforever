@@ -264,6 +264,11 @@ wolkaraforever/Cxx/vendor/SOURCE.json translation/OwnedCxx/vendor/SOURCE.json ad
 wolkaraforever/Cxx/vendor/string.cpp translation/OwnedCxx/vendor/string.cpp add
 wolkaraforever/Cxx/vendor/thread.cpp translation/OwnedCxx/vendor/thread.cpp add
 #
+# Runtime: prepared dynamic-code pages and host-only regression fixtures
+wolkaraforever/Runtime/CodeRemap.c runtime/CodeRemap.c add
+wolkaraforever/Runtime/CodeRemap.h runtime/CodeRemap.h add
+wolkaraforever/Runtime/tests/test_code_remap.c tests/test_code_remap.c add
+#
 # Input: any button, on any controller, in one stream (diagnostic)
 wolkaraforever/Input/ControllerCommandIngress.h launcher/Input/ControllerCommandIngress.h add
 wolkaraforever/Input/ControllerCommandIngress.m launcher/Input/ControllerCommandIngress.m add

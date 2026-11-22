@@ -51,6 +51,38 @@ Device and simulator SDK builds passed; these are not simulator execution result
 World-entry stability remains unverified. This result applies only to the installed
 source/device/mode/client combination above.
 
+## Dynamic-code follow-up: iPhone 17, 2026-11-22
+
+Diagnostic source based on `9ac0b4b`, with `CodeRemap.c` and the opt-in
+`--local-code-remap-probe` launcher entry; iOS 27.2.1, Developer service.
+No new guest memory implementation was enabled.
+
+| Host-owned test | Mac arm64 | iPhone 17 |
+| --- | --- | --- |
+| Shared RX view remapped at a stable target address | Native Mac mappings: return-42 and 128 rewrite/execute cycles passed under ASan/UBSan; adjacent page preserved | Mapping returned success, but no fixture value returned; the process exited with `SIGBUS` |
+| Existing arena probe: write through RW alias, execute at original RX address | Covered by the platform fixture | Returned 42, then 1337 after rewriting: passed |
+| Existing arena probe: change the original view to RW, write, then restore RX | Platform fixture permits device-dependent outcome | Restore RX rejected with errno 13; RWX also rejected with errno 13 |
+| Ordinary anonymous code after Developer service detached | Not an iOS permission test | `MAP_JIT` rejected with errno 1; calling the ordinary mapping failed with `SIGBUS / KERN_PROTECTION_FAILURE` |
+
+The remapping probe used only owned return-value code in two fresh pages. The original
+`--jit-probe` sized an arena from the existing application's loading metadata and ran
+only its owned spare-page samples, skipping all guest entry. Neither test inspected
+or changed game instructions, and neither attached a debugger after fixture entry.
+The two system exits belong to these diagnostics, not to new game sessions.
+
+These results rule out the tested remapping and direct-protection routes on this
+configuration. A runtime that generates code needs to cooperate with the prepared
+RW-alias/RX-address model; substituting a successful return from `mprotect` would be
+incorrect. A compatible Lua runtime or an application-supported interpreter option
+has not been established. The Lua panic is **not fixed**, and no new game stability
+pass is claimed.
+
+The diagnostic replacement retained all 1,885 existing client files by path, size and
+modification time, including 55 CASC archives, and identical `Config.wtf`. CN/zhCN,
+persistent in-app sign-in, and the earlier C++ ownership fix were kept. The ordinary
+launcher was restored after both probes. Required simulator execution remains
+unavailable; a Mac fixture pass is not an iOS permission pass.
+
 ## Report a problem
 
 Start with [Install WolkaraForever](docs/INSTALLATION.md) and [Use WolkaraForever](docs/USING_WOLKARAFOREVER.md). When you report a problem, follow [Send us a log](docs/SENDING_LOGS.md) and include the exact Technical details message if one was shown. Do not include credentials, signing material, pairing records, account information, or device identifiers.

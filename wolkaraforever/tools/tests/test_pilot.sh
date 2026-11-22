@@ -375,6 +375,20 @@ grep -q '^session_live=1$' "$work/sessions/no-report-pid/state.txt"
 check $? "without a client report PID the old log cannot be attributed safely"
 export WOLKAREFOREVER_FAKE_LISTING="$(listing_with_a_live_session)"
 
+# An owned execution probe skips all guest entry, even if its sample faults.
+owned_probe_log=$'[host] execution mode=developer-service\n[host] app=World of Warcraft Forever sha256=00\n[jit-probe] arena: alias=PASS rewrite=PASS direct=FAIL after-direct=FAIL direct_errno=13 rwx_errno=13\n[execution] begin mode=write-then-execute page_size=16384; host sample only\n[execution] calling generated arm64 sample; expected=42\n'
+( export WOLKAREFOREVER_FAKE_GUESTLOG="$owned_probe_log"; run_pilot "$work/sessions/owned-probe" state )
+grep -q '^session_live=0$' "$work/sessions/owned-probe/state.txt"
+check $? "an identified owned probe must not masquerade as a guest session"
+for suffix in $'[native] resolved rebases=1 binds=1\n' $'[native] entering original initializer preferred=0 native=0\n' $'[host] execution mode=developer-service\n[host] app=World of Warcraft Forever sha256=00\n'; do
+    ( export WOLKAREFOREVER_FAKE_GUESTLOG="$owned_probe_log$suffix"; run_pilot "$work/sessions/guest-after-probe" state )
+    grep -q '^session_live=1$' "$work/sessions/guest-after-probe/state.txt"
+    check $? "linked, entered, or subsequently launched guests must retain the live guard"
+done
+( export WOLKAREFOREVER_FAKE_GUESTLOG="${owned_probe_log/host sample only/unknown sample}"; run_pilot "$work/sessions/incomplete-probe" state )
+grep -q '^session_live=1$' "$work/sessions/incomplete-probe/state.txt"
+check $? "an incomplete probe identity must not release the live guard"
+
 # Third, the launcher with no game started. It has the launch line and nothing else, and it must not
 # read as a live game - refusing there would make every ordinary install impossible. This is the
 # case that keeps the stricter test honest.

@@ -244,3 +244,26 @@ For a bounded Developer service crash investigation, prefix the installer with
 `WOLKARA_HOST_DIAGNOSTICS=1`. This enables host counters and runtime-owned TLS
 allocation/release metadata for that build; it is off by default. See
 [host lifetime diagnostics](SENDING_LOGS.md#opt-in-host-lifetime-diagnostics).
+
+## Prepared dynamic-code page probe
+
+`wolkaraforever/tools/test_dynamic_code.sh` runs host-owned arm64 remapping fixtures
+on the Mac, including repeated RW/RX transitions and adjacent-page preservation.
+This does not establish iOS execution permission. On a signed device build,
+`wolkaraforever/tools/launch.sh --local-code-remap-probe` runs the same owned fixture
+in fresh memory prepared by Developer service before the helper detaches. It loads
+no game image. Run only when the app is stopped; afterward use the normal pilot
+stop/launch flow to restore the launcher. A successful memory API return alone
+is not an execution pass: the fixture must return the expected values.
+
+This is a diagnostic, not a guest-memory implementation. On the tested iPhone 17
+(iOS 27.2.1, Developer service), remapping prepared pages to another address passed
+the mapping API, but execution never returned and the process exited with `SIGBUS`.
+Do not use `wk_code_remap` for guest `mprotect`. The original `--jit-probe` separately
+confirmed that alias writes execute at the prepared address, but a direct RW-to-RX
+transition is refused. See [the measured support boundary](../COMPATIBILITY.md).
+
+`pilot.sh state` recognizes a complete host-only `--jit-probe` sequence even when
+iOS ended the sample before a result line. It does not treat that trace as a live
+game. Incomplete probe markers, guest linking/entry, a newer guest launch, or an
+unreadable log retain the conservative live-session guard.

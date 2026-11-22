@@ -46,6 +46,7 @@
 #import "SelfTest.h"
 #import "../Cloud/SteamCloudCoordinator.h"
 #include "HostDiagnostics.h"
+#include "CodeRemap.h"
 #include <errno.h>
 #include <mach/mach_time.h>
 #include <stdint.h>
@@ -1721,18 +1722,20 @@ static NSString *AKAudioStateDescription(void) {
         fclose(log);self.status.text=passed?@"Native retry guard passed; no game code executed.":@"Native retry guard failed.";
         return;
     }
-    if([arguments containsObject:@"--local-connected-arena-probe"] || [arguments containsObject:@"--local-execution-probe"]) {
+    if([arguments containsObject:@"--local-connected-arena-probe"] || [arguments containsObject:@"--local-execution-probe"] ||
+       [arguments containsObject:@"--local-code-remap-probe"]) {
+        BOOL remapProbe=[arguments containsObject:@"--local-code-remap-probe"];
         BOOL executeProbe=[arguments containsObject:@"--local-execution-probe"];
 
         self.status.text=@"Preparing the authenticated local debugger…";
         [self.localAuthorization startAndPrepareLocalAuthorization:^(NSString *setup) {
-            NSString *path=[NSHomeDirectory() stringByAppendingPathComponent:executeProbe?@"Documents/local-execution-probe.txt":@"Documents/local-connected-arena-probe.txt"];
+            NSString *path=[NSHomeDirectory() stringByAppendingPathComponent:remapProbe?@"Documents/local-code-remap-probe.txt":executeProbe?@"Documents/local-execution-probe.txt":@"Documents/local-connected-arena-probe.txt"];
             [setup writeToFile:path atomically:YES encoding:NSUTF8StringEncoding error:NULL];
             // Run outside the main queue: the target can be paused by its helper
             // while UIKit and provider IPC still need normal run-loop servicing.
             dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INITIATED,0),^{
                 static NativeCodeMemory memory,quarantine;
-                BOOL prepared=nc_create_managed(&memory,16384,TKPrepareLocalArena,NULL,&quarantine);
+                BOOL prepared=nc_create_managed(&memory,remapProbe?(size_t)getpagesize()*2:16384,TKPrepareLocalArena,NULL,&quarantine);
                 NSString *outcome=prepared?@"Prepared and detached; no code executed.":
                     quarantine.quarantined?@"Preparation uncertain; memory retained, guest entry blocked, restart required.":
                     @"Preparation rejected; guest entry blocked.";
@@ -1747,8 +1750,16 @@ static NSString *AKAudioStateDescription(void) {
                         outcome=answer==42?@"PASS: locally prepared memory executed our return-42 function after confirmed detach.":@"FAIL: fixture returned an unexpected value.";
                     } else outcome=@"FAIL: prepared memory could not receive our fixture.";
                 }
+                NSString *reportSetup=setup;
+                if(prepared && remapProbe) {
+                    FILE *probeLog=fopen(path.fileSystemRepresentation,"a");
+                    BOOL passed=probeLog && wk_code_remap_probe(&memory,probeLog);
+                    if(probeLog)fclose(probeLog);
+                    outcome=passed?@"PASS: prepared pages support stable-address code remapping after detach.":@"FAIL: prepared-page code remapping did not complete.";
+                    reportSetup=[NSString stringWithContentsOfFile:path encoding:NSUTF8StringEncoding error:NULL]?:setup;
+                }
                 nc_destroy(&memory);
-                NSString *result=[setup stringByAppendingFormat:@"\n%@",outcome];
+                NSString *result=[reportSetup stringByAppendingFormat:@"\n%@",outcome];
                 [result writeToFile:path atomically:YES encoding:NSUTF8StringEncoding error:NULL];
                 dispatch_async(dispatch_get_main_queue(),^{self.status.text=result;});
             });

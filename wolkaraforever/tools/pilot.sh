@@ -258,6 +258,27 @@ if prior_process_exited:
     running = 0
     last = "exited (previous process)"
 
+# --jit-probe loads image metadata to size an arena, but its branch executes
+# only owned samples and skips linking, initializers and guest entry. A sample
+# rejected by iOS may leave this log behind when the plain launcher is reopened.
+# Require both complete probe markers in the latest launch, and never override
+# any evidence of a subsequently linked/entered guest or an unreadable copy.
+current_launch = guest_lines[launch_index + 1:] if launch_index is not None else []
+probe_summary = any(re.fullmatch(
+    r"\[jit-probe\] arena: alias=(?:PASS|FAIL) rewrite=(?:PASS|FAIL) direct=(?:PASS|FAIL) "
+    r"after-direct=(?:PASS|FAIL) direct_errno=\d+ rwx_errno=\d+", line.strip())
+    for line in current_launch)
+owned_sample = any(re.fullmatch(
+    r"\[execution\] begin mode=(?:write-then-execute|rwx) page_size=\d+; host sample only",
+    line.strip()) for line in current_launch)
+linked_guest = any("[native] resolved rebases=" in line or
+    "[native-cxx]" in line or "entering original" in line or
+    re.search(r"\[native\].*initializer \d+ .*native=", line)
+    for line in current_launch)
+if guest_ok and guest_index is not None and probe_summary and owned_sample and not linked_guest:
+    running = 0
+    last = "host-only execution probe; guest entry skipped"
+
 # This tool writes this line when it ends a session itself (see
 # clear_ended_guest_session). A killed guest never writes startup_return, so
 # without it the ended session would read as live forever. Only as the last line:
