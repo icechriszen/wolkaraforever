@@ -866,15 +866,15 @@
 "login.status.off" = "Aus";
 "login.status.on" = "An";
 "login.title" = "Battle.net-Anmeldung (experimentell)";
-"login.explanation" = "Experimentelle Kompatibilitätsfunktion. Dies ist nicht der normale Anmeldeweg von WolkaraForever. Passwort und Authenticator bleiben auf der offiziellen Battle.net-Website; der Launcher speichert keine Browsersitzung und kein Startticket. Nutzung auf eigenes Risiko.";
+"login.explanation" = "Experimentelle Kompatibilitätsfunktion. Der integrierte Browser merkt sich die Battle.net-Anmeldung auf diesem Gerät und holt für jeden Start ein neues einmaliges Ergebnis. Anmeldedaten löschen entfernt die gespeicherte Websitzung. Safari hat eine eigene Sitzung und benötigt weiterhin eine manuelle Rückgabe.";
 "login.enable" = "Experimentelle Anmeldung aktivieren";
 "login.disable" = "Experimentelle Anmeldung deaktivieren";
 "login.clear" = "Anmeldedaten löschen";
 "login.enable.title" = "Experimentelle Anmeldung aktivieren?";
-"login.enable.message" = "Diese optionale Funktion übergibt ein einmaliges Anmeldeergebnis nur beim Drücken von Spielen an Forever. Sie kann ohne Vorwarnung nicht mehr funktionieren. Sie ersetzt nicht die normale Anmeldung im Spiel. Nutzung auf eigenes Risiko.";
+"login.enable.message" = "Der integrierte Browser speichert seine Websitzung auf diesem Gerät, damit bei späteren Starts keine Safari-Adresse kopiert werden muss. Battle.net kann weiterhin eine Bestätigung verlangen. Starttickets bleiben einmalig verwendbar. Anmeldedaten löschen entfernt die gespeicherte Sitzung.";
 "login.enable.confirm" = "Ich verstehe — aktivieren";
 "login.cleared.title" = "Anmeldedaten gelöscht";
-"login.cleared.message" = "Die Browser-Sitzung im Speicher, jedes ausstehende Startticket und das gesicherte Passwort wurden entfernt.";
+"login.cleared.message" = "Die gespeicherte Sitzung des integrierten Browsers, jedes ausstehende Startticket und das gesicherte Passwort wurden entfernt. Die separate Sitzung in Safari bleibt erhalten.";
 "login.failed" = "Die Anmeldung wurde nicht abgeschlossen. Abbrechen und erneut versuchen.";
 
 /* ---- Saved game password, experimental Battle.net login ---- */
@@ -897,7 +897,7 @@
 "region.cn" = "China";
 "locale.zhCN" = "Chinesisch (vereinfacht) · 简体中文";
 
-"login.external" = "Safari verwenden …";
+"login.external" = "Safari als Alternative …";
 "login.externalHelp" = "Melden Sie sich im Browser an. Die abschließende localhost-Seite kann nicht geöffnet werden. Kopieren Sie ihre vollständige Adresse, kehren Sie hierher zurück und fügen Sie sie unten ein. Halten Sie diese Adresse geheim: Sie gewährt Zugriff auf Ihr Konto.";
 "login.open" = "Browser zur Anmeldung öffnen";
 "login.paste" = "Letzte Browser-Adresse einfügen";

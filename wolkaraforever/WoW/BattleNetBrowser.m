@@ -23,14 +23,15 @@
 }
 
 + (WKWebsiteDataStore *)signInDataStore {
-    // Isolated from add-on browsing and kept in memory only (hardened local build):
-    // the Battle.net web session can mint new launch tickets, so it is never written
-    // to disk and ends with this process. WebKit owns the cookies; the launcher never
-    // reads or exports their values. One store per process so a cancelled attempt
-    // can be retried without signing in again.
+    // An isolated persistent WebKit profile remembers the official site's session
+    // across app restarts. WebKit owns its cookies; we never extract them or reuse
+    // a launch ticket. Clear sign-in data removes this profile's website data.
     static WKWebsiteDataStore *store;
     static dispatch_once_t once;
-    dispatch_once(&once, ^{ store=WKWebsiteDataStore.nonPersistentDataStore; });
+    dispatch_once(&once, ^{
+        NSUUID *identifier=[[NSUUID alloc] initWithUUIDString:@"40BA3C6E-AD0F-4D70-B46D-9C7D3A014B1C"];
+        store=[WKWebsiteDataStore dataStoreForIdentifier:identifier];
+    });
     return store;
 }
 + (void)clearSavedSignInWithCompletion:(void (^)(void))completion {
@@ -183,7 +184,11 @@
     }
     if ([failingURL isKindOfClass:NSURL.class] &&
         [self acceptMainFrameRedirect:failingURL navigation:navigation]) return;
-    // NSError descriptions can contain credential-bearing URLs; never show/log them.
+    // Fixed domains and numeric error codes are sufficient to diagnose a failed
+    // embedded login without exposing a callback, cookies or error descriptions.
+    NSString *category=[error.domain isEqual:NSURLErrorDomain]?@"network":
+        [error.domain isEqual:WKErrorDomain]?@"webkit":@"other";
+    WKLog("battle-login", @"embedded page failed: %@ code=%ld", category, (long)error.code);
     self.navigationItem.prompt=WKLocalized(@"login.failed");
 }
 

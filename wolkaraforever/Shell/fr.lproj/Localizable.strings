@@ -869,15 +869,15 @@
 "login.status.off" = "Désactivée";
 "login.status.on" = "Activée";
 "login.title" = "Connexion Battle.net (expérimentale)";
-"login.explanation" = "Fonction de compatibilité expérimentale. Ce n’est pas le parcours de connexion normal de WolkaraForever. Votre mot de passe et votre authentificateur restent sur le site officiel Battle.net ; le lanceur ne conserve ni session web ni ticket de lancement. Utilisez-la à vos risques.";
+"login.explanation" = "Fonction de compatibilité expérimentale. Le navigateur intégré mémorise la connexion Battle.net sur cet appareil et obtient un nouveau résultat à usage unique à chaque lancement. Effacer les données de connexion supprime la session web enregistrée. Safari utilise une session distincte et nécessite toujours un retour manuel.";
 "login.enable" = "Activer la connexion expérimentale";
 "login.disable" = "Désactiver la connexion expérimentale";
 "login.clear" = "Effacer les données de connexion";
 "login.enable.title" = "Activer la connexion expérimentale ?";
-"login.enable.message" = "Cette fonction optionnelle transmet un résultat de connexion à usage unique à Forever seulement après avoir choisi Jouer. Elle peut cesser de fonctionner sans préavis. Elle ne remplace pas la connexion normale dans le jeu. Utilisez-la à vos risques.";
+"login.enable.message" = "Le navigateur intégré conserve sa session web sur cet appareil pour les prochains lancements, sans copier d’adresse Safari. Battle.net peut encore demander une vérification. Les tickets de lancement restent à usage unique. Effacer les données de connexion supprime la session enregistrée.";
 "login.enable.confirm" = "Je comprends — activer";
 "login.cleared.title" = "Données de connexion effacées";
-"login.cleared.message" = "La session web en mémoire, tout ticket de lancement en attente et le mot de passe enregistré ont été supprimés.";
+"login.cleared.message" = "La session du navigateur intégré, tout ticket de lancement en attente et le mot de passe enregistré ont été supprimés. La session distincte de Safari reste inchangée.";
 "login.failed" = "La connexion ne s’est pas terminée. Annulez et réessayez.";
 
 /* ---- Saved game password, experimental Battle.net login ---- */
@@ -900,7 +900,7 @@
 "region.cn" = "Chine";
 "locale.zhCN" = "Chinois simplifié · 简体中文";
 
-"login.external" = "Utiliser Safari…";
+"login.external" = "Autre option : Safari…";
 "login.externalHelp" = "Connectez-vous dans votre navigateur. La dernière page localhost ne peut pas s’ouvrir. Copiez son adresse complète, revenez ici et collez-la ci-dessous. Gardez cette adresse privée : elle donne accès à votre compte.";
 "login.open" = "Ouvrir le navigateur";
 "login.paste" = "Coller l’adresse finale du navigateur";

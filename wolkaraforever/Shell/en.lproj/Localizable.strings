@@ -869,15 +869,15 @@
 "login.status.off" = "Off";
 "login.status.on" = "On";
 "login.title" = "Battle.net Login (Experimental)";
-"login.explanation" = "Experimental compatibility feature. This is not WolkaraForever's normal login path. Your password and authenticator stay on Battle.net's official website; the launcher keeps no saved browser session or launch ticket. Use at your own risk.";
+"login.explanation" = "Experimental compatibility feature. The in-app browser remembers Battle.net sign-in on this device and gets a fresh one-use launch result each time. Clear sign-in data removes the saved web session. Safari has a separate session and still needs a manual return.";
 "login.enable" = "Enable experimental login";
 "login.disable" = "Disable experimental login";
 "login.clear" = "Clear sign-in data";
 "login.enable.title" = "Enable experimental login?";
-"login.enable.message" = "This opt-in feature hands a one-use sign-in result to Forever only when you press Play. It may stop working without notice. It is not a replacement for normal in-game login. Use at your own risk.";
+"login.enable.message" = "The in-app browser keeps its website session on this device so future launches can sign in again without copying a Safari address. Battle.net may still require verification. Launch tickets remain single-use. Clear sign-in data removes the saved session.";
 "login.enable.confirm" = "I understand — enable";
 "login.cleared.title" = "Sign-in data cleared";
-"login.cleared.message" = "The in-memory browser session, any pending launch ticket and the saved password were removed.";
+"login.cleared.message" = "The saved in-app browser session, any pending launch ticket and the saved password were removed. Safari's separate website session is unchanged.";
 "login.failed" = "Sign-in did not finish. Cancel and try again.";
 
 /* ---- Saved game password, experimental Battle.net login ---- */
@@ -900,7 +900,7 @@
 "region.cn" = "China";
 "locale.zhCN" = "Simplified Chinese · 简体中文";
 
-"login.external" = "Use Safari…";
+"login.external" = "Safari fallback…";
 "login.externalHelp" = "Sign in in your browser. The final localhost page cannot open. Copy its full address, return here and paste it below. Keep that address private: it grants access to your account.";
 "login.open" = "Open browser to sign in";
 "login.paste" = "Paste the final browser address";

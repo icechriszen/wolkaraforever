@@ -28,14 +28,15 @@ The first time you start a game with no mode chosen, the launcher asks how to st
 
 In **Game Settings Manager**, open **Battle.net Login (Experimental)**. It is off by default. Enabling it requires acknowledging that it is an experimental compatibility feature, not WolkaraForever's normal login path, and that you use it at your own risk.
 
-When enabled, **Play** completes its usual readiness checks, then opens Battle.net's official sign-in page. Battle.net may hand the browser to your chosen HTTPS identity provider; verify that provider's address before entering credentials. Cancel leaves the game unstarted. A successful result is used once for the immediately following Forever launch. Passwords and authenticators remain on Battle.net's site; WolkaraForever does not save browser sessions or launch tickets. **Disable experimental login** and **Clear sign-in data** both remove the in-memory browser session and any pending result immediately.
+When enabled, **Play** completes its usual readiness checks, then opens Battle.net's official sign-in page. Battle.net may hand the browser to your chosen HTTPS identity provider; verify that provider's address before entering credentials. Cancel leaves the game unstarted. A successful result is used once for the immediately following Forever launch. The in-app browser now keeps a dedicated WebKit website session across app restarts. After signing in there once, later launches can obtain a fresh result without copying a Safari address, while the site session remains valid. Battle.net may still require verification. Launch tickets remain single-use. **Disable experimental login** and **Clear sign-in data** remove this saved in-app website session and any pending result. Safari has a separate session, which these controls do not clear.
 
 **Saving the game password.** The same feature can keep one game password on the device, so a launch on a phone does not mean typing it on a phone keyboard. While the game's own password field has the keyboard, a yellow key appears first on the keyboard's row: tapping it reads the password behind Face ID (or the device passcode), types it into that field and presses Return, and holding the key offers to forget it. The first tap offers to save one. The password is a Keychain item on this device only - it is never synchronised, never written to a log or to the game's files, and it is deleted when experimental login is turned off or **Clear sign-in data** is used. The login row says **password saved** while one is kept, and **Sign in with the saved password** in the same sheet starts the game without opening the browser; **Play** still opens Battle.net's sign-in page unless you choose that row.
 
 For China, the browser opens `account.battlenet.com.cn` in Chinese. Existing China selections
 from the earlier local build retain browser login on upgrade unless it was explicitly disabled.
 For a new setup, enable it in **Game Settings Manager**. Complete login and verification yourself.
-If the embedded page cannot finish, choose **Use Safari…**, open the official page, then paste
+To remember login, complete it inside the app once; an existing Safari session is not imported.
+If the embedded page cannot finish, choose **Safari fallback…**, open the official page, then paste
 its final localhost return address only into the app's masked return field. The app never reads
 Safari cookies or the clipboard automatically. Tap **Continue** (or the keyboard's **Done**).
 A rejected address shows an alert explaining whether it is empty, incomplete, the wrong page,
@@ -43,8 +44,10 @@ or an unsupported result; only that category is logged. Copy the final address a
 correcting the issue. An omitted `http://` is restored only for an explicitly pasted
 `localhost:0` return address. Never share the address in chat or logs.
 A successful handoff sets the game portal to CN and retains the selected text/audio language.
-The China account/device flow still needs a real login check; synthetic tests do not prove login
-or entry into the game world. Launcher language remains English, German or French.
+A manual China callback has been accepted on the physical phone and the Chinese first-run game
+page has appeared. The saved embedded session and entry into the game world still need their
+own real-device checks; synthetic tests do not prove them. Launcher language remains English,
+German or French.
 
 This feature can stop working without notice. Do not include credentials, tickets, callback URLs, or account details in reports.
 
