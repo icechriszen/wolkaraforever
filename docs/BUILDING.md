@@ -122,6 +122,11 @@ and it records the newest client error file before launching so the run can be j
 `restore`, `selftest`, `cycle`. Every command that launches records baselines first, so "did it
 fail?" is answered by comparison — a new file in `Documents/World of Warcraft/_forever_/Errors/`
 or a new crash report means the launch failed.
+An idle launcher opened after a client `_exit` is distinguished from the old session
+only when the log has the complete no-observer exit sequence and the latest client
+report names a different PID from the running app. Missing or ambiguous evidence
+keeps the live-session guard in place; logs are not rewritten for this classification.
+
 For read-only diagnostics, `pilot.sh crash <report.ips>` also accepts an exact listed app
 system-report filename, including CPU resource reports. Selecting a resource report does
 not change crash counts or launch verdicts; see [Send logs](SENDING_LOGS.md).

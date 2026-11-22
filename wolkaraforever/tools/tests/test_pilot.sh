@@ -338,6 +338,43 @@ export WOLKAREFOREVER_FAKE_GUESTLOG=$'[host] execution mode=developer-service so
 check $? "state should succeed with the app gone"
 grep -q "a game session is live" "$work/out.txt" && check 1 "a stale log with no app running must not read as live"
 
+# A fatal _exit log belongs to the previous process, not the idle launcher
+# opened afterwards. Only the exact no-observer tail plus a different report PID
+# supplies this evidence; every ambiguity must keep protecting a potentially live game.
+export WOLKAREFOREVER_FAKE_LISTING="$(listing_with_error)"
+quick_exit_log=$'[host] execution mode=developer-service source=chosen\n[host] app=World of Warcraft Forever sha256=00\n[native] _exit(1) called\n[native] exit observer registered=0 already_notified=0\n'
+export WOLKAREFOREVER_FAKE_GUESTLOG="$quick_exit_log"
+run_pilot "$work/sessions/prior-process-exit" state
+grep -q '^session_live=0$' "$work/sessions/prior-process-exit/state.txt"
+check $? "a new PID after a recorded quick exit must not inherit the ended session"
+grep -q 'exited (previous process)' "$work/out.txt"
+check $? "the ended prior process should be explained"
+( export WOLKAREFOREVER_FAKE_PROCESSES="  1   /private/var/containers/Bundle/Application/AAA/Tolkara.app/Tolkara";
+  run_pilot "$work/sessions/same-pid-exit" state )
+grep -q '^session_live=1$' "$work/sessions/same-pid-exit/state.txt"
+check $? "a terminal-looking log must not release the same process PID"
+( export WOLKAREFOREVER_FAKE_PROCESSES="  unknown   /private/var/containers/Bundle/Application/AAA/Tolkara.app/Tolkara";
+  run_pilot "$work/sessions/unknown-pid-exit" state )
+grep -q '^session_live=1$' "$work/sessions/unknown-pid-exit/state.txt"
+check $? "unknown process PID must stay conservative"
+( export WOLKAREFOREVER_FAKE_GUESTLOG="${quick_exit_log/registered=0/registered=1}";
+  run_pilot "$work/sessions/exit-with-observer" state )
+grep -q '^session_live=1$' "$work/sessions/exit-with-observer/state.txt"
+check $? "a potentially waiting exit observer must not release the session"
+( export WOLKAREFOREVER_FAKE_GUESTLOG=$'[host] execution mode=developer-service\n[host] app=World of Warcraft Forever sha256=00\n[native] _exit(1) called\n';
+  run_pilot "$work/sessions/incomplete-exit" state )
+grep -q '^session_live=1$' "$work/sessions/incomplete-exit/state.txt"
+check $? "an incomplete exit sequence must stay conservative"
+( export WOLKAREFOREVER_FAKE_GUESTLOG="$quick_exit_log"$'[host] execution mode=developer-service\n[host] app=World of Warcraft Forever sha256=00\n';
+  run_pilot "$work/sessions/later-guest-after-exit" state )
+grep -q '^session_live=1$' "$work/sessions/later-guest-after-exit/state.txt"
+check $? "a later guest start supersedes an earlier terminal log"
+( export WOLKAREFOREVER_FAKE_LISTING="$(listing_without_errors)";
+  run_pilot "$work/sessions/no-report-pid" state )
+grep -q '^session_live=1$' "$work/sessions/no-report-pid/state.txt"
+check $? "without a client report PID the old log cannot be attributed safely"
+export WOLKAREFOREVER_FAKE_LISTING="$(listing_with_a_live_session)"
+
 # Third, the launcher with no game started. It has the launch line and nothing else, and it must not
 # read as a live game - refusing there would make every ordinary install impossible. This is the
 # case that keeps the stricter test honest.

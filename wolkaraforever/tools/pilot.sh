@@ -179,9 +179,13 @@ def age_of(entry):
 files = entries()
 
 app = 0
+app_pid = None
 for line in read(in_session("processes.txt")):
     if re.search(r"Tolkara\.app/Tolkara(\s|$)", line):
         app += 1
+        fields = line.split()
+        if fields and fields[0].isdigit():
+            app_pid = int(fields[0])
         break
 
 # An update in progress: files staged for the next launch, written moments ago. This is
@@ -238,6 +242,22 @@ last = starts[-1].split("startup_return=", 1)[-1].strip() if starts else "none"
 # app is gone. There is deliberately no age bound: a suspended app still holds the session in
 # memory, and taking that away is what this guard exists to prevent.
 running = 1 if (guest_index is not None and not returned) else 0
+# A fatal client exit does not return through startup_return. Its old log can
+# otherwise hold a new, idle launcher open forever. Accept this narrow terminal
+# sequence only with no exit observer, a client report naming the old PID, and a
+# different current PID. Same/unknown PID, an observer or a later log line stay
+# conservative. No timestamp guess and no device log rewrite is needed.
+terminal = [line.strip() for line in guest_lines if line.strip()]
+report_pid = re.search(r"_(?:Error|Crash)_(\d+)\.txt$", newest)
+prior_process_exited = bool(
+    guest_index is not None and app_pid is not None and report_pid and
+    app_pid != int(report_pid.group(1)) and len(terminal) >= 2 and
+    re.fullmatch(r"\[native\] _exit\(-?\d+\) called", terminal[-2]) and
+    terminal[-1] == "[native] exit observer registered=0 already_notified=0")
+if prior_process_exited:
+    running = 0
+    last = "exited (previous process)"
+
 # This tool writes this line when it ends a session itself (see
 # clear_ended_guest_session). A killed guest never writes startup_return, so
 # without it the ended session would read as live forever. Only as the last line:
