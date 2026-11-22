@@ -12,7 +12,7 @@ The project supports the Forever lifecycle and features described in the current
 
 WolkaraForever does not promise universal device, iOS-version, controller, network, account, or game-client compatibility. It does not provide an App Store build, game distribution, gameplay automation, game-code modification, integrity bypasses, or account-safety guarantees.
 
-**Battle.net Login (Experimental)** is an opt-in compatibility path, not a supported replacement for normal in-game login. Its browser session and one-use launch result are transient; it may stop working without notice. Use it at your own risk.
+**Battle.net Login (Experimental)** is an opt-in compatibility path, not a supported replacement for normal in-game login. The in-app browser keeps an isolated website session across launches; Clear sign-in data removes it. Each launch result is single-use and transient. The feature may stop working without notice. Use it at your own risk.
 
 **Login and the system roots.** The game validates Battle.net's certificate against macOS's system root certificates, which every artifact this project's toolchain builds supplies. An app installed by another route, or built without them, cannot log in in any execution mode: the client answers `BLZ51900003` with the experimental login on and off. [Use WolkaraForever on iPhone](docs/IPHONE.md) says how to check a build.
 
