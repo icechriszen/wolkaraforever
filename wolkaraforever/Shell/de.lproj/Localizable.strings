@@ -906,3 +906,12 @@
 "login.openFailed" = "Der Browser konnte nicht geöffnet werden. Versuchen Sie es erneut oder brechen Sie ab.";
 "login.invalidPaste" = "Fügen Sie die vollständige letzte Adresse aus dem Browser ein. Sie muss mit http://localhost:0/?ST= beginnen.";
 "login.configFailed" = "Die chinesische Anmelderegion konnte nicht gesetzt werden. Versuchen Sie es erneut.";
+
+/* Explicit Safari return validation. Never interpolate the private address. */
+"login.returnError.title" = "Anmeldeadresse nicht akzeptiert";
+"login.returnError.empty" = "Fügen Sie die vollständige letzte Adresse aus Safari ein und tippen Sie auf Weiter.";
+"login.returnError.length" = "Der eingefügte Text ist zu lang für eine Rückgabeadresse. Kopieren Sie nur die letzte Adresse aus Safari.";
+"login.returnError.endpoint" = "Kopieren Sie nach der Anmeldung die letzte Adresse mit http://localhost:0/ und fügen Sie sie hier ein. Die Adresse der Battle.net-Anmeldeseite kann nicht verwendet werden.";
+"login.returnError.missing" = "Diese Adresse enthält kein ST-Anmeldeergebnis. Schließen Sie die Anmeldung ab und kopieren Sie die vollständige letzte Adresse.";
+"login.returnError.duplicate" = "Diese Adresse enthält mehrere Anmeldeergebnisse. Kopieren Sie die letzte Adresse erneut.";
+"login.returnError.format" = "Das Anmeldeergebnis hat ein nicht unterstütztes Format. Melden Sie sich erneut an. Falls dies wieder auftritt, melden Sie diesen Hinweis, ohne die Adresse weiterzugeben.";

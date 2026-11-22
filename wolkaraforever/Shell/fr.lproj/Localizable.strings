@@ -909,3 +909,12 @@
 "login.openFailed" = "Impossible d’ouvrir le navigateur. Réessayez ou annulez.";
 "login.invalidPaste" = "Collez l’adresse finale complète du navigateur. Elle doit commencer par http://localhost:0/?ST=.";
 "login.configFailed" = "Impossible d’appliquer la région de connexion Chine. Réessayez.";
+
+/* Explicit Safari return validation. Never interpolate the private address. */
+"login.returnError.title" = "Adresse de connexion refusée";
+"login.returnError.empty" = "Collez l’adresse finale complète de Safari, puis touchez Continuer.";
+"login.returnError.length" = "Le texte collé est trop long pour une adresse de retour. Copiez uniquement l’adresse finale de Safari.";
+"login.returnError.endpoint" = "Après la connexion, copiez l’adresse finale commençant par http://localhost:0/ et collez-la ici. L’adresse de la page de connexion Battle.net ne convient pas.";
+"login.returnError.missing" = "Cette adresse ne contient aucun résultat de connexion ST. Terminez la connexion et copiez l’adresse finale complète.";
+"login.returnError.duplicate" = "Cette adresse contient plusieurs résultats de connexion. Copiez à nouveau l’adresse finale.";
+"login.returnError.format" = "Le résultat de connexion utilise un format non pris en charge. Reconnectez-vous. Si cela se reproduit, signalez ce message sans partager l’adresse.";

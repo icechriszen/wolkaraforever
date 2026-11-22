@@ -57,6 +57,38 @@ NSString *TKBattleNetCallbackTicket(NSURL *url) {
     }
     return ticket;
 }
+NSString *TKBattleNetPastedCallbackTicket(NSString *text, NSString **failureCode) {
+    if (failureCode) *failureCode=nil;
+    NSString *value=[text stringByTrimmingCharactersInSet:NSCharacterSet.whitespaceAndNewlineCharacterSet];
+    NSString *problem=nil;
+    if (!value.length) problem=@"empty";
+    else if (value.length>8192) problem=@"length";
+    else {
+        // This is formatting recovery for an explicit paste, not navigation trust.
+        // Do not guess a host, port or ticket, and do not accept a bare ticket.
+        if ([value hasPrefix:@"localhost:0/"] || [value hasPrefix:@"localhost:0?"])
+            value=[@"http://" stringByAppendingString:value];
+        if (value.length>8192) {
+            if (failureCode) *failureCode=@"length";
+            return nil;
+        }
+        NSURL *url=[NSURL URLWithString:value];
+        if (!url || ![url.scheme isEqual:@"http"] || ![url.host isEqual:@"localhost"] ||
+            ![url.port isEqual:@0] || (url.path.length && ![url.path isEqual:@"/"]) ||
+            url.user || url.password || url.fragment) problem=@"endpoint";
+        else {
+            NSArray *items=[NSURLComponents componentsWithURL:url resolvingAgainstBaseURL:NO].queryItems;
+            NSUInteger count=0; NSString *ticket=nil;
+            for (NSURLQueryItem *item in items) if ([item.name isEqual:@"ST"]) { count++; ticket=item.value; }
+            if (!count) problem=@"missing";
+            else if (count>1) problem=@"duplicate";
+            else if (!TicketValid(ticket?:@"")) problem=@"format";
+            else return TKBattleNetCallbackTicket(url);
+        }
+    }
+    if (failureCode) *failureCode=problem?:@"endpoint";
+    return nil;
+}
 NSData *TKBattleNetEncodeLaunchTicket(NSString *ticket, NSString *userName) {
     // Wire format fixed by the game client (RegistryDarwin). Not a secret.
     if (!TicketValid(ticket)) return nil;

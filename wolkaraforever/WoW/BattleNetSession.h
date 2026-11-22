@@ -18,6 +18,10 @@ BOOL TKBattleNetTrustedURL(NSURL *url);
 // opt-in browser; only a Blizzard-origin page may deliver the game callback.
 BOOL TKBattleNetFederatedURL(NSURL *url);
 NSString * _Nullable TKBattleNetCallbackTicket(NSURL *url);
+// Explicit user paste only: restore Safari's omitted scheme for exact localhost:0.
+// failureCode is a fixed diagnostic category, never input or ticket content.
+NSString * _Nullable TKBattleNetPastedCallbackTicket(NSString *text,
+    NSString * _Nullable * _Nullable failureCode);
 // The game's own handoff wire format (fixed-entropy PBKDF2 + AES-CBC, zero IV). The
 // unmodified game decrypts WEB_TOKEN with exactly this, so it cannot be changed. It is
 // an encoding, not protection: anyone holding the plist can decode it. Protection comes

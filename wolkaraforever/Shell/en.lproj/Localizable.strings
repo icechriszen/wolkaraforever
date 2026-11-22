@@ -909,3 +909,12 @@
 "login.openFailed" = "The browser could not open. Try again or cancel to use Battle.net email login.";
 "login.invalidPaste" = "Paste the complete final address from your browser. It must start with http://localhost:0/?ST=.";
 "login.configFailed" = "Could not apply the China login region. Please try again.";
+
+/* Explicit Safari return validation. Never interpolate the private address. */
+"login.returnError.title" = "Sign-in address not accepted";
+"login.returnError.empty" = "Paste the complete final address from Safari, then tap Continue.";
+"login.returnError.length" = "The pasted text is too long to be a sign-in return address. Copy only the final address from Safari.";
+"login.returnError.endpoint" = "Copy the final http://localhost:0/ address after signing in, then paste it here. The Battle.net sign-in page address cannot be used.";
+"login.returnError.missing" = "This address has no ST sign-in result. Finish signing in and copy the complete final address.";
+"login.returnError.duplicate" = "This address contains more than one sign-in result. Copy the final address again.";
+"login.returnError.format" = "The sign-in result has an unsupported format. Sign in again. If this repeats, report this message without sharing the address.";

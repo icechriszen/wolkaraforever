@@ -68,6 +68,42 @@ int main(void) { @autoreleasepool {
     // China tickets use the same one-use lifecycle and retain CN / zhCN at handoff.
     NSString *chinaTicket=@"CN-0123456789abcdef0123456789abcdef-123456789";
     assert([TKBattleNetCallbackTicket([NSURL URLWithString:[@"http://localhost:0/?ST=" stringByAppendingString:chinaTicket]]) isEqual:chinaTicket]);
+    // Explicit paste tolerates Safari display formatting without weakening automatic callbacks.
+    NSString *chinaCallback=[@"http://localhost:0/?ST=" stringByAppendingString:chinaTicket];
+    for (NSString *good in @[chinaCallback, [@" \n" stringByAppendingFormat:@"%@\r\n",chinaCallback],
+        [chinaCallback substringFromIndex:7],
+        [chinaCallback stringByReplacingOccurrencesOfString:@"http://localhost:0/" withString:@"localhost:0"]]) {
+        NSString *failure=@"stale";
+        assert([TKBattleNetPastedCallbackTicket(good,&failure) isEqual:chinaTicket]);
+        assert(!failure);
+    }
+    assert([TKBattleNetPastedCallbackTicket(chinaCallback,NULL) isEqual:chinaTicket]);
+    assert(!TKBattleNetCallbackTicket([NSURL URLWithString:[chinaCallback substringFromIndex:7]]));
+    NSArray *rejected=@[
+        @[@" \r\n",@"empty"],
+        @[[chinaCallback stringByPaddingToLength:8193 withString:@"x" startingAtIndex:0],@"length"],
+        @[[[chinaCallback substringFromIndex:7] stringByPaddingToLength:8190 withString:@"x" startingAtIndex:0],@"length"],
+        @[@"https://account.battlenet.com.cn/login/zh/",@"endpoint"],
+        @[chinaTicket,@"endpoint"],
+        @[[chinaCallback stringByReplacingOccurrencesOfString:@"http:" withString:@"https:"],@"endpoint"],
+        @[[chinaCallback stringByReplacingOccurrencesOfString:@":0/" withString:@"/"],@"endpoint"],
+        @[[chinaCallback stringByReplacingOccurrencesOfString:@":0/" withString:@":80/"],@"endpoint"],
+        @[[chinaCallback stringByReplacingOccurrencesOfString:@"localhost" withString:@"user@localhost"],@"endpoint"],
+        @[[chinaCallback stringByReplacingOccurrencesOfString:@"localhost" withString:@"localhost.evil.test"],@"endpoint"],
+        @[[chinaCallback stringByReplacingOccurrencesOfString:@"/?" withString:@"/other?"],@"endpoint"],
+        @[[chinaCallback stringByAppendingString:@"#fragment"],@"endpoint"],
+        @[@"http://localhost:0/",@"missing"],
+        @[@"http://localhost:0/?st=synthetic",@"missing"],
+        @[[chinaCallback stringByAppendingFormat:@"&ST=%@",chinaTicket],@"duplicate"],
+        @[[chinaCallback stringByAppendingString:@"&ST="],@"duplicate"],
+        @[@"http://localhost:0/?ST=",@"format"],
+        @[@"http://localhost:0/?ST=synthetic-private-value",@"format"]];
+    for (NSArray *row in rejected) {
+        NSString *failure=nil;
+        assert(!TKBattleNetPastedCallbackTicket(row[0],&failure));
+        assert([failure isEqual:row[1]]); // A fixed category, never any part of the pasted input.
+    }
+    puts("PASS explicit Safari paste formatting and private validation categories (Mac Foundation)");
     NSString *chinaDomain=Domain();
     SetValue(chinaDomain,@"CONNECTION_STRING",@"synthetic stale connection");
     SetValue(chinaDomain,@"GAME_ACCOUNT",@"synthetic stale account");

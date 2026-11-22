@@ -37,7 +37,11 @@ from the earlier local build retain browser login on upgrade unless it was expli
 For a new setup, enable it in **Game Settings Manager**. Complete login and verification yourself.
 If the embedded page cannot finish, choose **Use Safari…**, open the official page, then paste
 its final localhost return address only into the app's masked return field. The app never reads
-Safari cookies or the clipboard automatically. Never share that address in chat or logs.
+Safari cookies or the clipboard automatically. Tap **Continue** (or the keyboard's **Done**).
+A rejected address shows an alert explaining whether it is empty, incomplete, the wrong page,
+or an unsupported result; only that category is logged. Copy the final address again after
+correcting the issue. An omitted `http://` is restored only for an explicitly pasted
+`localhost:0` return address. Never share the address in chat or logs.
 A successful handoff sets the game portal to CN and retains the selected text/audio language.
 The China account/device flow still needs a real login check; synthetic tests do not prove login
 or entry into the game world. Launcher language remains English, German or French.

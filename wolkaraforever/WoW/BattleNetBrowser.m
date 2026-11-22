@@ -99,9 +99,13 @@
     WKLog("battle-login", @"browser closed: %@", received?@"accepted result":@"no result");
     void (^completion)(BOOL)=self.completion;
     self.completion=nil;
-    [self dismissViewControllerAnimated:YES completion:^{
-        if (completion) completion(received);
-    }];
+    // Dismiss the login sheet and any validation alert together. Dismissing self
+    // while it presents an alert would dismiss only the alert on timeout.
+    UIViewController *container=self.navigationController?:self;
+    UIViewController *presenter=container.presentingViewController;
+    void (^done)(void)=^{ if (completion) completion(received); };
+    if (presenter) [presenter dismissViewControllerAnimated:YES completion:done];
+    else done();
 }
 
 - (void)cancel { [self finish:NO]; }
@@ -207,6 +211,8 @@
     _returnField.smartQuotesType=UITextSmartQuotesTypeNo;
     _returnField.smartDashesType=UITextSmartDashesTypeNo;
     _returnField.keyboardType=UIKeyboardTypeURL;
+    _returnField.returnKeyType=UIReturnKeyDone;
+    [_returnField addTarget:self action:@selector(useBrowserReturn) forControlEvents:UIControlEventEditingDidEndOnExit];
     UIButton *use=[UIButton buttonWithType:UIButtonTypeSystem];
     [use setTitle:WKLocalized(@"login.continue") forState:UIControlStateNormal];
     use.accessibilityIdentifier=@"wow.login.useBrowserReturn";
@@ -244,13 +250,25 @@
     }];
 }
 - (void)useBrowserReturn {
-    if (_finished || !_externalLoginActive) return;
+    if (_finished || !_externalLoginActive || self.presentedViewController) return;
     // Explicit user paste only: no pasteboard access or Safari credential extraction.
-    NSString *text=[_returnField.text stringByTrimmingCharactersInSet:NSCharacterSet.whitespaceAndNewlineCharacterSet];
-    NSString *ticket=text.length<=8192?TKBattleNetCallbackTicket([NSURL URLWithString:text]):nil;
+    NSString *problem=nil;
+    NSString *ticket=TKBattleNetPastedCallbackTicket(_returnField.text?:@"",&problem);
     _returnField.text=@"";
-    if (!ticket) { _returnHelp.text=WKLocalized(@"login.invalidPaste"); return; }
     [_returnField resignFirstResponder];
+    if (!ticket) {
+        // Keep the visible result beside the action: the help label can be above
+        // the viewport after the keyboard scrolls the private input into view.
+        WKLog("battle-login", @"browser return refused: %@", problem?:@"endpoint");
+        NSString *message=WKLocalized([@"login.returnError." stringByAppendingString:(problem?:@"endpoint")]);
+        _returnHelp.text=message;
+        UIAlertController *alert=[UIAlertController alertControllerWithTitle:WKLocalized(@"login.returnError.title")
+            message:message preferredStyle:UIAlertControllerStyleAlert];
+        [alert addAction:[UIAlertAction actionWithTitle:WKLocalized(@"common.ok") style:UIAlertActionStyleDefault handler:nil]];
+        [self presentViewController:alert animated:YES completion:nil];
+        return;
+    }
+    WKLog("battle-login", @"browser return received: validated address");
     [self finish:[TKBattleNetSession acceptTicket:ticket region:_region locale:_locale]];
 }
 
