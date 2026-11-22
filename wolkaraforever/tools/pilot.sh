@@ -17,7 +17,7 @@
 #   wolkaraforever/tools/pilot.sh game              straight into the game, no checks
 #   wolkaraforever/tools/pilot.sh wait [--timeout s] block until it is up, or until it fails
 #   wolkaraforever/tools/pilot.sh view              screenshot, log, whether it crashed or asserted
-#   wolkaraforever/tools/pilot.sh crash             read the newest crash report out loud
+#   wolkaraforever/tools/pilot.sh crash [report.ips] read the newest crash or a named app system report
 #   wolkaraforever/tools/pilot.sh log [lines] [pat] the app's own log, from Documents
 #   wolkaraforever/tools/pilot.sh leave [bundle]    put the app in the background for real
 #   wolkaraforever/tools/pilot.sh return            bring it back to the front
@@ -195,9 +195,10 @@ for entry in files:
     if age is not None and 0 <= age < 120:
         recent += 1
 
-# The names carry their own date, so the last one sorts last and is the newest.
+# Both client assertions and fatal exceptions are evidence. Their names carry
+# their own date, so the last one sorts last and is the newest.
 error_files = sorted(((e.get("relativePath") or ""), age_of(e)) for e in files
-                     if re.search(r"_Error_\d+\.txt$", e.get("relativePath") or ""))
+                     if re.search(r"_(?:Error|Crash)_\d+\.txt$", e.get("relativePath") or ""))
 newest = error_files[-1][0].rsplit("/", 1)[-1] if error_files else "none"
 newest_age = error_files[-1][1] if error_files else None
 
@@ -932,13 +933,39 @@ cmd_log() {
 # turns that into something readable without a trip through Xcode.
 cmd_crash() {
     refresh_state
-    local name; name=$(cat "$SESSION/newest-crash" 2>/dev/null || echo none)
+    local name=${1:-}
+    if [ -n "$name" ]; then
+        [ "$(state_value inspection_ok)" = 1 ] || die "the device could not be inspected; not selecting a report"
+        # Resource reports are useful evidence but must not count as crashes.
+        # An explicit selection must be a listed report for our app, never a path.
+        python3 - "$SESSION/crashes.json" "$name" <<'PY' || die "the requested app report is not in the device listing"
+import json, re, sys
+name = sys.argv[2]
+if not re.fullmatch(r"Tolkara(?:Diagnostics)?(?:\.[a-z_]+)?-\d[\w.-]*\.ips", name, re.ASCII):
+    raise SystemExit(1)
+try:
+    with open(sys.argv[1]) as handle:
+        entries = json.load(handle).get("result", {}).get("files", []) or []
+except (OSError, ValueError, AttributeError):
+    raise SystemExit(1)
+raise SystemExit(0 if any(
+    (entry.get("relativePath") or entry.get("name")) == name and
+    not entry.get("resources", {}).get("isDirectory", False)
+    for entry in entries if isinstance(entry, dict)) else 1)
+PY
+    else
+        name=$(cat "$SESSION/newest-crash" 2>/dev/null || echo none)
+    fi
     [ "$name" = "none" ] && die "no crash reports on the device"
     rm -rf "$CRASH_DIR" && mkdir -p "$CRASH_DIR"
     xcrun devicectl device copy from --device "$DEVICE" --domain-type systemCrashLogs \
         --source "$name" --destination "$CRASH_DIR/$name" >/dev/null 2>&1 \
         || die "could not fetch $name from the device"
-    say "$name, written $(state_value crash_newest_age)s ago"
+    if [ -n "${1:-}" ]; then
+        say "$name (selected system report; not a crash verdict)"
+    else
+        say "$name, written $(state_value crash_newest_age)s ago"
+    fi
     python3 - "$CRASH_DIR/$name" <<'PY'
 import json, sys
 
@@ -1090,7 +1117,7 @@ case "${1:-state}" in
     game)    cmd_launch --game ;;
     wait)    cmd_wait "${2:-}" "${3:-}" ;;
     view)    cmd_view ;;
-    crash)   cmd_crash ;;
+    crash)   cmd_crash "${2:-}" ;;
     log)     cmd_log "${2:-}" "${3:-}" ;;
     leave)   cmd_leave "${2:-}" ;;
     return)  cmd_return ;;  # `return` is a shell keyword; the case label is a plain word here

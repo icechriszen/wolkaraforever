@@ -62,6 +62,44 @@ wolkaraforever/tools/pilot.sh log 80            # the launcher's own log
 `device_log.sh` reads `native-guest.log`; `pilot.sh log` reads `wolkaraforever.log`. Both
 need `DEVICE` and `TOLKARA_BUNDLE_ID` set in your `local.env`.
 
+`pilot.sh state` and `view` include both the client's `_Error_` assertions and
+`_Crash_` fatal exceptions when finding the newest client report. These are separate
+from iOS's own `.ips` reports.
+
+`pilot.sh crash` reads the newest ordinary app crash report. To inspect a specific
+app system report from the device's report listing, pass its exact filename, for example
+`pilot.sh crash Tolkara.cpu_resource-YYYY-MM-DD-HHMMSS.ips`. Only listed Tolkara or
+TolkaraDiagnostics reports are accepted. Resource reports do not count as crashes;
+match their timestamps and recorded action to the failed attempt before drawing a conclusion.
+The selected report is copied into the pilot session's local `crash/` directory.
+
+## Opt-in host lifetime diagnostics
+
+For a Developer service freeze or allocator failure, run the installer with
+`WOLKARA_HOST_DIAGNOSTICS=1` to produce a diagnostic build (also works with
+`--build-only`), or launch with `--host-lifetime-diagnostics`.
+Normal builds leave this disabled. It records process memory totals and a main-queue
+heartbeat every five seconds, for at most ten minutes, in
+`Documents/host-lifetime-diagnostics.log`. Fixed lifecycle events and memory warnings
+are also recorded. A new process replaces this file when its native session starts;
+collect it before reproducing again.
+
+The matching `[host-tls]` lines in `native-guest.log` record only allocation/release
+metadata for thread-local storage owned by Wolkara's runtime, with a 4,096-event limit.
+They do not inspect game memory, install signal handlers, attach a debugger, replace
+allocator behavior, or alter game settings. A missing release-end can narrow a failure
+but does not by itself prove its cause. Correlate it with the actual client/system report.
+
+Retrieve the separate counter log with the existing read-only tool:
+
+```sh
+DEVICE_LOG_FILE=host-lifetime-diagnostics.log wolkaraforever/tools/device_log.sh 200
+```
+
+The owning synthetic Mac tests run with ASan/UBSan through
+`wolkaraforever/tools/test_host_lifetime_diagnostics.sh`; they do not establish that a
+physical game crash has been fixed.
+
 ## What to write with the log
 
 Five short lines are plenty:

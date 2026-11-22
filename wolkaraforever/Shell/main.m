@@ -13,6 +13,7 @@
 #import "DiagnosticsViewController.h"
 #import "ExecutionMode.h"
 #import "ExternalJITDiagnostics.h"
+#import "HostLifetimeDiagnostics.h"
 #import "LibraryViewController.h"
 #import "../Controller/ControllerInspector.h"
 #import "../Controller/ControllerWindow.h"
@@ -525,16 +526,19 @@ static NSString *AKAudioStateDescription(void) {
     [self askForSpeechOnce];
     [self reserveExecutableMemory];
     if (self.executionMode==TKExecutionModeExternalJIT) WKExternalJITDiagnosticsCheckpoint(@"lifecycle-foreground");
+    WKHostDiagnosticsCheckpoint("foreground");
 }
 
 // Both of these can arrive, in either order, depending on why the app went away, so both are
 // handled rather than one being trusted to imply the other.
 - (void)sceneWillResignActive:(UIScene *)scene {
     (void)scene;
+    WKHostDiagnosticsCheckpoint("inactive");
     [self leftTheForeground:@"resigning active"];
 }
 - (void)sceneDidEnterBackground:(UIScene *)scene {
     (void)scene;
+    WKHostDiagnosticsCheckpoint("background");
     [self leftTheForeground:@"in the background"];
 }
 
@@ -563,6 +567,7 @@ static NSString *AKAudioStateDescription(void) {
 }
 - (void)receivedMemoryWarning:(NSNotification *)notification {
     (void)notification;
+    WKHostDiagnosticsMemory("memory-warning");
     if (self.executionMode==TKExecutionModeExternalJIT) {
         WKExternalJITDiagnosticsCheckpoint(@"memory-warning");
         WKExternalJITDiagnosticsMemory(@"warning");
@@ -1479,6 +1484,11 @@ static NSString *AKAudioStateDescription(void) {
     }
     NSArray<NSString *> *arguments=NSProcessInfo.processInfo.arguments;
     BOOL externalJIT = !container && self.executionMode==TKExecutionModeExternalJIT;
+    if (!container && self.executionMode==TKExecutionModeDeveloperService && WKHostDiagnosticsEnabled()) {
+        if (WKHostDiagnosticsStart(TKDocumentsPath(@"host-lifetime-diagnostics.log").fileSystemRepresentation,5,120)) {
+            WKLog("host", @"host lifetime diagnostics enabled (bounded counters only)");
+        }
+    }
     if (externalJIT) {
         WKExternalJITDiagnosticsCheckpoint(@"native-startup-entered");
         WKExternalJITDiagnosticsMemory(@"native-startup-entered");
@@ -1604,6 +1614,7 @@ static NSString *AKAudioStateDescription(void) {
         WKExternalJITDiagnosticsMemory(@"native-return");
         WKExternalJITDiagnosticsFinish(ok);
     }
+    WKHostDiagnosticsFinish(ok ? 0 : 1);
     NSString *guestDamage=[NSUserDefaults.standardUserDefaults stringForKey:@"WolkaraForever.GuestFailure.DamagedInstallation"];
     NSString *guestAlert=[NSUserDefaults.standardUserDefaults stringForKey:@"WolkaraForever.GuestAlert.Last"];
     [NSUserDefaults.standardUserDefaults removeObjectForKey:@"WolkaraForever.GuestFailure.DamagedInstallation"];

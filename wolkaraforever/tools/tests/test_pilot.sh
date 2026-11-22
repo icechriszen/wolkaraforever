@@ -184,6 +184,21 @@ grep -q "newest 2026-10-16_09.00.00_Error_1.txt" "$work/out.txt"
 check $? "the newest error file should be reported"
 grep -q "COULD NOT BE INSPECTED" "$work/out.txt" && check 1 "a healthy inspection must not warn"
 
+# A fatal client exception uses _Crash_, not _Error_. It must participate in
+# the same baseline and be copied, or a failed run appears to have only an old assertion.
+export WOLKAREFOREVER_FAKE_LISTING='{"result":{"files":[
+ {"relativePath":"Documents/World of Warcraft/_forever_/Errors/2026-10-16_09.00.00_Error_1.txt","metadata":{"lastModDate":"2026-10-16T09:00:00Z"}},
+ {"relativePath":"Documents/World of Warcraft/_forever_/Errors/2026-10-16_09.05.00_Crash_1.txt","metadata":{"lastModDate":"2026-10-16T09:05:00Z"}}
+]}}'
+run_pilot "$work/sessions/client-crash" state
+grep -q "newest 2026-10-16_09.05.00_Crash_1.txt" "$work/out.txt"
+check $? "a newer fatal client exception must supersede the old informational error"
+grep -q "error files:    2" "$work/out.txt"
+check $? "both client error and crash reports must be counted"
+[ -f "$work/sessions/client-crash/errors/2026-10-16_09.05.00_Crash_1.txt" ]
+check $? "the fatal client exception must be copied for inspection"
+export WOLKAREFOREVER_FAKE_LISTING="$(listing_with_error)"
+
 # The same device, but devicectl cannot list files. The old script read that as zero
 # error files, which is indistinguishable from a clean run.
 ( export WOLKAREFOREVER_FAKE_BLIND=files; run_pilot "$work/sessions/blind" state )
@@ -418,6 +433,34 @@ if [ "$crash_ok" != 0 ]; then
     echo "--- end ---"
 fi
 check "$crash_ok" "the crash report is read out with its frames"
+
+# A CPU report can be selected without being mistaken for a crash. Never copy
+# an unlisted name, another app's report, or a path supplied as a report name.
+saved_crashes="$WOLKAREFOREVER_FAKE_CRASHES"
+export WOLKAREFOREVER_FAKE_CRASHES='{"result":{"files":[
+ {"relativePath":"Tolkara-2026-10-16-090000.ips","metadata":{"lastModDate":"2026-10-16T09:00:00Z"}},
+ {"relativePath":"Tolkara.cpu_resource-2026-10-16-091000.ips","metadata":{"lastModDate":"2026-10-16T09:10:00Z"}},
+ {"relativePath":"OtherApp-2026-10-16-091000.ips","metadata":{"lastModDate":"2026-10-16T09:10:00Z"}}
+]}}'
+run_pilot "$work/sessions/resource" crash Tolkara.cpu_resource-2026-10-16-091000.ips
+check $? "an explicitly selected app resource report should be copied"
+[ -f "$work/sessions/resource/crash/Tolkara.cpu_resource-2026-10-16-091000.ips" ]
+check $? "the selected file, not the older crash, should be captured"
+grep -q "not a crash verdict" "$work/out.txt"
+check $? "a selected resource report must not be called a crash"
+run_pilot "$work/sessions/resource-default" crash
+check $? "default crash selection should still succeed"
+[ -f "$work/sessions/resource-default/crash/Tolkara-2026-10-16-090000.ips" ]
+check $? "default selection must still ignore the newer resource report"
+for name in Tolkara-2026-10-16-080000.ips OtherApp-2026-10-16-091000.ips ../Tolkara-2026-10-16-090000.ips; do
+    run_pilot "$work/sessions/resource-refused" crash "$name"
+    [ $? -ne 0 ]
+    check $? "an unlisted, unrelated or path-like report must be refused: $name"
+done
+( export WOLKAREFOREVER_FAKE_BLIND=files; run_pilot "$work/sessions/resource" crash Tolkara.cpu_resource-2026-10-16-091000.ips )
+[ $? -ne 0 ]
+check $? "a selected report must be refused when inspection fails, even with a cached listing"
+export WOLKAREFOREVER_FAKE_CRASHES="$saved_crashes"
 unset WOLKAREFOREVER_FAKE_IPS
 
 # A crash report that appears while waiting is the answer, and is reported as one: the

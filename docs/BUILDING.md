@@ -122,6 +122,9 @@ and it records the newest client error file before launching so the run can be j
 `restore`, `selftest`, `cycle`. Every command that launches records baselines first, so "did it
 fail?" is answered by comparison — a new file in `Documents/World of Warcraft/_forever_/Errors/`
 or a new crash report means the launch failed.
+For read-only diagnostics, `pilot.sh crash <report.ips>` also accepts an exact listed app
+system-report filename, including CPU resource reports. Selecting a resource report does
+not change crash counts or launch verdicts; see [Send logs](SENDING_LOGS.md).
 
 ## Run in the simulator
 
@@ -204,3 +207,8 @@ authorization, or performance; say which device ran when you report a result.
 
 Read [Compatibility](../COMPATIBILITY.md) for the support boundary, and
 [Security](../SECURITY.md) to report a vulnerability.
+
+For a bounded Developer service crash investigation, prefix the installer with
+`WOLKARA_HOST_DIAGNOSTICS=1`. This enables host counters and runtime-owned TLS
+allocation/release metadata for that build; it is off by default. See
+[host lifetime diagnostics](SENDING_LOGS.md#opt-in-host-lifetime-diagnostics).
