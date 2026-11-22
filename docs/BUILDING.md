@@ -29,6 +29,33 @@ A command sequence, therefore, is always "prepare, then run the engine's own scr
 prepared tree". The wrappers in `wolkaraforever/tools/` do exactly that, which is why the engine
 scripts under `build/platform/tools/` are never called directly for a normal build.
 
+## C++ allocator ownership
+
+A native application can replace C++ `operator new` and `operator delete`. Binding its own
+imports to those operators is not enough: system-library string operations and C++ thread
+cleanup can otherwise allocate with one implementation and release with another.
+
+The build includes `wkOwnedCxx.dylib`, compiled from the pinned LLVM libc++ string and thread
+sources and the builder's SDK. When the loader finds an application-provided scalar allocation
+or release operator, it configures this module once with the same canonical pair. Covered
+string and thread-local APIs then use that pair. The module exports only its C configuration
+interface; its C++ definitions and allocation operators are hidden, so the launcher's existing
+C++ objects and system-library bindings stay with the host. Application mappings and the module
+remain alive for the process, including thread cleanup after the native entry point returns.
+
+This is scoped API adaptation, not a replacement for every C++ library facility. A missing,
+incompatible, or already-configured module refuses application entry. A program with no
+replacement allocation operators continues through the system library. The pinned source,
+license, and SDK version check are under `wolkaraforever/Cxx/`; the license is included in the
+installed app. Updating the SDK requires revalidating the private thread ABI before changing
+the version check. No game program, configuration, or store is modified by this adapter.
+
+Run `wolkaraforever/tools/test_owned_cxx.sh` on an Apple Silicon Mac. Its independent native
+control and old loader path must respectively pass and reproduce the ownership discrepancy;
+the adapted path must pass string operations, multi-thread cleanup, future readiness, host
+object survival, configuration guards, and ASan/UBSan. These checks are component-level Mac
+evidence; iPhone game stability requires a separate test of the installed build.
+
 ## Execution modes
 
 The runtime can start an application's code in one of three ways. The mode is a device-side

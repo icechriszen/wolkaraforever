@@ -1,0 +1,11 @@
+{
+  "project": "LLVM libc++",
+  "tag": "llvmorg-22.1.6",
+  "license": "Apache-2.0 WITH LLVM-exception",
+  "upstream": "https://github.com/llvm/llvm-project/tree/llvmorg-22.1.6/libcxx",
+  "sha256": {
+    "string.cpp": "af151f35ae29b36abb7e7a8d8ca0518e5cf3629a7e09866b3b7fd1a30d8b8a0e",
+    "thread.cpp": "d5f2b5f32a8a2e2ce407f674f0be63fee6be23de2351e1a26aa83d66a3069a02",
+    "LICENSE.TXT": "539dd7aed86e8a4f12cbdd0e6c50c189c7d74847e4fecc64ce2c6ee3a01da38b"
+  }
+}

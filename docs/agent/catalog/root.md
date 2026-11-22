@@ -1,6 +1,6 @@
 # Root catalog
 
-> Verified: 2026-11-20 · Source: `de93aa9` · Proof: SHA-256 of each tracked file
+> Verified: 2026-11-22 · Source: `7933fb2` · Proof: SHA-256 of each tracked file
 
 | Path | Folder | Type | Purpose | Contents/function | Dependencies | Human-doc impact | Proof |
 | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -10,7 +10,7 @@
 | COMPATIBILITY.md | . | documentation | Repository-level file | Documentation supporting repository operation or policy | . | None | `sha256:ccdf2009a8eb5736724ecc2994fd5e16a077c47bbe804feea33134613fad2171`; `de31280`; 2026-11-22 |
 | CONTRIBUTORS.md | . | documentation | Repository-level file | Documentation supporting repository operation or policy | . | None | `sha256:03e1e65c416fe9e1facd40b4a1614d367a8265c61a0528f8783553d7007f8687`; `de93aa9`; 2026-11-20 |
 | LICENSE | . | repository file | Repository-level file | Repository file supporting repository operation or policy | . | None | `sha256:ddbec1870d68d8671e611b68dab33fbc23582f5d8c78d5942ab147bc829d5287`; `de93aa9`; 2026-11-20 |
-| NOTICE.md | . | documentation | Repository-level file | Documentation supporting repository operation or policy | . | None | `sha256:32a75f54be573143d771e1210eaa09370a6c1bcdc03bce386075d229848e29ff`; `de93aa9`; 2026-11-20 |
+| NOTICE.md | . | documentation | Repository-level file | Documentation supporting repository operation or policy | . | None | `sha256:5cab6af887818458da097e8cfcbb58790fcee169d8bb6eca992d7a5bf3ffa5df`; `7933fb2`; 2026-11-22 |
 | README.md | . | documentation | Repository-level file | Documentation supporting repository operation or policy | . | None | `sha256:3d084ef2e427b0c76f418dded25a65d7c5a2d19faf5b1cb75cc31009c21efbf1`; `de93aa9`; 2026-11-20 |
 | SECURITY.md | . | documentation | Repository-level file | Documentation supporting repository operation or policy | . | None | `sha256:8d8d0eaecb2b7256e0a5d28d19b9c00ac757b562a1e7c8b21f22b90145219fac`; `de93aa9`; 2026-11-20 |
 | local.env.example | . | repository file | Repository-level file | Repository file supporting repository operation or policy | . | None | `sha256:c61500c39d38772a0858ea72f416f398da25540a549b7daebd66734feace6871`; `de93aa9`; 2026-11-20 |

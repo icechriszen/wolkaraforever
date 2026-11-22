@@ -140,6 +140,20 @@ intent() {
         echo "$f $dst $(intent "$dst")"
     done
     echo "#"
+    echo "# Cxx: isolated allocator-owning standard-library APIs and loader policy"
+    git ls-files wolkaraforever/Cxx | while read -r f; do
+        case "$f" in
+            wolkaraforever/Cxx/tests/*) dst=tests/cxx/${f#wolkaraforever/Cxx/tests/};;
+            wolkaraforever/Cxx/NativeCxx.*) dst=runtime/${f#wolkaraforever/Cxx/};;
+            wolkaraforever/Cxx/OwnedCxx.h)
+                dst=runtime/OwnedCxx.h
+                echo "$f $dst $(intent "$dst")"
+                dst=translation/OwnedCxx/OwnedCxx.h;;
+            *) dst=translation/OwnedCxx/${f#wolkaraforever/Cxx/};;
+        esac
+        echo "$f $dst $(intent "$dst")"
+    done
+    echo "#"
     echo "# Input: any button, on any controller, in one stream (diagnostic)"
     git ls-files wolkaraforever/Input | while read -r f; do
         case "$f" in

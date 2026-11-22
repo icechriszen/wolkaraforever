@@ -248,6 +248,22 @@ wolkaraforever/NetworkHealth/NetworkHealth.h runtime/NetworkHealth.h add
 wolkaraforever/NetworkHealth/NetworkHealth.m runtime/NetworkHealth.m add
 wolkaraforever/NetworkHealth/tests/test_network_health.m tests/test_network_health.m add
 #
+# Cxx: isolated allocator-owning standard-library APIs and loader policy
+wolkaraforever/Cxx/Allocator.cpp translation/OwnedCxx/Allocator.cpp add
+wolkaraforever/Cxx/NativeCxx.c runtime/NativeCxx.c add
+wolkaraforever/Cxx/NativeCxx.h runtime/NativeCxx.h add
+wolkaraforever/Cxx/OwnedCxx.h runtime/OwnedCxx.h add
+wolkaraforever/Cxx/OwnedCxx.h translation/OwnedCxx/OwnedCxx.h add
+wolkaraforever/Cxx/build.py translation/OwnedCxx/build.py add
+wolkaraforever/Cxx/tests/allocator_fixture.cpp tests/cxx/allocator_fixture.cpp add
+wolkaraforever/Cxx/tests/host_strings.cpp tests/cxx/host_strings.cpp add
+wolkaraforever/Cxx/tests/loader_probe.c tests/cxx/loader_probe.c add
+wolkaraforever/Cxx/tests/policy.c tests/cxx/policy.c add
+wolkaraforever/Cxx/vendor/LICENSE.TXT translation/OwnedCxx/vendor/LICENSE.TXT add
+wolkaraforever/Cxx/vendor/SOURCE.json translation/OwnedCxx/vendor/SOURCE.json add
+wolkaraforever/Cxx/vendor/string.cpp translation/OwnedCxx/vendor/string.cpp add
+wolkaraforever/Cxx/vendor/thread.cpp translation/OwnedCxx/vendor/thread.cpp add
+#
 # Input: any button, on any controller, in one stream (diagnostic)
 wolkaraforever/Input/ControllerCommandIngress.h launcher/Input/ControllerCommandIngress.h add
 wolkaraforever/Input/ControllerCommandIngress.m launcher/Input/ControllerCommandIngress.m add

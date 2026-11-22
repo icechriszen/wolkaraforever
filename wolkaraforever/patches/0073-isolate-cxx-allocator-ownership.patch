@@ -1,0 +1,132 @@
+# Isolate allocator-owning libc++ APIs from the host process.
+# No original application image is changed; its imports and allocator exports
+# are resolved by the normal loader before entry.
+
+diff --git a/runtime/NativeGuest.m b/runtime/NativeGuest.m
+--- a/runtime/NativeGuest.m
++++ b/runtime/NativeGuest.m
+@@ -9,6 +9,7 @@
+ #endif
+ #include "GuestFixups.h"
+ #include "GuestLink.h"
++#include "NativeCxx.h"
+ #include "GuestPaths.h"
+ #include "GuestVMBudget.h"
+ #include "GuestSoftwareVM.h"
+@@ -126,6 +127,8 @@
+ } guest;
+ // The libraries the application carries, for the life of the guest.
+ static GuestLinkSet carried;
++static WKNativeCxx owned_cxx;
++static bool owned_cxx_handle(void *handle);
+ static NativeCodeMemory external_quarantine;
+ // Prepared before the launch, while a debugger was there.
+ static NativeCodeMemory reserved_arena;
+@@ -148,6 +151,9 @@
+     return false;
+ }
+ #define LOG(...) do { fprintf(guest.log, __VA_ARGS__); fflush(guest.log); } while (0)
++static void owned_cxx_event(unsigned event) {
++    LOG("[native-cxx] isolated %s path entered\n",event==1?"allocation":"release");
++}
+ static void log_once(const char *format, ...) __attribute__((format(printf,1,2)));
+ static unsigned trace_tid(void);
+ __attribute__((noinline,used,visibility("default")))
+@@ -912,9 +918,15 @@
+         if (name && snprintf(symbol,sizeof symbol,"_%s",name)<(int)sizeof symbol &&
+             gl_lookup(&carried,&guest.image,guest.path,BIND_SPECIAL_DYLIB_FLAT_LOOKUP,symbol,&address,NULL))
+             value=(void *)(uintptr_t)address;
+-        else value=dlsym(handle,name);
+-    }
+-    else if (!value) value = dlsym(handle,name);
++        else {
++            value=wk_cxx_lookup(&owned_cxx,name);
++            if(!value)value=dlsym(handle,name);
++        }
++    }
++    else if (!value) {
++        if(owned_cxx_handle(handle))value=wk_cxx_lookup(&owned_cxx,name);
++        if(!value)value=dlsym(handle,name);
++    }
+     // Tracing reaches through the application's own libraries: what a placed
+     // image exports is wrapped so each call logs its arguments and result.
+     if (trace_guest && placed && value && inside(value,4)) value=gw_wrap(name,value);
+@@ -1512,6 +1524,14 @@
+ static bool guest_generic;
+ // What each carried library links against outside the application.
+ static void *carried_hosts[GL_MAX_LIBRARIES][GI_MAX_DYLIBS];
++static bool owned_cxx_handle(void *handle) {
++    if(!owned_cxx.api || !handle)return false;
++    for(size_t i=0;i<guest.image.dylib_count;i++)
++        if(guest.libraries[i]==handle && wk_cxx_library(guest.image.dylibs[i]))return true;
++    for(size_t j=0;j<carried.count;j++)for(size_t i=0;i<carried.libraries[j].image.dylib_count;i++)
++        if(carried_hosts[j][i]==handle && wk_cxx_library(carried.libraries[j].image.dylibs[i]))return true;
++    return false;
++}
+ static const char *const stub_kinds[]={"function","data","class","metaclass"};
+ // A map entry with an empty target: the library is absent on this platform
+ // (classify.py's 'absent' kind). It is never opened, and its imports never
+@@ -1596,7 +1616,9 @@
+     if (gl_lookup(&carried,image,path,BIND_SPECIAL_DYLIB_SELF,symbol,&address,NULL)) return (void *)(uintptr_t)address;
+     for (size_t i=0;!first && i<image->dylib_count;i++) {
+         if (gl_lookup(&carried,image,path,(int)i+1,symbol,&address,NULL)) return (void *)(uintptr_t)address;
+-        void *value=host[i] && host[i]!=ABSENT_LIBRARY ? dlsym(host[i],name) : NULL;
++        void *value=host[i] && host[i]!=ABSENT_LIBRARY && wk_cxx_library(image->dylibs[i])
++            ? wk_cxx_lookup(&owned_cxx,name) : NULL;
++        if(!value)value=host[i] && host[i]!=ABSENT_LIBRARY ? dlsym(host[i],name) : NULL;
+         if (value) return value;
+     }
+     return NULL;
+@@ -1617,6 +1639,8 @@
+     void *host=named && binder->host ? binder->host[ordinal-1] : NULL;
+     // An absent library answers nothing, not even through what else is loaded.
+     bool absent=host==ABSENT_LIBRARY;
++    if(!pointer && !absent && (!named || wk_cxx_library(binder->image->dylibs[ordinal-1])))
++        pointer=wk_cxx_lookup(&owned_cxx,name);
+     if (!pointer && host && !absent) pointer=dlsym(host,name);
+     if (!pointer && !absent) pointer=dlsym(RTLD_DEFAULT,name);
+     // Nothing provides it: a stub where no build-time analysis covered it, or null when weak.
+@@ -1856,6 +1880,13 @@
+         void (*set_nibs)(const char *)=dlsym(RTLD_DEFAULT,"AKSetGuestNibDirectory");
+         if(set_nibs) set_nibs([NSHomeDirectory() stringByAppendingPathComponent:@"Documents/GuestCompatibility/Nibs"].fileSystemRepresentation);
+     }
++    {
++        NSString *ownedCxxPath=[@(frameworks) stringByAppendingPathComponent:@"wkOwnedCxx.dylib"];
++        if(!wk_cxx_prepare(&owned_cxx,&carried,ownedCxxPath.fileSystemRepresentation,owned_cxx_event,error,sizeof error)) {
++            LOG("[native-cxx] preparation failed: %s; guest entry blocked\n",error);goto done;
++        }
++        if(owned_cxx.api)LOG("[native-cxx] allocator isolation ready; libc++=%u; strings and thread-local ownership\n",owned_cxx.api->libcxx_version);
++    }
+     trace_guest=[NSProcessInfo.processInfo.arguments containsObject:@"--trace-guest"];
+     gt_set_lifetime_trace(WK_HOST_DIAGNOSTICS || [NSProcessInfo.processInfo.arguments containsObject:@"--host-lifetime-diagnostics"]);
+     if (trace_guest) LOG("[native] tracing failed file access, created directories, getenv, sockets and the calls dlsym hands out (--trace-guest)\n");
+@@ -1948,6 +1979,7 @@
+     GuestBinder binder={.image=&guest.image,.path=guest.path,.host=guest.libraries};
+     if (!gf_apply(&guest.image,guest.slide,resolve,&binder,&stats,error,sizeof error)) { LOG("[native] fixups failed: %s\n",error); goto done; }
+     LOG("[native] resolved rebases=%zu binds=%zu\n",stats.rebases,stats.binds);
++    if(owned_cxx.api)LOG("[native-cxx] isolated import bindings=%zu\n",owned_cxx.bindings);
+     LOG("[native] stubs=%u of %u\n",gs_used(),gs_capacity());
+     if (!setup_tls(&guest.image,guest.slide,"the application")) goto done;
+     // Carried libraries get the treatment dyld gives them.
+diff --git a/tools/build_emulated_guest.sh b/tools/build_emulated_guest.sh
+--- a/tools/build_emulated_guest.sh
++++ b/tools/build_emulated_guest.sh
+@@ -26,7 +26,7 @@
+ rm -rf "$OUT/Guest/Nibs"
+ # Adapters left by a build for other executables or other experimental adapters:
+ # every one would be signed into the app, and a generic build opens ak<Leaf>.dylib by name.
+-rm -f "$OUT/Frameworks"/ak*.dylib "$OUT/Frameworks/libAKSupport.dylib"
++rm -f "$OUT/Frameworks"/ak*.dylib "$OUT/Frameworks/libAKSupport.dylib" "$OUT/Frameworks/wkOwnedCxx.dylib"
+ MODULE="$ROOT/build/guest-module"
+ rm -rf "$MODULE/Nibs"
+ python3 "$ROOT/tools/package_guest.py" "$EXE" "$MODULE"
+@@ -70,6 +70,9 @@
+         python3 "$ROOT/tools/build_shims.py" "$P" "$W/surface.json" "$OUT/Frameworks"
+         cp "$W/map.json" "$OUT/Guest/libraries.json"
+     fi
++    python3 "$ROOT/translation/OwnedCxx/build.py" "$P" "$OUT/Frameworks"
++    cp "$ROOT/translation/OwnedCxx/vendor/LICENSE.TXT" "$OUT/LLVM-libcxx-LICENSE.txt"
++    cp "$ROOT/translation/OwnedCxx/vendor/SOURCE.json" "$OUT/LLVM-libcxx-SOURCE.json"
+     # The builder's own Mac's public root certificates. They travel with every
+     # artifact, the unsigned .ipa included, because an application that reads
+     # macOS's system root store - a game validating Battle.net, for instance -
