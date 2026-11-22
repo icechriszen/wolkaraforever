@@ -22,6 +22,8 @@ NSURL *TKBattleNetLoginURL(NSString *region) {
     NSString *lower=region.lowercaseString;
     if ([lower isEqual:@"cn"])
         return [NSURL URLWithString:@"https://account.battlenet.com.cn/login/zh/?externalChallenge=login&app=WOW"];
+    if ([lower isEqual:@"tw"])
+        return [NSURL URLWithString:@"https://tw.battle.net/login/zh/?externalChallenge=login&app=WoW"];
     if (![@[@"us",@"eu",@"kr",@"tw"] containsObject:lower]) return nil;
     return [NSURL URLWithString:[NSString stringWithFormat:
         @"https://%@.battle.net/login/en/?externalChallenge=login&app=WoW",lower]];
@@ -124,7 +126,7 @@ static BOOL TokenPresent(NSString *domain) {
 }
 BOOL TKBattleNetWriteTicket(NSString *ticket, NSString *userName, NSString *region, NSString *locale, NSString *domain) {
     if (![@[@"US",@"EU",@"KR",@"TW",@"CN"] containsObject:region] ||
-        ![@[@"enUS",@"frFR",@"deDE",@"esES",@"zhCN"] containsObject:locale]) return NO;
+        ![@[@"enUS",@"frFR",@"deDE",@"esES",@"zhCN",@"zhTW"] containsObject:locale]) return NO;
     NSData *encoded=TKBattleNetEncodeLaunchTicket(ticket,userName);
     if (!encoded) return NO;
     TKBattleNetClearTicket(domain);
@@ -173,7 +175,7 @@ static void ClearHandOffLocked(void) {
     [self clear];
     NSString *upper=region.uppercaseString;
     if (!TicketValid(ticket) || ![@[@"US",@"EU",@"KR",@"TW",@"CN"] containsObject:upper] ||
-        ![@[@"enUS",@"frFR",@"deDE",@"esES",@"zhCN"] containsObject:locale]) {
+        ![@[@"enUS",@"frFR",@"deDE",@"esES",@"zhCN",@"zhTW"] containsObject:locale]) {
         WKLog("battle-login", @"callback refused: invalid result");
         return NO;
     }

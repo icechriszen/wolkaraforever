@@ -41,7 +41,7 @@ static UIColor *Muted(void) { return [UIColor colorWithRed:0.66 green:0.72 blue:
 // is the same row in the same language.
 static NSString *TKWoWLocaleName(NSString *locale) {
     static NSArray<NSString *> *known; static dispatch_once_t once;
-    dispatch_once(&once, ^{ known = @[@"enUS", @"frFR", @"esES", @"deDE", @"zhCN"]; });
+    dispatch_once(&once, ^{ known = @[@"enUS", @"frFR", @"esES", @"deDE", @"zhCN", @"zhTW"]; });
     return WKLocalized([@"locale." stringByAppendingString:[known containsObject:locale] ? locale : @"enUS"]);
 }
 // No saved choice yet: start from the language the installed game is already in (a copy
@@ -49,7 +49,7 @@ static NSString *TKWoWLocaleName(NSString *locale) {
 // English. Starting from English would make the first check plan an English download
 // over a French or German installation.
 static NSString *TKWoWDefaultLocale(NSDictionary *product) {
-    NSArray<NSString *> *supported=@[@"enUS", @"frFR", @"esES", @"deDE", @"zhCN"];
+    NSArray<NSString *> *supported=@[@"enUS", @"frFR", @"esES", @"deDE", @"zhCN", @"zhTW"];
     NSString *documents=NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES).firstObject;
     NSString *folder=[product[@"folder"] isKindOfClass:NSString.class] ? product[@"folder"] : nil;
     if (documents.length && folder.length) {
@@ -304,7 +304,7 @@ static dispatch_queue_t TKForeverUIQueue(void) {
     if ([_region isEqual:@"cn"] && ![defaults objectForKey:@"WoWBrowserLogin"])
         [defaults setBool:YES forKey:@"WoWBrowserLogin"];
     _locale=[defaults stringForKey:@"WoWLocale"]?:TKWoWDefaultLocale(_product);
-    if (![@[@"enUS",@"frFR",@"esES",@"deDE",@"zhCN"] containsObject:_locale]) _locale=@"enUS";
+    if (![@[@"enUS",@"frFR",@"esES",@"deDE",@"zhCN",@"zhTW"] containsObject:_locale]) _locale=@"enUS";
     return self;
 }
 - (UIButton *)button:(NSString *)identifier action:(SEL)action {
@@ -1302,7 +1302,7 @@ static dispatch_queue_t TKForeverUIQueue(void) {
 }
 - (void)choosePreference:(BOOL)region {
     UIAlertController *sheet=[UIAlertController alertControllerWithTitle:region?WKLocalized(@"home.preferences.region"):WKLocalized(@"home.preferences.downloadLanguage") message:nil preferredStyle:UIAlertControllerStyleActionSheet];
-    NSArray *values=region?@[@"eu",@"us",@"kr",@"tw",@"cn"]:@[@"enUS",@"frFR",@"esES",@"deDE",@"zhCN"];
+    NSArray *values=region?@[@"eu",@"us",@"kr",@"tw",@"cn"]:@[@"enUS",@"frFR",@"esES",@"deDE",@"zhCN",@"zhTW"];
     for (NSString *value in values) [sheet addAction:[UIAlertAction actionWithTitle:region?TKWoWRegionName(value):TKWoWLocaleName(value) style:UIAlertActionStyleDefault handler:^(UIAlertAction *action) {
         (void)action;
         if (region) { self->_region=value; [NSUserDefaults.standardUserDefaults setObject:value forKey:@"WoWRegion"]; [self refresh]; }

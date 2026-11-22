@@ -59,6 +59,7 @@ int main(void) { @autoreleasepool {
     assert([TKBattleNetLoginURL(@"cn").absoluteString isEqual:@"https://account.battlenet.com.cn/login/zh/?externalChallenge=login&app=WOW"]);
     assert([TKBattleNetLoginURL(@"CN") isEqual:TKBattleNetLoginURL(@"cn")]);
     assert([TKBattleNetLoginURL(@"eu").host isEqual:@"eu.battle.net"]);
+    assert([TKBattleNetLoginURL(@"TW").absoluteString isEqual:@"https://tw.battle.net/login/zh/?externalChallenge=login&app=WoW"]);
     assert(!TKBattleNetLoginURL(@"cn.evil.test"));
     for (NSString *host in @[@"account.battlenet.com.cn",@"www.battlenet.com.cn",@"blizzard.cn",@"www.blizzard.cn"])
         assert(TKBattleNetTrustedURL([NSURL URLWithString:[@"https://" stringByAppendingString:host]]));
@@ -114,6 +115,16 @@ int main(void) { @autoreleasepool {
     assert([TKBattleNetSession handOffForProfile:@"wow-forever" domain:chinaDomain clearAfter:30].count==0);
     [TKBattleNetSession gameEnded];
     assert(Empty(chinaDomain));
+
+    // Traditional Chinese survives the entire TW handoff, including cleanup.
+    NSString *taiwanTicket=@"TW-0123456789abcdef0123456789abcdef-123456789";
+    NSString *taiwanDomain=Domain();
+    assert([TKBattleNetSession acceptTicket:taiwanTicket region:@"tw" locale:@"zhTW"]);
+    assert([TKBattleNetSession handOffForProfile:@"wow-forever" domain:taiwanDomain clearAfter:30].count==3);
+    assert([Value(taiwanDomain,@"REGION") isEqual:@"TW"] && [Value(taiwanDomain,@"LOCALE") isEqual:@"zhTW"]);
+    assert([TKBattleNetSession handOffForProfile:@"wow-forever" domain:taiwanDomain clearAfter:30].count==0);
+    [TKBattleNetSession gameEnded];
+    assert(Empty(taiwanDomain));
 
     // Wire-format fixtures (the game decodes exactly this; not a security boundary).
     NSData *encoded=TKBattleNetEncodeLaunchTicket(ticket,@"testuser");

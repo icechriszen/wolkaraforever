@@ -20,6 +20,17 @@ keeps the game directory and resumes verified downloaded data. Do not uninstall 
 
 Changing game language can require additional files. App language and game language are separate settings.
 
+Taiwan (`tw`) can be paired with **Traditional Chinese · 繁體中文** (`zhTW`). This choice
+survives configuration export/import and is passed to the experimental Battle.net login;
+the Taiwan login page opens in Chinese. Game access still depends on the selected account.
+
+For a CN/TW compatibility comparison, install a separately signed Wolkara test app with a
+different bundle identifier and its own authorization Keychain group. Its Documents folder,
+preferences, and in-app website session are separate from the existing app. Keep the CN app
+installed. The current launcher does not isolate two regions within one app's game folder:
+changing region there can update that existing installation. Select TW and zhTW in the new
+test app before downloading; changing the language alone does not change the regional client.
+
 ## Choose how a game starts
 
 The first time you start a game with no mode chosen, the launcher asks how to start it. **Developer service** is the supported route and is what [Install WolkaraForever](INSTALLATION.md) sets up; **Local signing** and **External JIT** need their own setup first. The choice cannot be skipped on that first start, it is remembered afterwards, and the **Execution Mode** button on the library screen changes it. [Build and run WolkaraForever](BUILDING.md) explains what each mode needs.

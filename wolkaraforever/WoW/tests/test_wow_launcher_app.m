@@ -2484,6 +2484,9 @@ static int backupsBeforePerformance;
     accepted = [TKWolkaraForeverConfig validatedSettingsFromFile:@{@"version": @1,
         @"settings": @{@"WoWRegion": @"cn", @"WoWLocale": @"zhCN"}} problem:&problem];
     assert(problem == nil && [accepted[@"WoWRegion"] isEqual:@"cn"] && [accepted[@"WoWLocale"] isEqual:@"zhCN"]);
+    accepted = [TKWolkaraForeverConfig validatedSettingsFromFile:@{@"version": @1,
+        @"settings": @{@"WoWRegion": @"tw", @"WoWLocale": @"zhTW"}} problem:&problem];
+    assert(problem == nil && [accepted[@"WoWRegion"] isEqual:@"tw"] && [accepted[@"WoWLocale"] isEqual:@"zhTW"]);
     // An invented language is refused, and the rest of the file still stands.
     problem = nil;
     accepted = [TKWolkaraForeverConfig
@@ -2942,6 +2945,23 @@ static NSArray<NSString *> *VisibleTexts(UIView *view) {
     assert([[self configText] containsString:@"SET audioLocale \"zhCN\""]);
     assert([[self configText] containsString:@"SET portal \"eu\""]);
     assert([[self row:@"wow.preferences"].configuration.title containsString:@"简体中文"]);
+    // Select Traditional Chinese through the same UI; it must preserve the portal.
+    [[self row:@"wow.preferences"] sendActionsForControlEvents:UIControlEventTouchUpInside];Pump(0.6);
+    preferences=(id)self.controller.presentedViewController;
+    gameLanguage=nil;
+    for (UIAlertAction *action in preferences.actions) if ([action.title isEqual:@"Language"]) gameLanguage=action;
+    assert(gameLanguage);
+    [self.controller dismissViewControllerAnimated:NO completion:nil];RunAction(gameLanguage);Pump(0.7);
+    languages=(id)self.controller.presentedViewController;
+    UIAlertAction *traditional=nil;
+    for (UIAlertAction *action in languages.actions) if ([action.title isEqual:@"Traditional Chinese · 繁體中文"]) traditional=action;
+    assert(traditional);
+    [self.controller dismissViewControllerAnimated:NO completion:nil];RunAction(traditional);Pump(1.2);
+    assert([[NSUserDefaults.standardUserDefaults stringForKey:@"WoWLocale"] isEqual:@"zhTW"]);
+    assert([[self configText] containsString:@"SET textLocale \"zhTW\""]);
+    assert([[self configText] containsString:@"SET audioLocale \"zhTW\""]);
+    assert([[self configText] containsString:@"SET portal \"eu\""]);
+    assert([[self row:@"wow.preferences"].configuration.title containsString:@"繁體中文"]);
     [self.controller setGameLocale:previousLocale];Pump(1.2);
 
     // --- Open Add-on Directory: the file browser opens on the game's Interface/AddOns

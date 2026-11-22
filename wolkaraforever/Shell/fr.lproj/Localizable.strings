@@ -899,6 +899,7 @@
 
 "region.cn" = "Chine";
 "locale.zhCN" = "Chinois simplifié · 简体中文";
+"locale.zhTW" = "Chinois traditionnel · 繁體中文";
 
 "login.external" = "Autre option : Safari…";
 "login.externalHelp" = "Connectez-vous dans votre navigateur. La dernière page localhost ne peut pas s’ouvrir. Copiez son adresse complète, revenez ici et collez-la ci-dessous. Gardez cette adresse privée : elle donne accès à votre compte.";
