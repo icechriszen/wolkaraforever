@@ -74,6 +74,23 @@ In **Game Settings Manager**, choose **Arm network health for next launch** only
 
 Open **Add-On Manager** to view recorded packages, install the bundled WolkaraRoue package, import a validated archive, or browse a supported provider. An optional provider key stays in the device Keychain. The app removes only add-ons it recorded as managed.
 
+The bundled touch add-on `WolkaraRoue` now includes Simplified Chinese. Install or
+update it from Add-On Manager after leaving the game; updating the launcher alone
+does not replace an already installed add-on. Its **Mobile UI → Controls → General
+→ Language** selector offers **Follow game**, English, French, Spanish, German and
+简体中文. With no saved language choice, a zhCN client automatically uses Chinese;
+an explicit supported choice is retained. Save and close the panel to reload the
+interface and apply a change. The add-on uses the game's own fonts and its existing
+settings migration. Updating its package does not replace game archives or account
+SavedVariables. Unsupported game locales fall back to English.
+
+With Chinese selected on a zhCN client, game menu labels use the client's own
+localized strings (for example its spellbook, quest log and logout labels), with
+Chinese fallbacks if a client version omits a string. Spell/item names already
+come from game APIs. The add-on's touch controls have separate translations;
+General settings and the General chat channel have separate wording. An explicit
+English or other supported language choice does not inherit Chinese game labels.
+
 When an add-on folder includes manifests for several WoW clients, the manager uses the manifest explicitly named for Forever or declaring Forever’s interface to show its title and version. It still considers every manifest when reporting compatibility.
 
 A provider tab without a key shows one **Set up access** row; opening it asks for the key and then loads the tab. When a key is saved, use the **⚙️** button in the Add-on Manager’s top bar to **Change CurseForge key…** or **Remove key**; removal is confirmed and leaves the key only deleted from this device's Keychain. Each installed row shows the package's name, version, author and its CurseForge thumbnail once the package records a provider identity, and one word about its update with the action that goes with it: **Update**, **Check**, **Retry**, **Open**, **Link** or **Manage**. **Not checked yet** means nothing has asked the provider about that package yet, and **Check** is what asks; **Update** asks anyway and either installs the newest file or reports that the package is current. **Update All** runs the same question for every eligible package and finishes when each one has been written, so rows settle together rather than returning to **Not checked yet**.

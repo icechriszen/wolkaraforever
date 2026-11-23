@@ -264,7 +264,7 @@ local function Show()
         local name = info.filters and info.filters[i]
         if name then
             chip.filter = name
-            chip.text:SetText(ns.T(name))
+            chip.text:SetText(ns.T(name, "spell"))
             chip:SetWidth(chip.text:GetStringWidth() + 26)
             chip:SetOn(name == filter)
             chip:Show()

@@ -51,3 +51,4 @@ luajit wolkaraforever/tools/tests/test_mobile_addon_migration.lua "$addon/Core.l
 luajit wolkaraforever/tools/tests/test_mobile_addon_api.lua "$addon/Core.lua"
 luajit wolkaraforever/tools/tests/test_mobile_addon_duo.lua "$addon"
 
+luajit wolkaraforever/tools/tests/test_mobile_addon_language.lua "$addon"

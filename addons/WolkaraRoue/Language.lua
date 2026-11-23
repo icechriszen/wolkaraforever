@@ -2,12 +2,232 @@
 local _, ns = ...
 
 local LANGUAGES = {
+    { code = "auto", name = "Follow game" },
     { code = "enUS", name = "English" }, { code = "frFR", name = "Français" },
     { code = "esES", name = "Español" }, { code = "deDE", name = "Deutsch" },
+    { code = "zhCN", name = "简体中文" },
 }
 
 local L = {
+    zhCN = {
+        ["Preset %d"] = "预设 %d",
+        ["Mounts"] = "坐骑",
+        ["Toys"] = "玩具",
+        ["Pets"] = "小宠物",
+        ["Class"] = "职业",
+        ["Usable"] = "可用",
+        ["Favorites"] = "收藏",
+        ["Preset"] = "预设",
+        ["Presets"] = "预设",
+        ["Nothing here with this filter."] = "此筛选条件下没有内容。",
+        ["No professions learned yet."] = "尚未学习专业技能。",
+        ["No mounts collected yet."] = "尚未收集坐骑。",
+        ["No toys collected yet."] = "尚未收集玩具。",
+        ["No pets collected yet."] = "尚未收集小宠物。",
+        ["Preset saved: %s."] = "已保存预设：%s。",
+        ["Preset loaded: %s."] = "已加载预设：%s。",
+        ["%s is empty: save to it first."] = "%s 为空，请先保存预设。",
+        ["Collections"] = "收藏",
+        ["Combat"] = "战斗",
+        ["Frames"] = "单位框体",
+        ["Spell wheels"] = "技能轮盘",
+        ["Used by the Standard layout."] = "用于标准布局。",
+        ["Positions"] = "位置",
+        ["Party frames"] = "小队框体",
+        ["Chat button"] = "聊天按钮",
+        ["Offline"] = "离线",
+        ["Dead"] = "死亡",
+        ["Tips"] = "操作提示",
+        ["Got it"] = "知道了",
+        ["Show tips"] = "查看提示",
+        ["Layouts"] = "布局",
+        ["Load"] = "加载",
+        ["Save"] = "保存",
+        ["Layout %d saved."] = "已保存布局 %d。",
+        ["Layout %d is empty."] = "布局 %d 为空。",
+        ["Layout %d loaded."] = "已加载布局 %d。",
+        ["Swipe along the skill arc, or tap the arrow, to switch between skills 1-5 and 6-10."] = "沿技能弧滑动，或轻点箭头，在第 1—5 和第 6—10 个技能之间切换。",
+        ["Hold the move stick fully forward for 2 seconds, then slide onto the lock to auto-run."] = "将移动摇杆向前推到底并保持 2 秒，再滑向锁定图标即可自动奔跑。",
+        ["Tap Edit (under the menu button) to change your skills: tap a slot, then a spell."] = "轻点菜单按钮下方的“编辑”来调整技能：先点槽位，再点技能。",
+        ["The menu button under the minimap opens your quick menu; choose its entries in Menu."] = "小地图下方的菜单按钮可打开快捷菜单；在“菜单”中选择要显示的项目。",
+        ["Tap Chat to peek at the latest lines, tap the lines to open the full chat."] = "轻点“聊天”查看最近消息，再点消息即可打开完整聊天窗口。",
+        ["Save & Close"] = "保存并关闭",
+        ["Edit"] = "编辑",
+        ["Edit mode"] = "编辑模式",
+        ["Group Finder"] = "队伍查找器",
+        ["Legacy"] = "传承",
+        ["Choose for quick menu"] = "选择快捷菜单项目",
+        ["Tap tiles to add them to the quick menu or take them out. Menu always comes last."] = "轻点图标，将其加入或移出快捷菜单。“菜单”始终位于最后。",
+        ["the group finder is not available in this version of the game."] = "当前游戏版本不支持队伍查找器。",
+        ["the Legacy page is not available in this version of the game."] = "当前游戏版本不支持传承页面。",
+        ["the quick menu holds 15 entries, plus Menu."] = "快捷菜单最多容纳 15 个项目，另加“菜单”。",
+        ["Menu"] = "菜单",
+        ["Friends"] = "好友",
+        ["Dungeons"] = "地下城",
+        ["the dungeon finder is not available in this version of the game."] = "当前游戏版本不支持地下城查找器。",
+        ["Edit mode: tap a slot, then a spell."] = "编辑模式：先点槽位，再点技能。",
+        ["Save & Exit"] = "保存并退出",
+        ["Tap a buff to cancel it (out of combat)."] = "非战斗状态下，轻点增益图标可取消该效果。",
+        ["Target enemy"] = "选择敌人",
+        ["Auto attack"] = "自动攻击",
+        ["Assist"] = "协助目标",
+        ["Target friend"] = "选择友方",
+        ["Clear target"] = "清除目标",
+        ["Follow"] = "跟随",
+        ["Sit"] = "坐下",
+        ["slots can only be filled out of combat."] = "只能在非战斗状态下设置槽位。",
+        ["Bags"] = "背包",
+        ["Mobile Interface"] = "触屏界面",
+        ["Toggle wheel"] = "开关轮盘",
+        ["Toggle wheel "] = "开关轮盘 ",
+        ["Game interface"] = "游戏界面",
+        ["Chat"] = "聊天",
+        ["Whispers"] = "密语",
+        ["System"] = "系统",
+        ["All"] = "全部",
+        ["Say"] = "说话",
+        ["Yell"] = "大喊",
+        ["Party"] = "小队",
+        ["Party Leader"] = "小队队长",
+        ["Raid Leader"] = "团队领袖",
+        ["Raid Warning"] = "团队警告",
+        ["Guild"] = "公会",
+        ["Officer"] = "官员",
+        ["From"] = "来自",
+        ["To"] = "发给",
+        ["Says"] = "说",
+        ["Yells"] = "喊",
+        ["General"] = "常规",
+        ["Reply"] = "回复",
+        ["Channel"] = "频道",
+        ["%s[%s] %s: %s"] = "%s[%s] %s：%s",
+        ["To "] = "发给 ",
+        [" new whisper"] = " 条新密语",
+        [" new whispers"] = " 条新密语",
+        ["Whisper to "] = "密语给 ",
+        ["To:"] = "发给：",
+        ["open input"] = "打开输入框",
+        ["Free buttons"] = "自由按钮",
+        ["buttons "] = "按钮 ",
+        ["Health bars"] = "生命条",
+        ["%"] = "%",
+        ["Target"] = "目标",
+        ["Character"] = "角色",
+        ["Spells"] = "技能",
+        ["Quests"] = "任务",
+        ["Map"] = "世界地图",
+        ["Game Menu"] = "主菜单",
+        ["Game Settings"] = "设置选项",
+        ["Mobile UI"] = "触屏界面",
+        ["Reload"] = "重载界面",
+        ["Log Out"] = "返回角色选择",
+        ["Quit"] = "退出游戏",
+        ["Close"] = "关闭",
+        ["Minimap"] = "小地图",
+        ["minimap"] = "小地图",
+        ["Quests (%d)  %s"] = "任务（%d）  %s",
+        ["Ready to turn in"] = "可交付",
+        ["Items"] = "物品",
+        ["Picker"] = "选择器",
+        ["Item "] = "物品 ",
+        ["No active spells in your spellbook."] = "法术书中没有主动技能。",
+        ["No usable items in your bags."] = "背包中没有可使用的物品。",
+        ["No macros yet. Create one with /macro."] = "尚未创建宏。输入 /macro 可以创建。",
+        ["|cffff5555error|r while listing: "] = "列出内容时|cffff5555出错|r：",
+        ["Choose for this slot"] = "选择此槽位的内容",
+        ["Clear slot"] = "清空槽位",
+        ["Replace: "] = "替换：",
+        ["saving your settings: the interface is reloading."] = "正在保存设置并重载界面。",
+        ["settings saved."] = "设置已保存。",
+        ["Interface size"] = "界面大小",
+        ["Settings"] = "设置",
+        ["adjust the interface out of combat."] = "请在非战斗状态下调整界面。",
+        ["Wheel"] = "轮盘",
+        ["Wheel "] = "轮盘 ",
+        ["On"] = "开启",
+        ["Off"] = "关闭",
+        ["Slots"] = "槽位数",
+        ["Size"] = "大小",
+        ["At button"] = "按钮周围",
+        ["Centered"] = "屏幕中央",
+        ["Right spells"] = "右侧技能",
+        ["Left spells"] = "左侧技能",
+        ["Count"] = "数量",
+        ["Spell spacing"] = "技能间距",
+        ["Right"] = "右侧",
+        ["Left"] = "左侧",
+        ["Shortcuts"] = "快捷按钮",
+        ["Health"] = "生命值",
+        ["Game"] = "游戏",
+        ["Text"] = "文字",
+        ["Mobile"] = "触屏",
+        ["Shown"] = "显示",
+        ["Default UI"] = "默认界面",
+        ["Action bars"] = "动作条",
+        ["Hidden"] = "隐藏",
+        ["Player/target frames"] = "玩家与目标框体",
+        ["Customize"] = "自定义",
+        ["Reset positions"] = "重置位置",
+        ["Done"] = "完成",
+        ["Turning wheels"] = "旋转轮盘",
+        ["Wheels"] = "轮盘",
+        ["wheel "] = "轮盘 ",
+        ["Game windows"] = "游戏窗口",
+        ["customize out of combat."] = "请在非战斗状态下自定义界面。",
+        ["Customize mode: drag whatever you want to move, tap a slot to choose its spell, then Done."] = "自定义模式：拖动界面元素调整位置，轻点槽位选择技能，最后点“完成”。",
+        ["pet abilities can't go in a slot."] = "槽位不支持宠物技能。",
+        ["only spells, items and macros can go in a slot."] = "槽位只支持技能、物品和宏。",
+        ["tap an empty wheel slot to put a spell in it, swipe from a spell to turn the wheel, and the gear in the shortcuts sets everything up."] = "轻点空槽位放入技能，从技能图标开始滑动可转动轮盘；通过快捷栏的齿轮按钮进行设置。",
+        ["not ready yet"] = "尚未就绪",
+        ["no errors."] = "没有错误。",
+        ["not in combat."] = "当前未处于战斗状态。",
+        ["settings and default positions restored (wheel spells are kept)."] = "已恢复默认设置和位置（保留轮盘技能）。",
+        ["Controls"] = "操作设置",
+        ["Skill fan"] = "扇形技能栏",
+        ["Fan style"] = "扇形栏样式",
+        ["Pages"] = "分页",
+        ["Pages: 5 per page, cast on touch.  Wheel: 10 per page, swipe for the next 5, cast on release."] = "分页：每页 5 个，触碰时施放。轮盘：每页 10 个，滑动查看后 5 个，松手时施放。",
+        ["Reach"] = "覆盖范围",
+        ["Quick bar"] = "快捷栏",
+        ["Strip"] = "消息条",
+        ["Button"] = "按钮",
+        ["Button: closed until you tap it.  Strip: the last lines always shown."] = "按钮：轻点后展开。消息条：始终显示最近的消息。",
+        ["Buffs"] = "增益效果",
+        ["On bar"] = "状态栏中",
+        ["Game's"] = "游戏原生",
+        ["On bar: small icons next to your name.  Game's: WoW's own buff icons, top right."] = "状态栏中：在角色名旁显示小图标。游戏原生：使用右上角的原生增益图标。",
+        ["Windows"] = "窗口",
+        ["Large"] = "放大",
+        ["Fit"] = "适应空间",
+        ["Large: as big as the screen allows.  Fit: smaller, between the move and camera areas."] = "放大：尽量占满屏幕。适应空间：缩小到移动区与视角控制区之间。",
+        ["The app's floating sticks are tuned to the default fan. If you change Reach a lot,\nthe camera zone may overlap the fan or leave a gap."] = "悬浮摇杆按默认扇形技能栏调整。大幅更改覆盖范围时，\n视角控制区可能与技能栏重叠或留出空隙。",
+        ["Defaults"] = "恢复默认",
+        ["Layout"] = "布局",
+        ["iPhone Duo"] = "iPhone Duo",
+        ["Standard"] = "标准",
+        ["iPhone Duo: the corner fan, quick bar and chat button, made for the app's floating sticks.  Standard: the original layout."] = "iPhone Duo：角落扇形栏、快捷栏和聊天按钮，适配应用的悬浮摇杆。标准：原有布局。",
+        ["Language"] = "语言",
+        ["Changes apply after the interface reloads."] = "重载界面后更改生效。",
+        ["change the controls out of combat."] = "请在非战斗状态下调整操作设置。",
+        ["the fan and quick bar are not installed."] = "未安装扇形技能栏和快捷栏。",
+        ["Tap to type..."] = "轻点输入…",
+        ["rested"] = "休息充分",
+        ["Talents"] = "天赋",
+        ["Professions"] = "专业技能",
+        ["talents are not available in this version of the game."] = "当前游戏版本不支持天赋页面。",
+        ["professions are in the spellbook in this version of the game."] = "当前游戏版本的专业技能位于法术书中。",
+        ["To write, tap 'Tap to type' above the chat; Send posts it."] = "轻点聊天上方的“轻点输入”开始输入，点“发送”发出消息。",
+        ["Whisper to %s: tap 'Tap to type' above the chat."] = "密语给 %s：轻点聊天上方的“轻点输入”。",
+        ["Social"] = "社交",
+        ["Macros"] = "宏",
+        ["Raid"] = "团队",
+        ["Instance"] = "副本",
+        ["Actions"] = "操作",
+        ["Jump"] = "跳跃",
+        ["Follow game"] = "跟随游戏",
+    },
     frFR = {
+        ["Follow game"] = "Langue du jeu",
         ["Preset %d"] = "Préréglage %d",
         ["Mounts"] = "Montures",
         ["Toys"] = "Jouets",
@@ -218,6 +438,7 @@ local L = {
         ["Whisper to %s: tap 'Tap to type' above the chat."] = "Message privé à %s : touche « Touche pour écrire » au-dessus du chat.",
     },
     esES = {
+        ["Follow game"] = "Idioma del juego",
         ["Preset %d"] = "Preajuste %d",
         ["Mounts"] = "Monturas",
         ["Toys"] = "Juguetes",
@@ -424,6 +645,7 @@ local L = {
         ["Whisper to %s: tap 'Tap to type' above the chat."] = "Susurrar a %s: toca 'Toca para escribir' encima del chat.",
     },
     deDE = {
+        ["Follow game"] = "Spielsprache",
         ["Preset %d"] = "Vorlage %d",
         ["Mounts"] = "Reittiere",
         ["Toys"] = "Spielzeuge",
@@ -631,27 +853,93 @@ local L = {
     },
 }
 
-function ns.T(text)
+-- Missing preferences from older releases follow the game's own locale. Reading
+-- translations never mutates saved settings; an explicit supported choice wins.
+local function SelectedLanguage()
     local code = ns.db and ns.db.language
-    local words = code and L[code]
+    for _, language in ipairs(LANGUAGES) do
+        if language.code == code then return code end
+    end
+    return "auto"
+end
+
+local function ResolvedLanguage()
+    local code = SelectedLanguage()
+    if code == "auto" then code = type(GetLocale) == "function" and GetLocale() or "enUS" end
+    if code == "enGB" then code = "enUS" end
+    if code == "esMX" then code = "esES" end
+    return code == "enUS" and code or (L[code] and code or "enUS")
+end
+
+-- Use the client's own localized UI labels when Chinese is selected on a zhCN
+-- client. Keep preference keys (including quick-menu entries) in English.
+-- Context matters: a spell picker is not the spellbook button, and the General
+-- chat channel is not the add-on's general settings page.
+local CHINESE_CONTEXT = {
+    ["menu:Spells"] = "法术书",
+    ["menu:Quests"] = "任务日志",
+    ["chat:General"] = "综合",
+    ["spell:General"] = "综合",
+}
+local GAME_STRINGS = {
+    ["Character"] = { "CHARACTER_BUTTON" },
+    ["menu:Spells"] = { "SPELLBOOK_ABILITIES_BUTTON", "SPELLBOOK_BUTTON" },
+    ["menu:Quests"] = { "QUESTLOG_BUTTON" },
+    ["Map"] = { "WORLDMAP_BUTTON" },
+    ["Professions"] = { "PROFESSIONS_BUTTON" },
+    ["Talents"] = { "TALENTS" },
+    ["Social"] = { "SOCIAL_BUTTON" },
+    ["Friends"] = { "FRIENDS" },
+    ["Guild"] = { "GUILD" },
+    ["Collections"] = { "COLLECTIONS" },
+    ["Legacy"] = { "LEGACY_BUTTON" },
+    ["Macros"] = { "MACROS" },
+    ["Game Menu"] = { "MAINMENU_BUTTON" },
+    ["Game Settings"] = { "GAMEMENU_OPTIONS" },
+    ["Log Out"] = { "LOG_OUT" },
+    ["Quit"] = { "EXIT_GAME" },
+    ["Close"] = { "CLOSE" },
+    ["Jump"] = { "BINDING_NAME_JUMP" },
+    ["chat:General"] = { "GENERAL" },
+    ["spell:General"] = { "GENERAL" },
+}
+
+function ns.T(text, context)
+    local code = ResolvedLanguage()
+    if code == "zhCN" then
+        local contextual = context and (context .. ":" .. text)
+        local key = CHINESE_CONTEXT[contextual] and contextual or text
+        local names = GAME_STRINGS[key]
+        if names and type(GetLocale) == "function" and GetLocale() == "zhCN" then
+            for _, name in ipairs(names) do
+                local value = _G[name]
+                if type(value) == "string" and value ~= "" then return value end
+            end
+        end
+        if CHINESE_CONTEXT[key] then return CHINESE_CONTEXT[key] end
+    end
+    local words = L[code]
     return words and words[text] or text
 end
 
 function ns.LanguageName()
-    local code = ns.db and ns.db.language or "enUS"
-    for _, language in ipairs(LANGUAGES) do if language.code == code then return language.name end end
-    return "English"
+    local code = SelectedLanguage()
+    for _, language in ipairs(LANGUAGES) do
+        if language.code == code then
+            return code == "auto" and ns.T(language.name) or language.name
+        end
+    end
 end
 
 function ns.NextLanguage()
-    local code = ns.db.language or "enUS"
+    if not ns.db then return end
+    local code = SelectedLanguage()
     for index, language in ipairs(LANGUAGES) do
         if language.code == code then
             ns.db.language = LANGUAGES[index % #LANGUAGES + 1].code
             return
         end
     end
-    ns.db.language = "frFR"
 end
 
 function ns.DuoLayout()

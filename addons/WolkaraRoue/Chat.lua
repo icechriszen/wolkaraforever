@@ -471,7 +471,7 @@ function Chat:Init()
     to = ns.Label(panel, "GameFontNormal", ns.T("To:"))
     chips = {}
     for i, info in ipairs(TARGETS) do
-        local chip = ns.UIButton(panel, ns.T(info.label), 100, ROW, function()
+        local chip = ns.UIButton(panel, ns.T(info.label, "chat"), 100, ROW, function()
             target = { kind = info.kind }
             if info.kind == "whisper" then target.name = lastWhisper end
             UpdateChips()

@@ -1,5 +1,5 @@
 {
-  "archive": "WolkaraRoue-1.0.4.zip",
+  "archive": "WolkaraRoue-1.0.5-cn.1.zip",
   "files": {
     "WolkaraRoue/Actions.lua": {
       "sha256": "29e0944b02e2423b25fc55fd1201ee3bf2da8ff6efc1fa10b8b79c85ca8279ed",
@@ -10,8 +10,8 @@
       "size": 1932
     },
     "WolkaraRoue/Bindings.lua": {
-      "sha256": "ad38f76c096ce2e3ac532064869463c84f1686d6c9003cd2d52d4f9e67866827",
-      "size": 331
+      "sha256": "8b118cf6a108ecd6dbccc3ee604b42b187228d5ea6da8b7f38160d7c75db1a30",
+      "size": 550
     },
     "WolkaraRoue/Bindings.xml": {
       "sha256": "a02f39b9226693adbaac8775a983ba78e284f0bb8907fc2d390f5cc1885404a3",
@@ -22,8 +22,8 @@
       "size": 2660
     },
     "WolkaraRoue/Chat.lua": {
-      "sha256": "57e68a4356e5a10aa89ee803ee076c3d04a52e98b3d79d96d04cab815dc18377",
-      "size": 22437
+      "sha256": "3a57368a8882e5a4b7e116b36377465a7dfbb1b46a124a507f5543af378d65b9",
+      "size": 22445
     },
     "WolkaraRoue/ChatTab.lua": {
       "sha256": "26140c1760da46a14bbf01d695e3212728479b17c2be92d5ec7ab4842ec05a47",
@@ -38,16 +38,16 @@
       "size": 22457
     },
     "WolkaraRoue/DuoMenu.lua": {
-      "sha256": "86b29e80806240215397bb828a471c3f01607cdf71987c9c39ec6184d70a1f59",
-      "size": 7964
+      "sha256": "ac067e13818f793fc2256f0967047b175e27a65ebbc0bcd967ecf897cc5e1ee7",
+      "size": 7972
     },
     "WolkaraRoue/EditMode.lua": {
       "sha256": "58c8a19fa5f3c41bc816e0adedb207e99745056e60cbf0a02c24f6418288814c",
       "size": 3456
     },
     "WolkaraRoue/Fan.lua": {
-      "sha256": "877ad3d30a9f8f01eb1d341dcd2c184d779e83d8d96487b56468c9cf08cb9474",
-      "size": 22640
+      "sha256": "c7b0c3e6121df5c52d70f83bbc15da8c310e118de1704be5fecf8873a86e4e2f",
+      "size": 22646
     },
     "WolkaraRoue/Free.lua": {
       "sha256": "b3de667fd0167109971e4cc3ffee884c04eff398ab6b1db535884f0744df2afc",
@@ -62,12 +62,12 @@
       "size": 371
     },
     "WolkaraRoue/Language.lua": {
-      "sha256": "ca3f0bad3438e41976d0b66205cfaceaca71c52b5d1a8e984f1d4e2ae4a15a3c",
-      "size": 38813
+      "sha256": "b9876ce88f66504cf90f4c50ba6377aa00038fb6f6ed5ca410833c52ae12059e",
+      "size": 53921
     },
     "WolkaraRoue/Menu.lua": {
-      "sha256": "76a16b4e8d4ec33bbac3e1485172dd51796e7261c1cb23051f9ff8d3565131ef",
-      "size": 11849
+      "sha256": "93dcb3aea4c5935283a4e11ed0153fafe696f7affdfa085b8170f804c28df761",
+      "size": 11863
     },
     "WolkaraRoue/Minimap.lua": {
       "sha256": "414670fa64169e9b23d781ff4c1e476737354ea23db343621e6ddd9748b9cf69",
@@ -82,8 +82,8 @@
       "size": 6470
     },
     "WolkaraRoue/Picker.lua": {
-      "sha256": "6b8946957e8625a5d4a109a1288471a68acda78df24387c07b4cda839a658711",
-      "size": 21021
+      "sha256": "ebf0a39b5b7ac610657c91a8586fcfc14a74cc363f97da3ca8997ab714c8c312",
+      "size": 21030
     },
     "WolkaraRoue/Placement.lua": {
       "sha256": "2fca070568fcb04cb124292d918954fea4b7f15927e9382a1b0a0dbfc4280b97",
@@ -114,8 +114,8 @@
       "size": 10055
     },
     "WolkaraRoue/Shortcuts.lua": {
-      "sha256": "f1097e7616827fd09679e959850e690f2849fa50d0dc2a15328c90d54c177497",
-      "size": 3917
+      "sha256": "97a7c841463f61cac97baec422fb76a671f21cc554554dc5591ed91208303b53",
+      "size": 3925
     },
     "WolkaraRoue/Skin.lua": {
       "sha256": "e80ff194ac00ca3b45e4aed4a96e483799336e4669ab3bfeff1947d70ad58704",
@@ -138,14 +138,14 @@
       "size": 6648
     },
     "WolkaraRoue/WolkaraRoue.toc": {
-      "sha256": "13f428627a6f2ea91bd5b83829a4f2965d3bc4482f856eb07987cf3859dbd721",
-      "size": 663
+      "sha256": "2c6ae202d7169daa30d26774d43ebab70be576006ed8f7634a94dd63865bdb56",
+      "size": 816
     }
   },
   "format": "wolkaraforever.addon",
   "interface": 16001,
   "name": "WolkaraRoue",
-  "release": "1.0.4",
-  "sha256": "99d84c1054c1c2c8da878cde7271d55e81c9a220acaa1d413b3e8c0286e468e6",
+  "release": "1.0.5-cn.1",
+  "sha256": "c124b29832b753bc8e07496a2d9ee49380e76256614569c086c43a232ec9a2e2",
   "version": 1
 }
