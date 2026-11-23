@@ -200,6 +200,38 @@ reply.scripts.OnClick(reply)
 WolkaraMobileChatOpener.scripts.OnClick()
 assert(opened == "/w Bob-Realm ")
 
+-- Current UI clients moved the opener into ChatFrameUtil. Missing the old
+-- global must not silently discard the app's F12 request.
+ChatFrame_OpenChat = nil
+ChatFrameUtil = { OpenChat = function(text, frame)
+    assert(frame == DEFAULT_CHAT_FRAME)
+    opened = text
+end }
+Tap("Say", panel)
+opened = nil
+WolkaraMobileChatOpener.scripts.OnClick()
+assert(opened == "/s ", "namespaced chat opener was not called")
+local notice
+ns.Print = function(text) notice = text end
+ChatFrameUtil = nil
+WolkaraMobileChatOpener.scripts.OnClick()
+assert(notice == "Chat input is unavailable on this client.", "missing opener is silently ignored")
+
+local function HasHint(text)
+    for _, frame in ipairs(frames) do
+        if frame.ftype == "FontString" and frame.parent == panel and rawget(frame, "text") == text then return true end
+    end
+end
+ns.DuoLayout = function() return false end
+Chat:Layout()
+assert(HasHint("To write, use the keyboard button below the chat; Send posts it."), "Standard advertises a Duo-only input row")
+ns.DuoLayout = function() return true end
+ns.ChatTab = { Settings = function() return { enabled = true } end }
+Chat:Layout()
+assert(HasHint("To write, tap 'Tap to type' above the chat; Send posts it."))
+ns.DuoLayout = function() return false end
+Chat:Layout()
+
 -- Touching the strip opens the panel on the same tab; the cross closes it.
 ticker.scripts.OnMouseUp(ticker)
 assert(panel.shown and not ticker.shown and #WolkaraMobileChatList.lines >= 2)

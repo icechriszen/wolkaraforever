@@ -106,12 +106,22 @@ on a zhCN client the reset language choice follows the game and remains Chinese.
 Choose Standard again if needed, then close the settings panel to save/reload.
 The Standard chat panel has its own **X** close button. Only an active Duo chat
 pill replaces that button; disabling Duo restores the Standard close action.
+In Standard, write with the app's keyboard button below the chat. The inline
+**Tap to type** row belongs to the active Duo chat button. The add-on's F12
+entry supports both the older `ChatFrame_OpenChat` and newer
+`ChatFrameUtil.OpenChat` client APIs; a missing entry reports an error locally.
 If the top Bags, Spells, Map and Menu buttons are absent in Standard, enter
 `/mobile`, select **Spell wheels → Shortcuts**, and set it to **On**. In Simplified
 Chinese these controls are **技能轮盘 → 快捷按钮 → 开启**. This switch restores the
 bar without resetting the layout, assigned spells or language.
 
 Movement comes from the app's on-screen gamepad, separately from the spell wheels.
+The turning wheels expand to fit the default five skill slots where screen space
+allows, while leaving room for the native sticks, opposite wheel and upper HUD.
+Larger banks, or enlarged buttons on a small screen, rotate: swipe along a spell
+icon to bring the other slots into view. Increasing the left or right spell count
+brings the newest slot into view immediately. The limit remains twelve per side;
+this does not reset assigned spells, language or saved positions.
 Expand the bottom toolbar and enable its gamepad button if the movement sticks are
 absent. The toolbar gear's **Reset to defaults** restores the native controls'
 positions and settings; it does not reset WolkaraRoue or its Chinese language.

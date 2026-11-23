@@ -79,7 +79,16 @@ local TARGETS = {
     { kind = "general", label = "General" }, { kind = "whisper", label = "Reply" },
 }
 
-local WRITE = "To write, tap 'Tap to type' above the chat; Send posts it."
+local function InputHint(name)
+    local inline = ns.DuoLayout and ns.DuoLayout() and ns.ChatTab and ns.ChatTab.Settings().enabled
+    if name then
+        local text = inline and "Whisper to %s: tap 'Tap to type' above the chat."
+            or "Whisper to %s: use the keyboard button below the chat."
+        return ns.T(text):format(name)
+    end
+    return ns.T(inline and "To write, tap 'Tap to type' above the chat; Send posts it."
+        or "To write, use the keyboard button below the chat; Send posts it.")
+end
 
 -- ---------------------------------------------------------------------------------------
 -- Messages
@@ -178,7 +187,12 @@ end
 Chat.Prefix = Prefix
 
 local function OpenInput()
-    if ChatFrame_OpenChat then ChatFrame_OpenChat(Prefix(), DEFAULT_CHAT_FRAME) end
+    local open = ChatFrameUtil and ChatFrameUtil.OpenChat or ChatFrame_OpenChat
+    if type(open) == "function" then
+        open(Prefix(), DEFAULT_CHAT_FRAME)
+    elseif ns.Print then
+        ns.Print(ns.T("Chat input is unavailable on this client."))
+    end
 end
 
 local function Paint(button, selected)
@@ -452,7 +466,7 @@ function Chat:Init()
         if name then
             target = { kind = "whisper", name = name }
             UpdateChips()
-            hint:SetText((ns.T("Whisper to %s: tap 'Tap to type' above the chat.")):format(Short(name)))
+            hint:SetText(InputHint(Short(name)))
         elseif SetItemRef then
             SetItemRef(link, text, button, self)
         end
@@ -475,12 +489,12 @@ function Chat:Init()
             target = { kind = info.kind }
             if info.kind == "whisper" then target.name = lastWhisper end
             UpdateChips()
-            hint:SetText(ns.T(WRITE))
+            hint:SetText(InputHint())
         end)
         chip.kind = info.kind
         chips[i] = chip
     end
-    hint = ns.Label(panel, "GameFontHighlightSmall", ns.T(WRITE))
+    hint = ns.Label(panel, "GameFontHighlightSmall", InputHint())
     hint:SetJustifyH("LEFT")
     if hint.SetWordWrap then hint:SetWordWrap(false) end
 
@@ -512,6 +526,7 @@ function Chat:Layout()
     ticker:PlaceSaved()
     UpdateTabs()
     UpdateChips()
+    hint:SetText(InputHint())
     if settings.custom then
         TuckGameChat(true)
         if not panel:IsShown() then ticker:Show() end

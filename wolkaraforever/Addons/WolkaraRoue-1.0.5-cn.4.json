@@ -1,5 +1,5 @@
 {
-  "archive": "WolkaraRoue-1.0.5-cn.3.zip",
+  "archive": "WolkaraRoue-1.0.5-cn.4.zip",
   "files": {
     "WolkaraRoue/Actions.lua": {
       "sha256": "29e0944b02e2423b25fc55fd1201ee3bf2da8ff6efc1fa10b8b79c85ca8279ed",
@@ -22,8 +22,8 @@
       "size": 2660
     },
     "WolkaraRoue/Chat.lua": {
-      "sha256": "3a57368a8882e5a4b7e116b36377465a7dfbb1b46a124a507f5543af378d65b9",
-      "size": 22445
+      "sha256": "07ab8fad64ff46825d33e9ef005f4d0b788cec47d98b4261807c73e77d9ec17d",
+      "size": 23042
     },
     "WolkaraRoue/ChatTab.lua": {
       "sha256": "69e750eaf2867268557399a8d6ee95e3a8c8e506d371576d2eff06d0191ea02c",
@@ -66,8 +66,8 @@
       "size": 371
     },
     "WolkaraRoue/Language.lua": {
-      "sha256": "a5f93a8c40287f42b1d86897df188b53bc28794a7e86a85a1fc6b06826da9916",
-      "size": 53935
+      "sha256": "71335c824b7f324f0628feacb3b2c10ff596353efe346b8ab9ccdefa824c7a68",
+      "size": 54310
     },
     "WolkaraRoue/Menu.lua": {
       "sha256": "93dcb3aea4c5935283a4e11ed0153fafe696f7affdfa085b8170f804c28df761",
@@ -134,8 +134,8 @@
       "size": 1321
     },
     "WolkaraRoue/Turn.lua": {
-      "sha256": "78976b1051a7b332f77dcc2deb96b59c49736672f0ab7f21b8b4a941a9b07780",
-      "size": 12675
+      "sha256": "0b758ac63d06670a895e1aed4d9748d5818484c85e2c094c5dbcb4435a7c0209",
+      "size": 13886
     },
     "WolkaraRoue/Wheels.lua": {
       "sha256": "eb29156801d5cfd95393ed29a447ddba6e08658882a5fede26365ae23c35d0d4",
@@ -146,14 +146,14 @@
       "size": 7509
     },
     "WolkaraRoue/WolkaraRoue.toc": {
-      "sha256": "3cc3a3c7112ad8c81f201f23b4edeee2755ce1691c7dda8f69a80c5f2d0536af",
+      "sha256": "d833c91335ede6e9bbcad53ff89ee5990bc83f3eee947f04a8212f079349ba6a",
       "size": 852
     }
   },
   "format": "wolkaraforever.addon",
   "interface": 16001,
   "name": "WolkaraRoue",
-  "release": "1.0.5-cn.3",
-  "sha256": "a8d218d3a4f4426d93d986084217af4c437f4cb95c732f96015692c9efc8e983",
+  "release": "1.0.5-cn.4",
+  "sha256": "61d11c598b00e425980c81335e4336170ba3b255d41dc42110323cbfd7997ecc",
   "version": 1
 }

@@ -282,3 +282,34 @@ for _, uiScale in ipairs({ 1, 1.7, 2 }) do
     end
 end
 print("mobile native-aligned wheels: both stick centres, scaled hit-box clearance, inactive slots and secure touch PASS")
+
+-- The phone's Standard 150% UI has a 512-unit-high root. Its five saved
+-- slots must all be on screen, not just the first three of the bank.
+W, H = 874 * 512 / 402, 512
+for _, key in ipairs({ "free", "freeLeft" }) do
+    ns.db[key].count, ns.db[key].scale, ns.db[key].spread, ns.db[key].turnOffset = 5, 100, 100, 0
+end
+Turn:Layout()
+for _, pair in ipairs({ { "left", lefts }, { "right", buttons } }) do
+    local cx, cy = ns.TouchLayout.Stick(pair[1], W, H)
+    for index = 1, 5 do
+        local x, y = Where(pair[2][index])
+        assert(cx + x >= 32 and cx + x <= W - 32 and cy + y >= 32 and cy + y <= H - 80,
+            "a default five-slot wheel hides a configured spell")
+    end
+end
+-- On a small viewport, adding any slot through the 12-slot limit reveals
+-- that slot immediately. Re-layout then preserves its offset and assignment.
+W, H = 437, 201
+for count = 1, 12 do
+    for _, key in ipairs({ "free", "freeLeft" }) do ns.db[key].count = count end
+    Turn:Layout()
+    for _, pair in ipairs({ { "free", buttons }, { "freeLeft", lefts } }) do
+        local x = Where(pair[2][count])
+        assert(math.abs(x) < 10000, "newly added slot is hidden")
+        local saved = ns.db[pair[1]].turnOffset
+        Turn:Layout()
+        assert(ns.db[pair[1]].turnOffset == saved, "ordinary layout rotates the saved bank")
+    end
+end
+print("mobile wheels: five default slots visible; added slots 1-12 revealed on both sides PASS")

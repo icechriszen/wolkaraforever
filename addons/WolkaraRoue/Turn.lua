@@ -51,6 +51,19 @@ function Turn.Geometry(width, height, count, spread, side, scale)
             scale = scale or 1
             local radius = stickRadius + SIZE * scale / math.sqrt(2) + 10
             local apart = SIZE * scale * (0.9 + 0.35 * (spread or 100) / 100)
+            -- The compact radius cleared the stick but clipped slots 4 and 5.
+            -- Fit the default five-slot bank when the viewport has room. Larger
+            -- banks still rotate; never squeeze neighbouring hit boxes together.
+            local visible = math.min(count, 5)
+            if visible > 1 then
+                local needed = apart / (2 * math.sin(math.rad((180 - FIRST) / (visible - 1)) / 2))
+                local otherX = ns.TouchLayout.Stick(side == "left" and "right" or "left", width, height)
+                local half = SIZE * scale / 2
+                -- Reserve the upper shortcut/HUD row and the gap between wheels.
+                local available = math.min(height - y - half - 80,
+                    math.abs(otherX - x) / 2 - half - 10)
+                radius = math.max(radius, math.min(needed, available))
+            end
             return radius, math.deg(2 * math.asin(math.min(1, apart / (2 * radius)))), x, y
         end
     end
@@ -70,7 +83,7 @@ end
 local function Point(wheel, radius, degrees)
     -- The old corner layout clipped the rest of the wheel off-screen. A wheel
     -- around a real stick must likewise keep its inactive half out of the game.
-    if wheel.hostCoordinates and (degrees < 90 or degrees > 180) then return 100000, 100000 end
+    if wheel.hostCoordinates and (degrees < 90 - 1e-7 or degrees > 180 + 1e-7) then return 100000, 100000 end
     local angle = math.rad(degrees)
     local x, y = radius * math.cos(angle), radius * math.sin(angle)
     if wheel.mirror then x = -x end
@@ -244,6 +257,13 @@ local function LayoutWheel(wheel)
     band:SetAttribute("count", count)
     band:SetAttribute("step", step)
     local offset = count > 0 and math.floor(tonumber(settings.turnOffset) or 0) % count or 0
+    -- A count increase must reveal the new slot, even when enlarged controls
+    -- leave room for fewer icons. Do not rotate a saved layout on initial load.
+    if cx and wheel.lastCount and count > wheel.lastCount then
+        offset = (1 - count) % count
+        settings.turnOffset = offset
+    end
+    wheel.lastCount = count
     band:SetAttribute("offset", offset)
     for slot = 0, math.max(0, count - 1) do
         local x, y = Point(wheel, radius, FIRST + slot * step)
