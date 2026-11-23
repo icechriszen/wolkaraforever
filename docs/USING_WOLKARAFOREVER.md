@@ -121,6 +121,15 @@ Larger banks, or enlarged buttons on a small screen, rotate: swipe along a spell
 icon to bring the other slots into view. Increasing the left or right spell count
 brings the newest slot into view immediately. The limit remains twelve per side;
 this does not reset assigned spells, language or saved positions.
+Outside combat, only the wheel whose spell button started the current left-button
+drag follows the pointer. Releasing outside that moving button, ending a drag,
+hiding the control, changing layout or entering combat ends the preview; it
+settles at the last committed notch. Later pointer or stick movement must not
+resume that preview. Ordinary taps and the existing secure combat swipe remain
+unchanged. No layout reset is needed for this update.
+If a left-wheel plus button is visible but does not respond, check whether the
+movable chat strip overlaps it. Use `/mobile edit` to move the strip clear of the
+wheel and finish editing; this retains skill assignments and language.
 
 Movement comes from the app's on-screen gamepad, separately from the spell wheels.
 Expand the bottom toolbar and enable its gamepad button if the movement sticks are

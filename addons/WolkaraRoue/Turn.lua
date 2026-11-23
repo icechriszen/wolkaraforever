@@ -33,6 +33,7 @@ local SIDES = {
 }
 local ORDER = { "right", "left" }
 local wheels, attached = {}, {}
+local activeWheel
 
 local function Settings(wheel) return ns.db[wheel.key] end
 
@@ -113,6 +114,21 @@ local function CursorAngle(wheel)
     return math.deg(math.atan2(y - (wheel.originY or 0), -inward))
 end
 
+-- There is one game pointer, even when the native overlay has two sticks.
+-- OnMouseUp is not guaranteed on a button that moved away from that pointer.
+-- End the preview on every release/cancel path and settle at the secure notch.
+local function EndDrag(wheel, cancelled)
+    if not wheel or not wheel.dragging then return end
+    local button = wheel.dragButton
+    wheel.dragging, wheel.dragButton = false, nil
+    if activeWheel == wheel then activeWheel = nil end
+    if cancelled and button then button.swiped = true end
+    if InCombatLockdown() then wheel.settlePending = true; return end
+    local offset = wheel.band:GetAttribute("offset") or 0
+    Place(wheel, offset)
+    Settings(wheel).turnOffset = offset
+end
+
 -- Le même angle dans le code sécurisé, qui n'a que l'arithmétique : la position du doigt sur
 -- la bande (0 à 1 depuis son coin bas-gauche) devient un angle entre 90 et 180 degrés, par une
 -- approximation de l'arc tangente juste à un tiers de degré près. Ces extraits sont accrochés
@@ -184,11 +200,16 @@ function Turn:Init()
         band:Hide()
         local wheel = { side = side, key = info.key, corner = info.corner, mirror = info.mirror, band = band }
         band:SetScript("OnUpdate", function()
-            if not wheel.dragging or InCombatLockdown() then return end
+            if not wheel.dragging then return end
+            if activeWheel ~= wheel or InCombatLockdown() or not IsMouseButtonDown("LeftButton") then
+                EndDrag(wheel, true)
+                return
+            end
             local turns = (CursorAngle(wheel) - wheel.dragFrom) / (band:GetAttribute("step") or 20)
             if turns < SWIPE and turns > -SWIPE then turns = 0 end
             Place(wheel, wheel.dragOffset + turns)
         end)
+        band:SetScript("OnHide", function() EndDrag(wheel, true) end)
         wheels[side] = wheel
     end
 end
@@ -206,23 +227,27 @@ local function Wrap(wheel)
         SecureHandlerWrapScript(button, "OnMouseDown", band, DOWN)
         SecureHandlerWrapScript(button, "OnMouseUp", band, UP)
         SecureHandlerWrapScript(button, "OnClick", band, CLICK)
-        button:HookScript("OnMouseDown", function()
-            if InCombatLockdown() or not Turn:Enabled(wheel.side) then return end
+        button:HookScript("OnMouseDown", function(_, mouseButton)
+            if mouseButton ~= "LeftButton" or InCombatLockdown() or not Turn:Enabled(wheel.side) then return end
+            EndDrag(activeWheel, true)
+            button.swiped = nil
+            activeWheel, wheel.dragButton = wheel, button
             wheel.dragging, wheel.dragFrom, wheel.dragOffset = true, CursorAngle(wheel), band:GetAttribute("offset") or 0
         end)
-        button:HookScript("OnMouseUp", function()
-            if not wheel.dragging then return end
-            wheel.dragging = false
-            if InCombatLockdown() then return end
+        button:HookScript("OnMouseUp", function(_, mouseButton)
+            if mouseButton ~= "LeftButton" or not wheel.dragging or wheel.dragButton ~= button then return end
             -- Un glissé ne doit pas non plus ouvrir le sélecteur d'une case vide (PostClick).
             local turns = (CursorAngle(wheel) - wheel.dragFrom) / (band:GetAttribute("step") or 20)
             if turns >= SWIPE or turns <= -SWIPE then button.swiped = true end
             -- Le code sécurisé a déjà arrondi au cran le plus proche, ou laissé la roue où elle
             -- était pour un simple toucher ; on s'aligne dessus et on le retient.
-            local offset = band:GetAttribute("offset") or 0
-            Place(wheel, offset)
-            Settings(wheel).turnOffset = offset
+            EndDrag(wheel)
         end)
+        local function cancel()
+            if wheel.dragButton == button then EndDrag(wheel, true) end
+        end
+        button:HookScript("OnDragStop", cancel)
+        button:HookScript("OnHide", cancel)
     end
 end
 
@@ -230,6 +255,7 @@ end
 local function LayoutWheel(wheel)
     local buttons, band = attached[wheel.side], wheel.band
     if not buttons or InCombatLockdown() then return end
+    EndDrag(wheel, true)
     Wrap(wheel)
     local turning = Turn:Enabled(wheel.side)
     band:SetAttribute("turning", turning)
@@ -281,6 +307,8 @@ function Turn:Layout()
     end
 end
 
+function Turn:CombatStarts() EndDrag(activeWheel, true) end
+
 -- Le combat fini, le cran où chaque roue s'est arrêtée est retenu.
 ns.On("PLAYER_REGEN_ENABLED", function()
     if not ns.db then return end
@@ -288,6 +316,10 @@ ns.On("PLAYER_REGEN_ENABLED", function()
         local wheel = wheels[side]
         if wheel and attached[side] and Turn:Enabled(side) then
             Settings(wheel).turnOffset = wheel.band:GetAttribute("offset") or 0
+            if wheel.settlePending then
+                wheel.settlePending = nil
+                Place(wheel, Settings(wheel).turnOffset)
+            end
         end
     end
 end)

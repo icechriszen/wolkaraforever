@@ -45,6 +45,8 @@ UIParent = { GetWidth = function() return W end, GetHeight = function() return H
     GetEffectiveScale = function() return 1 end }
 local cursor = { 0, 0 }
 GetCursorPosition = function() return cursor[1], cursor[2] end
+local held = true
+IsMouseButtonDown = function(button) assert(button == "LeftButton"); return held end
 
 local handlers = {}
 local ns = { STICK_X = 0.12, STICK_Y = 0.222, WHITE = "white" }
@@ -150,19 +152,19 @@ combat = false
 -- Out of combat the spells follow the finger once it has really moved, then settle on the
 -- secure code's notch.
 local function Cursor(angle) local a = math.rad(angle); cursor = { W + math.cos(a) * 200, math.sin(a) * 200 } end
-Cursor(110); buttons[4].hooks.OnMouseDown()
+Cursor(110); buttons[4].hooks.OnMouseDown(buttons[4], "LeftButton")
 Cursor(110 + step * 0.2); band.scripts.OnUpdate()
 assert(At(11), "the spells moved for a touch")
 Cursor(110 + step * 0.5); band.scripts.OnUpdate()
 assert(At(11.5), "the spells did not follow the finger")
 band:SetAttribute("offset", 0)
-buttons[4].hooks.OnMouseUp()
+buttons[4].hooks.OnMouseUp(buttons[4], "LeftButton")
 assert(At(0) and ns.db.free.turnOffset == 0)
 -- That swipe is marked on the spell, so the add-on's own click handlers ignore it (no picker);
 -- a touch is not marked.
 assert(buttons[4].swiped == true)
 buttons[4].swiped = nil
-Cursor(120); buttons[6].hooks.OnMouseDown(); Cursor(120 + step * 0.2); buttons[6].hooks.OnMouseUp()
+Cursor(120); buttons[6].hooks.OnMouseDown(buttons[6], "LeftButton"); Cursor(120 + step * 0.2); buttons[6].hooks.OnMouseUp(buttons[6], "LeftButton")
 assert(buttons[6].swiped == nil)
 
 -- Arc mode: the band hides, spells cast on the game's own setting, and the snippets do nothing.
@@ -170,7 +172,7 @@ ns.db.free.turn = false
 Turn:Layout()
 assert(not band.shown and band:GetAttribute("turning") == false and buttons[1]:GetAttribute("useOnKeyDown") == nil)
 assert(Swipe(3, 120, 1.6) == nil and band:GetAttribute("offset") == 0)
-buttons[4].hooks.OnMouseDown()
+buttons[4].hooks.OnMouseDown(buttons[4], "LeftButton")
 assert(band.scripts.OnUpdate() == nil and At(0))
 
 -- The left wheel: the right one in a mirror, in the bottom-left corner. Nothing is drawn for
@@ -226,11 +228,76 @@ combat = false
 
 -- Out of combat its spells follow the finger in the mirror, then settle on the notch.
 local function CursorLeft(angle) local a = math.rad(angle); cursor = { -math.cos(a) * 200, math.sin(a) * 200 } end
-CursorLeft(110); lefts[4].hooks.OnMouseDown()
+CursorLeft(110); lefts[4].hooks.OnMouseDown(lefts[4], "LeftButton")
 CursorLeft(110 + step * 0.5); left.scripts.OnUpdate()
 assert(AtLeft(2.5), "the left spells did not follow the finger")
-lefts[4].hooks.OnMouseUp()
+lefts[4].hooks.OnMouseUp(lefts[4], "LeftButton")
 assert(AtLeft(2) and ns.db.freeLeft.turnOffset == 2 and lefts[4].swiped == true)
+
+-- A release can arrive outside the moving button, without its OnMouseUp.
+-- Subsequent pointer motion (including a gamepad cursor) must not drag a wheel.
+ns.db.free.turn = true
+Turn:Layout()
+CursorLeft(110); lefts[4].hooks.OnMouseDown(lefts[4], "LeftButton")
+CursorLeft(110 + step * 0.6); left.scripts.OnUpdate()
+assert(AtLeft(2.6))
+held = false
+Cursor(130); left.scripts.OnUpdate()
+assert(AtLeft(2), "released left wheel kept following the shared cursor")
+for _, move in ipairs({ Cursor, CursorLeft }) do
+    for angle = 95, 175, 10 do
+        move(angle); band.scripts.OnUpdate(); left.scripts.OnUpdate()
+        assert(At(0) and AtLeft(2), "stick/pointer motion moved an idle wheel")
+    end
+end
+
+-- Even if release and the next press occur between updates, one wheel owns
+-- the pointer. A delayed release on the old button cannot end the new drag.
+held = true
+CursorLeft(110); lefts[4].hooks.OnMouseDown(lefts[4], "LeftButton")
+CursorLeft(110 + step * 0.6); left.scripts.OnUpdate()
+Cursor(110); buttons[4].hooks.OnMouseDown(buttons[4], "LeftButton")
+Cursor(110 + step * 0.6); band.scripts.OnUpdate(); left.scripts.OnUpdate()
+assert(At(0.6) and AtLeft(2), "dragging right also dragged left")
+lefts[4].hooks.OnMouseUp(lefts[4], "LeftButton")
+Cursor(110 + step * 0.8); band.scripts.OnUpdate()
+assert(At(0.8) and AtLeft(2), "old release ended the new wheel gesture")
+buttons[4].hooks.OnDragStop(buttons[4])
+CursorLeft(150); band.scripts.OnUpdate(); left.scripts.OnUpdate()
+assert(At(0) and AtLeft(2), "drag-stop left a wheel following the cursor")
+
+-- Camera/right-button presses do not start a wheel gesture. A normal fresh
+-- tap clears the previous swipe marker, so an empty slot still opens its picker.
+Cursor(110); buttons[4].hooks.OnMouseDown(buttons[4], "RightButton")
+Cursor(150); band.scripts.OnUpdate()
+assert(At(0), "right-button camera gesture turned the wheel")
+Cursor(110); buttons[4].hooks.OnMouseDown(buttons[4], "LeftButton")
+assert(buttons[4].swiped == nil, "a stale swipe swallowed the next tap")
+buttons[4].hooks.OnMouseUp(buttons[4], "LeftButton")
+assert(buttons[4].swiped == nil and At(0))
+
+Cursor(110); buttons[4].hooks.OnMouseDown(buttons[4], "LeftButton")
+Cursor(110 + step * 0.6); band.scripts.OnUpdate()
+CursorLeft(110); lefts[4].hooks.OnMouseDown(lefts[4], "LeftButton")
+CursorLeft(110 + step * 0.6); left.scripts.OnUpdate(); band.scripts.OnUpdate()
+assert(At(0) and AtLeft(2.6), "dragging left also dragged right")
+lefts[4].hooks.OnHide(lefts[4])
+Cursor(150); left.scripts.OnUpdate()
+assert(AtLeft(2), "hidden initiating button left an active preview")
+
+-- Layout changes and combat transitions end previews; neither resumes later.
+Cursor(110); buttons[4].hooks.OnMouseDown(buttons[4], "LeftButton")
+Turn:Layout(); Cursor(150); band.scripts.OnUpdate()
+assert(At(0), "relayout resumed an old drag")
+CursorLeft(110); lefts[4].hooks.OnMouseDown(lefts[4], "LeftButton")
+CursorLeft(110 + step * 0.6); left.scripts.OnUpdate()
+assert(AtLeft(2.6))
+combat = true; Turn:CombatStarts(); combat = false
+handlers.PLAYER_REGEN_ENABLED()
+CursorLeft(150); left.scripts.OnUpdate()
+assert(AtLeft(2), "old preview resumed after combat")
+assert(ns.db.free.turnOffset == 0 and ns.db.freeLeft.turnOffset == 2)
+print("mobile add-on wheel gesture ownership: missed release, idle cursor, alternating wheels, drag-stop, camera, fresh tap, layout and combat: PASS")
 
 print(string.format("mobile add-on turning wheels: secure angle within %.2f deg (left %.2f); swipe on a spell turns without casting, touch casts, nothing else caught, arc mode inert, left is the mirror, no shadow: PASS", worst, worstLeft))
 

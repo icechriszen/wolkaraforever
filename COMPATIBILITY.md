@@ -311,6 +311,28 @@ appearance rather than proving input. The running game was not stopped. This
 validation does not claim to resolve the earlier dynamic-code fault or establish
 prolonged stability.
 
+## Wheel gesture follow-up: iPhone 17, 2026-11-23
+
+On installed source `7ccce97`, WolkaraRoue `1.0.5-cn.4`, the user subsequently
+reported that the left empty-slot plus did not open its picker. A read-only
+capture showed the movable chat strip over that slot. After moving the strip
+clear with `/mobile edit`, the user confirmed that the picker opened. This is
+user-operated evidence on iPhone 17, iOS 27.2.1, Developer service, CN Forever
+1.60.1.71037 / zhCN; Device Hub was unavailable.
+
+The user then reported that dragging one wheel slightly moved the other, and
+that native stick operation also moved wheels. The production-Lua fixture
+reproduced a stale preview: when a moving spell button misses OnMouseUp, its
+wheel follows the shared cursor indefinitely. Source `7ccce97` fails the new
+release regression. The `1.0.5-cn.5` candidate gives the out-of-combat preview one
+owner and checks held-left-button state, drag-stop, hide, layout and combat
+transitions. It keeps the existing secure swipe snippets, skill assignments,
+Chinese strings, native controls and runtime unchanged. The Lua/Chinese suite
+passes, including alternating wheels, a late old-button release, pointer motion
+after release, fresh taps and protected combat cleanup. These fixtures establish
+the source failure and correction, not the cause or resolution of every physical
+gesture; installation and user-operated device validation are pending.
+
 ## Report a problem
 
 Start with [Install WolkaraForever](docs/INSTALLATION.md) and [Use WolkaraForever](docs/USING_WOLKARAFOREVER.md). When you report a problem, follow [Send us a log](docs/SENDING_LOGS.md) and include the exact Technical details message if one was shown. Do not include credentials, signing material, pairing records, account information, or device identifiers.
