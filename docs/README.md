@@ -1,8 +1,10 @@
 # WolkaraForever guide
 
-> Verified: 2026-11-16 · Source: `9680e63`
+> Reviewed: 2026-11-23 · Source behavior: `0a38398`
 
-Use this guide to install WolkaraForever and manage a Forever installation.
+Use this guide to install this CN/iPhone fork and manage a Forever installation.
+Start with the [简体中文指南](../README.zh-CN.md) for Chinese setup and controls.
+The [fork overview](../README.md) identifies the published code and documentation branches.
 
 1. [Install WolkaraForever](INSTALLATION.md) to prepare your Mac and device, build the app, and start it for the first time.
 2. [Build and run WolkaraForever](BUILDING.md) to see how a build is assembled, which execution
@@ -13,6 +15,7 @@ Use this guide to install WolkaraForever and manage a Forever installation.
 5. [Send us a log](SENDING_LOGS.md) when something goes wrong — three taps on the iPad, and no
    computer needed.
 
+For fork-specific reports, use [this fork’s issues](https://github.com/icechriszen/wolkaraforever/issues).
 For help, read [Compatibility](../COMPATIBILITY.md) and send the log described in
 [Send us a log](SENDING_LOGS.md). Never share credentials, signing material, pairing records,
 account information, or device identifiers.

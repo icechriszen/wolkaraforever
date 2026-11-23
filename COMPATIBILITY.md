@@ -1,8 +1,54 @@
 # Compatibility and support boundary
 
-> Verified: 2026-11-13 · Source: `3c33543`
+> Reviewed: 2026-11-23 · Source behavior: `0a38398`
 
 WolkaraForever is a source-built project for an iPad or iPhone that you own and configure with your own Apple Developer account. The supported integrated route requires Developer Mode, current Xcode tooling, and an execution path that can prepare executable memory.
+
+## Current fork status
+
+The published code branch is `integration/cn-ios-validated`; the latest installed
+runtime fix is `b535ee4`, with source snapshot `0a38398` and add-on `1.0.5-cn.7`.
+No new release tag or general device-support claim is implied.
+
+| Area | Measured status |
+| --- | --- |
+| CN / zhCN and browser login | User-operated iPhone login, persistent in-app session reuse and world entry observed |
+| Runtime stability work | C++ ownership and map-hint fixtures pass; character/settings/world-entry acceptance recorded after event-monitor registration |
+| Standard touch UI | Chinese, shortcut/chat close, slot addition, tap alignment, stick spacing and independent wheel gestures accepted by the user |
+| Controller startup | USB GameSir-X5 Lite: both touch UIs hidden with working controller input; next unplugged launch restores UI and settings |
+| Chinese chat | Runtime `b535ee4`: non-empty text, one send call, one self echo, visible display and zero observer errors |
+| Data preservation | Same application container retained; no CASC archive removed; non-diagnostic add-on settings compared identical after the final chat test |
+| Not established | Required iPhone Duo/iPad Pro 13-inch (M5) simulator runs, Device Hub UI evidence, extended stability, TW client comparison, general dynamic-JIT compatibility |
+
+The physical results above are from iPhone 17 / iOS 27.2.1 / Developer service /
+CN Forever 1.60.1.71037. They do not generalize to other clients or execution modes.
+The sections below are dated investigation records: a failed earlier candidate is
+historical evidence, not the status of a later fix. In particular, early Lua/code
+permission observations do not establish a general JIT remedy or an official option
+to disable it. The final Chinese-chat before/after evidence is in the last investigation.
+
+## Publication checks: 2026-11-23
+
+Source `0a38398` (`b535ee4` runtime), add-on `1.0.5-cn.7`; documentation changes
+only on top. The following reran on the Apple-silicon Mac before publication:
+
+| Check | Result |
+| --- | --- |
+| `test_mobile_addon.sh` with LuaJIT | PASS: Lua syntax and add-on behavior fixtures, including Chinese, wheel gestures and chat diagnostics |
+| `test_owned_cxx.sh` | PASS: allocator ownership, strings, thread/future cleanup, host isolation and fail-closed preparation |
+| `test_dynamic_code.sh` | PASS: host remapping, repeated execution, adjacent pages, provenance, bounds and anonymous-map hints |
+| `test_host_lifetime_diagnostics.sh` | PASS: counters, bounded heartbeat, TLS ownership and opt-in behavior |
+| `test_forever_ui.sh` with pinned ZIPFoundation | PASS: startup controller/configuration preservation, touch geometry, graphics settings and archive recovery |
+| `test_addon_package.sh` with pinned ZIPFoundation | PASS: cn.7 reproducibility and acceptance; nine malformed packages refused |
+| Prepared `tests/test_text_input.m` with Foundation, `-Werror` and ASan/UBSan | PASS: Unicode ordering, modern/legacy clients, once-only delivery and content-free metadata |
+| `check_layers.sh` | PASS: 79 patches, mapped sources, unchanged pinned platform and 848 localization keys; historical no-merge-base replacement check remains TODO |
+| `check_docs.sh` (includes `check_agent_docs.sh`) | PASS: relative paths, anchors and generated catalog |
+
+These are host/source checks, not new simulator or phone runs. The user-operated
+phone acceptance remains the dated evidence below. Required simulator and Device
+Hub evidence, extended sessions and TW comparison remain outstanding, so publication
+does not make the integration ready for release or maintainer approval. Private
+configuration and generated evidence are not publication artifacts.
 
 ## Wheel capacity and chat entry acceptance: iPhone 17, 2026-11-23
 

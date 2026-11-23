@@ -1,6 +1,6 @@
 # Use WolkaraForever
 
-> Verified: 2026-11-16 · Source: `9680e63`
+> Reviewed: 2026-11-23 · Source behavior: `0a38398`
 
 Use the launcher to prepare Forever, configure the interface, and recover safely when a setting or add-on causes a problem.
 
@@ -12,7 +12,7 @@ Use the launcher to prepare Forever, configure the interface, and recover safely
 2. Start the download. The launcher can resume, verify, repair, and update recorded game data.
 3. Wait for the ready state before selecting **Play**.
 
-China (`cn`) and Simplified Chinese (`zhCN`) are supported by this local build. China uses
+China (`cn`) and Simplified Chinese (`zhCN`) are supported by this fork. China uses
 the official China metadata service and its advertised NetEase WoW HTTPS CDN. Fresh China
 installs write `portal "CN"` and the selected text/audio locale; changing language alone preserves
 the existing login portal and account settings. Updating WolkaraForever under the same bundle ID
@@ -33,7 +33,10 @@ test app before downloading; changing the language alone does not change the reg
 
 ## Choose how a game starts
 
-The first time you start a game with no mode chosen, the launcher asks how to start it. **Developer service** is the supported route and is what [Install WolkaraForever](INSTALLATION.md) sets up; **Local signing** and **External JIT** need their own setup first. The choice cannot be skipped on that first start, it is remembered afterwards, and the **Execution Mode** button on the library screen changes it. [Build and run WolkaraForever](BUILDING.md) explains what each mode needs.
+The ordinary Forever home uses the build's configured route. The supplied
+`local.env.example` selects **Developer service**, which [Installation](INSTALLATION.md)
+sets up. There is no execution-mode picker on that home screen. Alternative builds
+and one-run development overrides are described in [Building](BUILDING.md).
 
 ## Experimental Battle.net Login
 
@@ -55,20 +58,27 @@ or an unsupported result; only that category is logged. Copy the final address a
 correcting the issue. An omitted `http://` is restored only for an explicitly pasted
 `localhost:0` return address. Never share the address in chat or logs.
 A successful handoff sets the game portal to CN and retains the selected text/audio language.
-A manual China callback has been accepted on the physical phone and the Chinese first-run game
-page has appeared. The saved embedded session and entry into the game world still need their
-own real-device checks; synthetic tests do not prove them. Launcher language remains English,
+Manual China callbacks, reuse of the embedded website session and world entry have
+been observed on the tested iPhone 17 setup. This does not guarantee an indefinite
+login session or compatibility with every account; [Compatibility](../COMPATIBILITY.md)
+records the source/device/client combinations. Launcher language remains English,
 German or French.
 
 This feature can stop working without notice. Do not include credentials, tickets, callback URLs, or account details in reports.
 
 ## Change app language or interface
 
-Open **Settings** to choose an app language. Open **Launcher Manager** to choose **iPadOS** or **iOS on Duo**. Interface selection changes the arrangement only; it does not change game data or add-ons. Automatic on an iPhone, iOS, and iOS on Duo use the same direct-touch gestures when trackpad mode is off: a tap first moves the pointer to the finger, then clicks when the finger lifts. The touch toolbar and host now resolve the same interface setting. This does not change the game resolution or add a fixed tap offset.
+Use **Game Settings Manager → App language** for launcher labels and **Region / Locale**
+for the game's language. **Launcher Manager** controls the app's interface arrangement;
+it is separate from WolkaraRoue's **Standard / Duo** setting. Keep the add-on on
+**Standard** for the default wheel layout described below. Automatic on an iPhone,
+iOS and iOS on Duo use direct-touch gestures when trackpad mode is off: a tap moves
+the pointer to the finger, then clicks on release. The toolbar and host resolve the
+same interface setting. This does not change the game resolution or add a fixed tap offset.
 
 ## Optional network-health diagnostics
 
-In **Game Settings Manager**, choose **Arm network health for next launch** only when support asks for connection-health evidence. This experimental switch is off by default, is consumed by the next game launch, and stops automatically after 15 minutes. It records anonymous TCP state, latency, buffer and byte counters in the native log; it never records addresses, ports, host names, DNS, payloads, credentials, or game data. Use **Disarm** before starting the game to cancel it.
+In the home screen’s top-right **Settings**, choose **Arm network health for next launch** only when support asks for connection-health evidence. This experimental switch is off by default, is consumed by the next game launch, and stops automatically after 15 minutes. It records anonymous TCP state, latency, buffer and byte counters in the native log; it never records addresses, ports, host names, DNS, payloads, credentials, or game data. Use **Disarm** before starting the game to cancel it.
 
 ## Manage add-ons
 
@@ -85,7 +95,7 @@ folder names; the update journal restores the old folder and ownership state if
 the replacement fails. It does not require linking a CurseForge project or removing
 the old copy first, and does not replace account SavedVariables.
 
-The bundled touch add-on `WolkaraRoue` now includes Simplified Chinese. Install or
+The bundled touch add-on `WolkaraRoue` is `1.0.5-cn.7` and includes Simplified Chinese. Install or
 update it from Add-On Manager after leaving the game; updating the launcher alone
 does not replace an already installed add-on. Its **Mobile UI → Controls → General
 → Language** selector offers **Follow game**, English, French, Spanish, German and
@@ -123,7 +133,8 @@ marked separately in the saved trace. Only counts, lengths, error numbers and
 fixed state labels are saved, never message text, names or recipients. After
 reproducing once, exit the game normally so the trace is saved; the next UI load
 starts a new trace. This diagnostic does not submit or retry messages, reset
-settings, or establish that the remaining chat failure is fixed.
+settings, or itself prove delivery. The successful Chinese-message result below
+requires the runtime correction as well as the installed add-on.
 The host also carries a Unicode input correction: committed Chinese
 and other characters without an ANSI key are queued for the game's public text
 input interface, in order between earlier keys and Return. They no longer rely

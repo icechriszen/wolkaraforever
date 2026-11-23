@@ -1,8 +1,29 @@
 # Changelog
 
-> Verified: 2026-11-13 · Source: `3c33543`
+> Reviewed: 2026-11-23 · Source behavior: `0a38398`
 
-## Unreleased
+## Unreleased — CN / iPhone fork
+
+These cumulative fork changes are published on `integration/cn-ios-validated`;
+`docs/cn-ios-guide` adds the user-guide refresh. `1.0.5-cn.7` is the bundled add-on
+version, not a new launcher release tag.
+
+- CN region and zhCN client support, regional metadata/CDN handling and preservation of existing portal settings.
+- Official China web login, persistent isolated in-app website session, Safari callback validation and visible errors.
+- Scoped C++ allocator ownership, non-destructive anonymous-map hints and local event-monitor registration.
+- Simplified Chinese WolkaraRoue using game terminology, Standard chat close/shortcuts, wheel capacity and touch alignment.
+- Startup controller detection suppresses the touch add-on and toolbar for a controller session, restoring both on the next controller-free launch without resetting preferences.
+- Standard wheels and native fixed sticks share geometry; wheel drags have one owner and end on release, preventing stick or opposite-wheel motion from rotating stale previews.
+- Unicode input uses ordered text-client commits. The iPhone Chinese-chat reproduction now passes with one send, one self echo and visible display.
+- cn.7 records bounded chat metadata and provides `/mobile chatdiag`; it records no message body and never sends or retries chat.
+- Bundled add-on updates can adopt existing unmanaged WolkaraRoue folders transactionally while retaining account SavedVariables.
+- TW/zhTW selection is implemented; a physical TW client comparison is still pending.
+- Chinese setup/help, fork install links, reset boundaries and current validation status are documented.
+
+[Compatibility](COMPATIBILITY.md#current-fork-status) separates user-operated iPhone
+acceptance from host fixtures, unavailable simulators and unverified long sessions.
+
+## Upstream unreleased notes
 
 - **The unsigned package is named after the app.** It is `wolkaraforever-unsigned.ipa`,
   not `Tolkara-unsigned.ipa`, from the packaging script, the verification report and the

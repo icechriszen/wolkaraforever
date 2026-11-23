@@ -1,6 +1,6 @@
 # Build and run WolkaraForever
 
-> Verified: 2026-11-16 · Source: `9680e63`
+> Reviewed: 2026-11-23 · Source behavior: `0a38398`
 
 This guide covers the mechanisms behind a WolkaraForever build: how the tree is assembled, the
 three ways the runtime can execute an application, and the commands that build, install, run,
@@ -29,6 +29,17 @@ A command sequence, therefore, is always "prepare, then run the engine's own scr
 prepared tree". The wrappers in `wolkaraforever/tools/` do exactly that, which is why the engine
 scripts under `build/platform/tools/` are never called directly for a normal build.
 
+## Fork source and storage
+
+Build the published `integration/cn-ios-validated` branch from this fork for the CN,
+Standard touch and Unicode fixes. `docs/cn-ios-guide` changes documentation only on
+top of that code. `jklock/wolkaraforever` remains the primary upstream; fetching a
+new upstream revision is separate from reproducing a validated source SHA.
+
+The checkout and its `build/` directory may live on an external SSD. Keep one stable
+private `local.env` with the same signing team, bundle ID and Keychain group for
+updates. Do not copy a different test app's identifiers onto an existing installation.
+
 ## C++ allocator ownership
 
 A native application can replace C++ `operator new` and `operator delete`. Binding its own
@@ -56,6 +67,20 @@ the adapted path must pass string operations, multi-thread cleanup, future readi
 object survival, configuration guards, and ASan/UBSan. These checks are component-level Mac
 evidence; iPhone game stability requires a separate test of the installed build.
 
+## Unicode text and chat
+
+Software keyboard characters with no ANSI key are retained as private queued text
+commits. The host calls the active public text-input client in order between the
+preceding keys and Return, once per commit; it does not invent a physical key for
+Chinese, invoke a chat-send API, or retry messages. Both event polling and the
+application-owned dispatcher support this path. ASCII and control keys retain their
+key-event path. This lives in patch 0079 and requires an app update.
+
+WolkaraRoue separately initializes its selected chat channel synchronously and
+supports modern and legacy client UI APIs. Its cn.7 diagnostic distinguishes input,
+Return, send attempts, self echo and display. See [chat diagnostics](SENDING_LOGS.md#chat-sends-nothing)
+and [the measured result](../COMPATIBILITY.md#current-fork-status).
+
 ## Execution modes
 
 The runtime can start an application's code in one of three ways. The mode is a device-side
@@ -80,10 +105,10 @@ Which build offers which mode:
 | `Tolkara` (the app `install.sh` builds) | Yes | Yes | Shown as unavailable: not included in this build |
 | `TolkaraDiagnostics` (the unsigned `.ipa`) | Shown as unavailable | Yes | Yes |
 
-The app asks the first time you start a game: starting with no mode chosen opens the chooser and
-the game starts once you choose, so the first choice cannot be skipped. Change it later with the
-**Execution Mode** button on the library screen. In a build made with `TOLKARA_MODE` set, that
-preselection becomes the stored choice on first use.
+The ordinary Forever home uses the route carried by the build and its saved setting;
+it does not present an execution-mode picker. `local.env.example` selects Developer
+service for integrated source builds. A development launch can use `--execution-mode=`
+for a single run. The internal library's chooser is not a normal home-screen setup step.
 
 Each mode's own setup, and what to do when it is not ready, is in
 [Install WolkaraForever](INSTALLATION.md) and in
@@ -230,7 +255,7 @@ authorization, or performance; say which device ran when you report a result.
 | Problem | What to do |
 | --- | --- |
 | `prepare.sh` says the tree is dirty | Expected while developing; commit before producing evidence. |
-| `install.sh` refuses to replace the app | Something is running. Stop it from the app, or use `--replace-running`. |
+| `install.sh` refuses to replace the app | Exit the game normally, wait for saving, close Wolkara in the app switcher, then retry with the same configuration. |
 | The build fails and nothing reached the iPad | Rerun with `--build-only` and read `build/platform/logs/install-*.log`. |
 | Developer service is "not ready" | The enrollment is missing: run `wolkaraforever/tools/install.sh` again with `TOLKARA_MODE=developer-service`, which enrolls for you. |
 | The app says a page container is missing | Build with `TOLKARA_MODE=local-signing`, or copy the container for this executable's SHA-256 into `Documents/LocalSigning/`. |

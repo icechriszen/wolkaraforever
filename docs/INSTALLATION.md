@@ -1,6 +1,6 @@
 # Install WolkaraForever
 
-> Verified: 2026-11-16 · Source: `9680e63`
+> Reviewed: 2026-11-23 · Source behavior: `0a38398`
 
 Install WolkaraForever from source on an iPad or iPhone. This guide uses the supported Developer-service route; [Build and run WolkaraForever](BUILDING.md) covers the other execution modes and the build itself.
 
@@ -17,12 +17,15 @@ Install WolkaraForever from source on an iPad or iPhone. This guide uses the sup
 1. Clone the repository and create your private configuration.
 
    ```sh
-   git clone https://github.com/jklock/wolkaraforever.git
+   git clone --branch integration/cn-ios-validated https://github.com/icechriszen/wolkaraforever.git
    cd wolkaraforever
    cp local.env.example local.env
    ```
 
-2. Keep the bundle ID and Keychain group stable in `local.env` so updates keep the app’s data and enrollment.
+2. Fill in your active paid development team and unique bundle ID in `local.env`.
+   Keep `TOLKARA_MODE=developer-service`. Keep the signing team, bundle ID and Keychain
+   group stable on updates so the app retains its container, credentials and enrollment.
+   Xcode must show the paid team; a Personal Team alone is not this setup.
 3. Check prerequisites, select the connected device, and run preflight.
 
    ```sh
@@ -43,11 +46,29 @@ The installer builds, signs, installs, and launches the app through project safe
 
 On first launch, choose Forever, a region, and a game language. Download the required data and select **Play** only after the launcher reports that it is ready.
 
-The first time you start a game, the launcher asks how to start it. Choose **Developer service**, the route this guide sets up; the choice cannot be skipped, and you can change it later with the **Execution Mode** button on the library screen. The other two modes need their own setup first — see [Build and run WolkaraForever](BUILDING.md).
+The supplied configuration selects **Developer service**. The ordinary Forever home
+uses that route and has no execution-mode picker. Alternative builds and development
+launch overrides are described in [Building](BUILDING.md).
+
+Keep the device unlocked and connected over USB for the first enrollment. The system
+may ask to add the local developer-service VPN configuration. Its packet provider
+routes only the local service address, excludes the default route, and adds no DNS
+override or external VPN endpoint. It transports requests to the on-device developer
+service that prepares memory before the game starts.
+
+For China, choose **Game Settings Manager → Region / Locale → China / zhCN** and use
+[the in-app Battle.net login](USING_WOLKARAFOREVER.md#experimental-battlenet-login).
+The game and bundled add-on can use Chinese; launcher labels remain English, German
+or French. See [iPhone setup](IPHONE.md) or the [Chinese guide](../README.zh-CN.md).
 
 ## Update or recover
 
-Run `install.sh` again with the same private configuration to update the app. Do not delete the app as a first recovery step: it removes downloaded game data. If signing fails, correct the selected identity in Xcode, then rerun preflight.
+Exit the game normally, wait for its save, then close Wolkara from the app switcher.
+Run `git pull --ff-only` on the selected fork branch and run `install.sh` again with
+the same private configuration. A live-session or active-write refusal is a reason
+to finish exiting and retry. Do not delete the app: that removes downloaded data
+and configuration. Installing the app does not update an already installed add-on;
+afterward use **Install Addons (Curse & Direct) → WolkaraRoue (bundled) → Update**.
 
 ## Troubleshooting
 
