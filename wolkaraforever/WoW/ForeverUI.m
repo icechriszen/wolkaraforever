@@ -114,7 +114,117 @@ static BOOL TKWriteConfig(NSString *path, NSString *text, NSError **error) {
     return [data writeToFile:path options:NSDataWritingAtomic error:error];
 }
 
+// ASCII delimiters only: interpreting UTF-8 as Latin-1 preserves every byte,
+// but Unicode line enumeration would mistake some UTF-8 bytes for line breaks.
+static NSData *TKTouchAddonSettings(NSData *data, BOOL manifest, BOOL connected) {
+    NSString *text = [[NSString alloc] initWithData:data encoding:NSISOLatin1StringEncoding];
+    NSString *bom = @"\u00ef\u00bb\u00bf";
+    BOOL hasBOM = [text hasPrefix:bom];
+    if (hasBOM) text = [text substringFromIndex:3];
+    NSString *newline = [text containsString:@"\r\n"] ? @"\r\n" : @"\n";
+    NSMutableString *kept = [NSMutableString new];
+    NSArray<NSString *> *lines = [text componentsSeparatedByString:@"\n"];
+    for (NSUInteger i = 0; i < lines.count; i++) {
+        NSString *line = lines[i];
+        NSString *field = [line stringByTrimmingCharactersInSet:NSCharacterSet.whitespaceAndNewlineCharacterSet];
+        if (manifest && [field hasPrefix:@"##"]) field = [field substringFromIndex:2];
+        else if (manifest) field = @"";
+        NSRange colon = [field rangeOfString:@":"];
+        NSString *name = colon.location == NSNotFound ? nil :
+            [[field substringToIndex:colon.location] stringByTrimmingCharactersInSet:NSCharacterSet.whitespaceCharacterSet];
+        if (TKNameIs(name, manifest ? @"LoadOnDemand" : @"WolkaraRoue")) continue;
+        [kept appendString:line];
+        if (i + 1 < lines.count) [kept appendString:@"\n"];
+    }
+    NSString *setting = manifest ? (connected ? @"## LoadOnDemand: 1" : nil) :
+        (connected ? @"WolkaraRoue: disabled" : @"WolkaraRoue: enabled");
+    NSString *result = [NSString stringWithFormat:@"%@%@%@", hasBOM ? bom : @"",
+        setting ? [setting stringByAppendingString:newline] : @"", kept];
+    return [result dataUsingEncoding:NSISOLatin1StringEncoding];
+}
+
+static BOOL TKTouchAddonFile(NSString *root, NSString *path, NSError **error) {
+    NSDictionary *attributes = [NSFileManager.defaultManager attributesOfItemAtPath:path error:error];
+    if (!attributes) return NO;
+    if (!TKInside(root, path) || ![attributes[NSFileType] isEqual:NSFileTypeRegular] ||
+        [attributes[NSFileSize] unsignedLongLongValue] > TKForeverConfigLimit) {
+        if (error) *error = TKError(WKLocalized(@"forever.error.touchAddonSwitch"));
+        return NO;
+    }
+    return YES;
+}
+
 @implementation TKForeverUI
+
++ (void)prepareTouchControlsForPhysicalController:(BOOL)connected defaults:(NSUserDefaults *)defaults {
+    NSMutableDictionary *arguments = [[defaults volatileDomainForName:NSArgumentDomain] mutableCopy] ?: [NSMutableDictionary new];
+    // AKTouchControlsDefaultsKey in the separately loaded AppKit adapter. This
+    // process-only domain reaches that reader without changing saved preferences.
+    arguments[@"AKTouchControls"] = @(!connected);
+    [defaults setVolatileDomain:arguments forName:NSArgumentDomain];
+}
+
++ (BOOL)prepareTouchAddonForPhysicalController:(BOOL)connected
+                           inWorkingDirectory:(NSString *)directory
+                                        error:(NSError **)error {
+    NSFileManager *files = NSFileManager.defaultManager;
+    NSString *toc = [directory stringByAppendingPathComponent:@"Interface/AddOns/WolkaraRoue/WolkaraRoue.toc"];
+    // Do not install an add-on that the player has not installed.
+    if (![files fileExistsAtPath:toc]) return YES;
+    if (!TKTouchAddonFile(directory, toc, error)) return NO;
+    NSMutableArray<NSString *> *paths = [NSMutableArray arrayWithObject:toc];
+    NSString *account = [directory stringByAppendingPathComponent:@"WTF/Account"];
+    if ([files fileExistsAtPath:account]) {
+        if (!TKInside(directory, account) || ![[files attributesOfItemAtPath:account error:error][NSFileType] isEqual:NSFileTypeDirectory]) {
+            if (error) *error = TKError(WKLocalized(@"forever.error.touchAddonSwitch"));
+            return NO;
+        }
+        __block NSError *walkError = nil;
+        NSDirectoryEnumerator *walk = [files enumeratorAtURL:[NSURL fileURLWithPath:account]
+            includingPropertiesForKeys:nil options:0 errorHandler:^BOOL(NSURL *url, NSError *failure) {
+                (void)url; walkError = failure; return NO;
+            }];
+        for (NSURL *url in walk) {
+            NSDictionary *attributes = [files attributesOfItemAtPath:url.path error:error];
+            if (!attributes) return NO;
+            // An account tree with links cannot be enumerated completely without
+            // following potentially external files. Refuse before changing anything.
+            if ([attributes[NSFileType] isEqual:NSFileTypeSymbolicLink]) {
+                if (error) *error = TKError(WKLocalized(@"forever.error.touchAddonSwitch"));
+                return NO;
+            }
+            if ([url.lastPathComponent caseInsensitiveCompare:@"AddOns.txt"] != NSOrderedSame) continue;
+            if (!TKTouchAddonFile(directory, url.path, error)) return NO;
+            [paths addObject:url.path];
+        }
+        if (walkError) { if (error) *error = walkError; return NO; }
+    }
+    // Prepare every replacement before any write. The client is not running, so
+    // it cannot rewrite a character's enable list halfway through this operation.
+    NSMutableArray<NSDictionary *> *changes = [NSMutableArray new];
+    for (NSString *path in paths) {
+        NSData *before = [NSData dataWithContentsOfFile:path options:0 error:error];
+        if (!before) return NO;
+        NSData *after = TKTouchAddonSettings(before, [path isEqual:toc], connected);
+        if (![before isEqual:after]) [changes addObject:@{@"path":path, @"before":before, @"after":after}];
+    }
+    NSMutableArray<NSDictionary *> *written = [NSMutableArray new];
+    for (NSDictionary *change in changes) {
+        NSError *failure = nil;
+        BOOL stored = [change[@"after"] writeToFile:change[@"path"] options:NSDataWritingAtomic error:&failure];
+        if (stored) [written addObject:change];
+        NSData *readback = stored ? [NSData dataWithContentsOfFile:change[@"path"] options:0 error:&failure] : nil;
+        if (stored && [readback isEqual:change[@"after"]]) continue;
+        for (NSDictionary *previous in written.reverseObjectEnumerator) {
+            NSError *rollbackError = nil;
+            if (![previous[@"before"] writeToFile:previous[@"path"] options:NSDataWritingAtomic error:&rollbackError])
+                failure = rollbackError;
+        }
+        if (error) *error = failure ?: TKError(WKLocalized(@"forever.error.touchAddonSwitch"));
+        return NO;
+    }
+    return YES;
+}
 
 + (nullable NSString *)wtfDirectoryInWorkingDirectory:(NSString *)directory
                                                create:(BOOL)create

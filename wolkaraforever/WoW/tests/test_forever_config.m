@@ -21,6 +21,100 @@ static NSString *ConfigPath(NSString *root) {
     return [root stringByAppendingPathComponent:@"WTF/Config.wtf"];
 }
 
+static void TestTouchStartup(NSString *root) {
+    NSFileManager *files = NSFileManager.defaultManager;
+    NSError *error = nil;
+    NSString *toc = [root stringByAppendingPathComponent:@"Interface/AddOns/WolkaraRoue/WolkaraRoue.toc"];
+    NSString *enabled = [root stringByAppendingPathComponent:@"WTF/Account/Test/Realm/Player/AddOns.txt"];
+    NSString *second = [root stringByAppendingPathComponent:@"WTF/Account/Test/Realm/Other/AddOns.txt"];
+    NSString *saved = [root stringByAppendingPathComponent:@"WTF/Account/Test/Realm/Player/SavedVariables/WolkaraRoue.lua"];
+    NSString *language = [toc.stringByDeletingLastPathComponent stringByAppendingPathComponent:@"Language.lua"];
+    NSString *configBefore = Read(ConfigPath(root));
+    // An uninstalled add-on stays absent, even if its old enabled row survives.
+    Write(enabled, @"WolkaraRoue: disabled\r\nOtherAddon: enabled\r\nWolkaraRoueHelper: disabled");
+    NSString *enabledBefore = Read(enabled);
+    assert([TKForeverUI prepareTouchAddonForPhysicalController:NO inWorkingDirectory:root error:&error]);
+    assert(![files fileExistsAtPath:toc] && [Read(enabled) isEqual:enabledBefore]);
+    NSString *utf8 = @"\ufeff## Title-zhCN: 触屏轮盘\r\n## Version: 1.0.5-cn.1\r\n## SavedVariablesPerCharacter: WolkaraRoueDB\r\nCore.lua\r\nLanguage.lua\r\n";
+    NSString *tocBefore = [[NSString alloc] initWithData:[utf8 dataUsingEncoding:NSUTF8StringEncoding] encoding:NSISOLatin1StringEncoding];
+    Write(toc, tocBefore);
+    Write(second, @"OtherAddon: disabled\n");
+    // Include UTF-8 bytes which Unicode line enumeration could misread.
+    NSString *chinese = [[NSString alloc] initWithData:[@"设置：关闭，任务日志\n" dataUsingEncoding:NSUTF8StringEncoding] encoding:NSISOLatin1StringEncoding];
+    Write(language, chinese);
+    Write(saved, @"WolkaraRoueDB = { language = 'zhCN', freeLeft = { radius = 123 }, buttons = { 'spell:1' } }\n");
+    NSString *savedBefore = Read(saved);
+    assert([TKForeverUI prepareTouchAddonForPhysicalController:YES inWorkingDirectory:root error:&error]);
+    assert([Read(toc) isEqual:[tocBefore stringByReplacingOccurrencesOfString:@"\u00ef\u00bb\u00bf" withString:@"\u00ef\u00bb\u00bf## LoadOnDemand: 1\r\n"]]);
+    assert([Read(enabled) isEqual:enabledBefore]);
+    assert([Read(second) isEqual:@"WolkaraRoue: disabled\nOtherAddon: disabled\n"]);
+    NSDictionary *tocAttributes = [files attributesOfItemAtPath:toc error:NULL];
+    assert([TKForeverUI prepareTouchAddonForPhysicalController:YES inWorkingDirectory:root error:&error]);
+    assert([[files attributesOfItemAtPath:toc error:NULL][NSFileModificationDate] isEqual:tocAttributes[NSFileModificationDate]]);
+    // Unplugged next launch re-enables a previously disabled character; it does
+    // not reload/reset saved wheel choices or translation files.
+    assert([TKForeverUI prepareTouchAddonForPhysicalController:NO inWorkingDirectory:root error:&error]);
+    assert([Read(toc) isEqual:tocBefore]);
+    assert([Read(enabled) isEqual:@"WolkaraRoue: enabled\r\nOtherAddon: enabled\r\nWolkaraRoueHelper: disabled"]);
+    assert([Read(second) isEqual:@"WolkaraRoue: enabled\nOtherAddon: disabled\n"]);
+    assert([Read(saved) isEqual:savedBefore] && [Read(language) isEqual:chinese]);
+    assert([Read(ConfigPath(root)) isEqual:configBefore]);
+    // All duplicate owned fields converge, without treating another add-on's
+    // name prefix or a commented line as our row.
+    Write(toc, [@"## LoadOnDemand: 0\n## loadondemand: 1\n" stringByAppendingString:tocBefore]);
+    Write(second, @"# WolkaraRoue: disabled\nWolkaraRoue: disabled\nwOlKaRaRoUe: enabled\nOtherAddon: disabled\n");
+    assert([TKForeverUI prepareTouchAddonForPhysicalController:NO inWorkingDirectory:root error:&error]);
+    assert([Read(toc) isEqual:tocBefore]);
+    assert([Read(second) isEqual:@"WolkaraRoue: enabled\n# WolkaraRoue: disabled\nOtherAddon: disabled\n"]);
+    // Complete validation precedes all writes, including the TOC.
+    NSString *secondBefore = Read(second);
+    Write(second, [@"x" stringByPaddingToLength:1024*1024+1 withString:@"x" startingAtIndex:0]);
+    assert(![TKForeverUI prepareTouchAddonForPhysicalController:YES inWorkingDirectory:root error:&error]);
+    assert([Read(toc) isEqual:tocBefore]);
+    Write(second, secondBefore);
+    NSString *link = [root stringByAppendingPathComponent:@"WTF/Account/Linked"];
+    assert([files createSymbolicLinkAtPath:link withDestinationPath:root error:NULL]);
+    assert(![TKForeverUI prepareTouchAddonForPhysicalController:YES inWorkingDirectory:root error:&error]);
+    assert([Read(toc) isEqual:tocBefore] && [Read(second) isEqual:secondBefore]);
+    assert([files removeItemAtPath:link error:NULL]);
+    // A real failed atomic replacement rolls back the already written TOC and
+    // any earlier character list. This suite runs as the ordinary build user.
+    NSString *enabledCurrent = Read(enabled);
+    NSString *parent = second.stringByDeletingLastPathComponent;
+    assert([files setAttributes:@{NSFilePosixPermissions:@0500} ofItemAtPath:parent error:NULL]);
+    BOOL stored = [TKForeverUI prepareTouchAddonForPhysicalController:YES inWorkingDirectory:root error:&error];
+    assert([files setAttributes:@{NSFilePosixPermissions:@0700} ofItemAtPath:parent error:NULL]);
+    assert(!stored);
+    assert([Read(toc) isEqual:tocBefore] && [Read(enabled) isEqual:enabledCurrent] && [Read(second) isEqual:secondBefore]);
+    assert([Read(saved) isEqual:savedBefore] && [Read(language) isEqual:chinese]);
+
+    // A fresh character/account has no AddOns.txt yet. The manifest alone must
+    // suppress auto-loading with a controller and restore it without one.
+    assert([files removeItemAtPath:[root stringByAppendingPathComponent:@"WTF/Account"] error:NULL]);
+    assert([TKForeverUI prepareTouchAddonForPhysicalController:YES inWorkingDirectory:root error:&error]);
+    assert([Read(toc) containsString:@"## LoadOnDemand: 1"]);
+    assert([TKForeverUI prepareTouchAddonForPhysicalController:NO inWorkingDirectory:root error:&error]);
+    assert([Read(toc) isEqual:tocBefore]);
+    assert(![files fileExistsAtPath:enabled]);
+
+    NSString *suite = [@"TouchStartupTests." stringByAppendingString:NSUUID.UUID.UUIDString];
+    NSUserDefaults *defaults = [[NSUserDefaults alloc] initWithSuiteName:suite];
+    [defaults setBool:YES forKey:@"AKTouchControls"];
+    [defaults setObject:@{@"scale":@1.25} forKey:@"PlayerLayout"];
+    [defaults setVolatileDomain:@{@"OtherArgument":@"kept"} forName:NSArgumentDomain];
+    NSDictionary *persisted = [defaults persistentDomainForName:suite];
+    [TKForeverUI prepareTouchControlsForPhysicalController:YES defaults:defaults];
+    assert(![defaults boolForKey:@"AKTouchControls"]);
+    assert([[defaults stringForKey:@"OtherArgument"] isEqual:@"kept"]);
+    assert([[defaults persistentDomainForName:suite] isEqual:persisted]);
+    [TKForeverUI prepareTouchControlsForPhysicalController:NO defaults:defaults];
+    assert([defaults boolForKey:@"AKTouchControls"]);
+    assert([[defaults persistentDomainForName:suite] isEqual:persisted]);
+    [defaults removeVolatileDomainForName:NSArgumentDomain];
+    [defaults removePersistentDomainForName:suite];
+    puts("TOUCH_STARTUP_PASS: controller/unplugged/new-character policy, byte-preserved Chinese/configuration, idempotence, invalid-file refusal, write-failure rollback, and nonpersistent toolbar override.");
+}
+
 int main(void) {
     @autoreleasepool {
         NSFileManager *files = NSFileManager.defaultManager;
@@ -200,6 +294,7 @@ int main(void) {
         NSString *resolved = [TKForeverUI wtfDirectoryInWorkingDirectory:root create:NO error:&error];
         assert(resolved != nil && [resolved hasPrefix:root]);
 
+        TestTouchStartup(root);
         [files removeItemAtPath:root error:NULL];
         [files removeItemAtPath:bare error:NULL];
         [files removeItemAtPath:outside error:NULL];

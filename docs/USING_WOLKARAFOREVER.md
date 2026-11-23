@@ -95,6 +95,22 @@ interface and apply a change. The add-on uses the game's own fonts and its exist
 settings migration. Updating its package does not replace game archives or account
 SavedVariables. Unsupported game locales fall back to English.
 
+Each **Play** launch checks for an attached physical controller after sign-in and
+before the game starts. With a controller, WolkaraRoue does not automatically
+load and the native keyboard/controls toolbar is off. Without a controller, both
+are enabled. Plug in a USB controller or connect Bluetooth before pressing Play;
+connecting or disconnecting during a game applies on the next launch. This does
+not change **Gamepad UI** or its bindings.
+
+The switch retains the installed Chinese package and all saved wheel positions,
+buttons and language choices. It changes only WolkaraRoue's `LoadOnDemand` TOC
+field and its rows in existing character `AddOns.txt` files. The TOC also covers
+new characters without a saved add-on list. The toolbar choice lasts for this app
+process only; stored on-screen control preferences are retained. Other add-ons,
+SavedVariables, login settings and game archives are untouched. An absent
+WolkaraRoue package is not installed automatically. A preparation error stops
+launch so the player can retry after closing the game.
+
 With Chinese selected on a zhCN client, game menu labels use the client's own
 localized strings (for example its spellbook, quest log and logout labels), with
 Chinese fallbacks if a client version omits a string. Spell/item names already

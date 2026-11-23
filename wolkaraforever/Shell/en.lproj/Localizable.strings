@@ -735,6 +735,7 @@
 "forever.error.wtfCreate" = "The game's settings folder could not be created.";
 "forever.error.configOutside" = "The game's configuration is outside its working folder.";
 "forever.error.gamepadStore" = "The gamepad setting could not be stored.";
+"forever.error.touchAddonSwitch" = "WolkaraRoue could not be prepared for this controller. Close the game and try again. Your saved add-on settings have not been reset.";
 "forever.error.settingName" = "A setting name is not a bare name.";
 "forever.error.settingValue" = "A setting value contains a space or a quote.";
 "forever.error.settingStore" = "A setting could not be stored.";

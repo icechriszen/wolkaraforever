@@ -732,6 +732,7 @@
 "forever.error.wtfCreate" = "Der Einstellungsordner des Spiels konnte nicht erstellt werden.";
 "forever.error.configOutside" = "Die Konfiguration des Spiels liegt außerhalb seines Arbeitsordners.";
 "forever.error.gamepadStore" = "Die Gamepad-Einstellung konnte nicht gespeichert werden.";
+"forever.error.touchAddonSwitch" = "WolkaraRoue konnte nicht für diesen Controller vorbereitet werden. Schließe das Spiel und versuche es erneut. Deine gespeicherten Add-on-Einstellungen wurden nicht zurückgesetzt.";
 "forever.error.settingName" = "Ein Einstellungsname ist kein einfacher Name.";
 "forever.error.settingValue" = "Ein Einstellungswert enthält ein Leerzeichen oder ein Anführungszeichen.";
 "forever.error.settingStore" = "Eine Einstellung konnte nicht gespeichert werden.";

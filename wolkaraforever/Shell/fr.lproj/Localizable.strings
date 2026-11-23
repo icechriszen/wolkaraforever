@@ -735,6 +735,7 @@
 "forever.error.wtfCreate" = "Le dossier des réglages du jeu n’a pas pu être créé.";
 "forever.error.configOutside" = "La configuration du jeu est en dehors de son dossier de travail.";
 "forever.error.gamepadStore" = "Le réglage de la manette n’a pas pu être enregistré.";
+"forever.error.touchAddonSwitch" = "Impossible de préparer WolkaraRoue pour cette manette. Fermez le jeu et réessayez. Vos réglages d’extension n’ont pas été réinitialisés.";
 "forever.error.settingName" = "Un nom de réglage n’est pas un nom simple.";
 "forever.error.settingValue" = "Une valeur de réglage contient une espace ou un guillemet.";
 "forever.error.settingStore" = "Un réglage n’a pas pu être enregistré.";

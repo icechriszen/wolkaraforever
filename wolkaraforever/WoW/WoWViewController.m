@@ -847,6 +847,30 @@ static dispatch_queue_t TKForeverUIQueue(void) {
             return;
         }
     }
+    if (self.startApp && [app.profile isEqual:@"wow-forever"]) {
+        // Snapshot once immediately before entry, after browser login. The guest
+        // host (and its virtual controller) does not exist yet; synthetic
+        // controller snapshots are not attached hardware.
+        BOOL physical = NO;
+        for (GCController *controller in GCController.controllers) {
+            if (!controller.isSnapshot && (controller.extendedGamepad || controller.microGamepad)) {
+                physical = YES;
+                break;
+            }
+        }
+        NSError *error = nil;
+        NSString *directory = [_library workingDirectoryForApp:app error:&error];
+        if (!directory || ![TKForeverUI prepareTouchAddonForPhysicalController:physical
+            inWorkingDirectory:directory error:&error]) {
+            WKLog("wow", @"touch startup policy failed (%@, %ld)", error.domain, (long)error.code);
+            [TKBattleNetSession clear];
+            [self finishStartupWithMessage:WKLocalized(@"forever.error.touchAddonSwitch") failed:YES];
+            return;
+        }
+        [TKForeverUI prepareTouchControlsForPhysicalController:physical defaults:NSUserDefaults.standardUserDefaults];
+        WKLog("wow", @"touch startup: physical controller=%@; WolkaraRoue auto-load and toolbar=%@",
+            physical ? @"yes" : @"no", physical ? @"off" : @"on");
+    }
     if (self.startApp) self.startApp(app);
 }
 - (void)primaryAction {
