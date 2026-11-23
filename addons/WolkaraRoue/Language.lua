@@ -180,6 +180,8 @@ local L = {
         ["tap an empty wheel slot to put a spell in it, swipe from a spell to turn the wheel, and the gear in the shortcuts sets everything up."] = "轻点空槽位放入技能，从技能图标开始滑动可转动轮盘；通过快捷栏的齿轮按钮进行设置。",
         ["not ready yet"] = "尚未就绪",
         ["no errors."] = "没有错误。",
+        ["Chat trace: open=%d, text=%d, Return=%d, API=%d/%d, echo=%d, display=%d."] = "聊天诊断：入口=%d，文字=%d，回车=%d，发送调用=%d/%d，本人回显=%d，显示处理=%d。",
+        ["Chat trace: last text bytes=%d, observer errors=%d. Saved on normal logout; no message content is recorded."] = "聊天诊断：最近文字字节数=%d，诊断异常=%d。正常退出游戏时保存，不记录聊天内容。",
         ["not in combat."] = "当前未处于战斗状态。",
         ["settings and default positions restored (wheel spells are kept)."] = "已恢复默认设置和位置（保留轮盘技能）。",
         ["Controls"] = "操作设置",

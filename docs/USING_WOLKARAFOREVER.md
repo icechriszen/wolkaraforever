@@ -115,6 +115,15 @@ add-on. The input and channel are prepared before the app's text events arrive,
 so deferred chat initialization cannot overwrite the new line. The game still
 sends on Return; slash commands retain their existing path. No language or
 layout reset is needed when updating the bundled add-on.
+If sending still produces no visible message, `1.0.5-cn.7` records a bounded
+chat trace in the existing per-character settings. `/mobile chatdiag` prints a
+local summary of input, Return, send API, self-echo and display observations.
+An API count is an attempted call, not proof of delivery; unavailable hooks are
+marked separately in the saved trace. Only counts, lengths, error numbers and
+fixed state labels are saved, never message text, names or recipients. After
+reproducing once, exit the game normally so the trace is saved; the next UI load
+starts a new trace. This diagnostic does not submit or retry messages, reset
+settings, or establish that the remaining chat failure is fixed.
 If the top Bags, Spells, Map and Menu buttons are absent in Standard, enter
 `/mobile`, select **Spell wheels → Shortcuts**, and set it to **On**. In Simplified
 Chinese these controls are **技能轮盘 → 快捷按钮 → 开启**. This switch restores the

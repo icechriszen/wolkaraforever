@@ -137,7 +137,7 @@ end
 
 local UpdateChips
 
-local function Add(event, text, author, _, _, _, _, _, channelIndex, channelBase)
+local function Add(event, text, author, _, _, _, _, _, channelIndex, channelBase, _, _, guid)
     local info = EVENTS[event]
     if not info or type(text) ~= "string" then return end
     local r, g, b = Color(event, channelIndex)
@@ -146,6 +146,10 @@ local function Add(event, text, author, _, _, _, _, _, channelIndex, channelBase
         if not (panel and panel:IsShown() and Tab() == "whisper") then unread = unread + 1 end
     end
     Store({ line = Format(info, text, author, channelIndex, channelBase), r = r, g = g, b = b, tabs = info.tabs })
+    if ns.ChatDiagnostics then
+        ns.ChatDiagnostics:Rendered(event, guid, info.tabs[Tab()] and
+            ((ticker and ticker:IsShown()) or (panel and panel:IsShown())))
+    end
     if badge then Chat:UpdateBadge() end
     if info.incoming and UpdateChips then UpdateChips() end
 end
@@ -187,10 +191,12 @@ end
 Chat.Prefix = Prefix
 
 local function OpenInput()
+    if ns.ChatDiagnostics then ns.ChatDiagnostics:Mark("open") end
     local util = ChatFrameUtil
     local open = util and util.OpenChat
     if type(open) ~= "function" then open = ChatFrame_OpenChat end
     if type(open) ~= "function" then
+        if ns.ChatDiagnostics then ns.ChatDiagnostics:Mark("unavailable") end
         if ns.Print then ns.Print(ns.T("Chat input is unavailable on this client.")) end
         return
     end
@@ -204,7 +210,9 @@ local function OpenInput()
         if type(active) == "function" then box = active() end
     end
     box = box or (DEFAULT_CHAT_FRAME and DEFAULT_CHAT_FRAME.editBox) or _G.ChatFrame1EditBox
+    if ns.ChatDiagnostics then ns.ChatDiagnostics:Attach(box) end
     if not box or type(box.SetText) ~= "function" or (box.HasFocus and not box:HasFocus()) then
+        if ns.ChatDiagnostics then ns.ChatDiagnostics:Mark("unfocused", box) end
         if ns.Print then ns.Print(ns.T("Chat input is unavailable on this client.")) end
         return
     end
@@ -212,6 +220,7 @@ local function OpenInput()
     box:SetText(Prefix())
     if type(box.ParseText) == "function" then box:ParseText(0, true)
     elseif type(ChatEdit_ParseText) == "function" then ChatEdit_ParseText(box, 0, true) end
+    if ns.ChatDiagnostics then ns.ChatDiagnostics:Mark("ready", box) end
 end
 
 local function Paint(button, selected)
@@ -561,6 +570,7 @@ function Chat:Layout()
         ClearOverrideBindings(opener)
         SetOverrideBindingClick(opener, true, OPEN_KEY, "WolkaraMobileChatOpener", "LeftButton")
     end
+    if ns.ChatDiagnostics then ns.ChatDiagnostics:Binding() end
 end
 
 function Chat:SetEditing(on)

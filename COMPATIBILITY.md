@@ -406,9 +406,17 @@ also reached the text interpreter and was correctly rejected as printable text.
 There were no native fatal markers or Lua-error lines in that log; this log does
 not capture the add-on's internal error state, focus, submit callback or server
 echo, so those absences do not establish successful delivery. A local-only
-`/mobile error` result has been requested to distinguish a Lua failure from the
-remaining input/submit/display paths. No public chat message was sent by the
-agent and no new functional change was made from these logs alone.
+`/mobile error` returned “no errors” according to the user. This excludes a
+recorded add-on exception, but not an absent callback or a failed delivery.
+No public chat message was sent by the agent.
+
+The `1.0.5-cn.7` diagnostic observes public edit-box callbacks and secure
+post-hooks on the modern/legacy send APIs, plus self-echo and add-on display
+events. A 32-entry ring stores only counters, lengths, fixed enums and numeric
+error IDs in the existing per-character save. It never invokes a send API or
+changes input/submit behavior. Missing hooks and observer failures are recorded
+separately so a zero API count is not mistaken for proof when instrumentation
+is unavailable. Physical reproduction with this diagnostic is pending.
 
 ## Report a problem
 

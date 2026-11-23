@@ -1,5 +1,5 @@
 {
-  "archive": "WolkaraRoue-1.0.5-cn.6.zip",
+  "archive": "WolkaraRoue-1.0.5-cn.7.zip",
   "files": {
     "WolkaraRoue/Actions.lua": {
       "sha256": "29e0944b02e2423b25fc55fd1201ee3bf2da8ff6efc1fa10b8b79c85ca8279ed",
@@ -22,8 +22,12 @@
       "size": 2660
     },
     "WolkaraRoue/Chat.lua": {
-      "sha256": "7b544421214a0567ab5bf46c3d9843c449bcd07c90bf0e3256692cfbbc570f45",
-      "size": 24155
+      "sha256": "750bd815a201a1e2b2e19d5692cea9d3514ee69d5eda13329108fde1c94fd7c4",
+      "size": 24781
+    },
+    "WolkaraRoue/ChatDiagnostics.lua": {
+      "sha256": "bdd27a142e1eb17933c7d5a0155462fe281eaf0efbe22d607bdf7979d6bab3e2",
+      "size": 6955
     },
     "WolkaraRoue/ChatTab.lua": {
       "sha256": "69e750eaf2867268557399a8d6ee95e3a8c8e506d371576d2eff06d0191ea02c",
@@ -34,8 +38,8 @@
       "size": 12503
     },
     "WolkaraRoue/Core.lua": {
-      "sha256": "4787c107bd6edd8f5f4e2e9b745b301801ae27a5e60d9a7590d91042de196015",
-      "size": 22457
+      "sha256": "de25a49e0b206200d5d7b7178a4ef7984355905e80f7ed9eec766d1f3c4f4df1",
+      "size": 22554
     },
     "WolkaraRoue/DuoMenu.lua": {
       "sha256": "ac067e13818f793fc2256f0967047b175e27a65ebbc0bcd967ecf897cc5e1ee7",
@@ -66,8 +70,8 @@
       "size": 371
     },
     "WolkaraRoue/Language.lua": {
-      "sha256": "71335c824b7f324f0628feacb3b2c10ff596353efe346b8ab9ccdefa824c7a68",
-      "size": 54310
+      "sha256": "05bc0350bbe1d5b9b38a7dd6ef67f1ed6489718430e6773a681e49b1b5730f70",
+      "size": 54749
     },
     "WolkaraRoue/Menu.lua": {
       "sha256": "93dcb3aea4c5935283a4e11ed0153fafe696f7affdfa085b8170f804c28df761",
@@ -146,14 +150,14 @@
       "size": 7509
     },
     "WolkaraRoue/WolkaraRoue.toc": {
-      "sha256": "4333a296bc7683377d08117c9b5ca399f12188eb6eebce72ecd9729ae9b58c41",
-      "size": 852
+      "sha256": "81a086ed6c146be812959ec9832cf714f4dce24ef175e004585e7d3a8c1dfd0f",
+      "size": 872
     }
   },
   "format": "wolkaraforever.addon",
   "interface": 16001,
   "name": "WolkaraRoue",
-  "release": "1.0.5-cn.6",
-  "sha256": "fd829c49bb348b7f6ff40b3d6473381837ef19ae21df1a37a4dca6ea9db3d034",
+  "release": "1.0.5-cn.7",
+  "sha256": "176df725304038f0c9990d66ed26a936316ca9e85ff03ca458b0476ca4b8f62d",
   "version": 1
 }
