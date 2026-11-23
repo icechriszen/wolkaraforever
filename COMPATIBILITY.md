@@ -257,7 +257,7 @@ files retained their SHA-256 digests. The only metadata differences were data
 protection extended attributes added to 73 files by the iOS container manager;
 none of the archives' metadata changed.
 
-The candidate exports fixed compact native control geometry before Play into an
+The installed build exports fixed compact native control geometry before Play into an
 owned add-on data file. Standard spell wheels use those centres and keep their
 hit boxes clear of the sticks. Add-on menus/settings, bags and game windows fit
 between or above the native hit regions and keyboard toolbar. Saved native
@@ -271,8 +271,19 @@ Turn and Windows implementations fail those regressions. The Lua/Chinese suite,
 native geometry/export and configuration-preservation tests, 37 archive checks,
 package verifier, layer/docs gates, Release build and strict signature check
 passed. These source fixtures do not establish live interaction success; no
-simulator UI execution is claimed. Manual bundled update and user-operated
-physical overlap/input validation are pending on this installed build.
+simulator UI execution is claimed.
+
+After updating the bundled add-on, the user confirmed that both the spell-wheel
+overlap and the menu/bag overlap disappeared, and that tapping, movement and
+jumping worked normally. Read-only device copies confirmed add-on version
+`1.0.5-cn.3` and all 15 bounded native geometry fields. A subsequent screenshot
+showed the spell buttons surrounding the actual sticks, the short Chinese top-bar
+labels 法术书 and 地图, and the jump control without visible text. This passes the
+reported reproduction on the installed iPhone build. Interaction evidence is
+user-operated; Device Hub was unavailable, and the screenshot corroborates
+appearance rather than proving input. The running game was not stopped. This
+validation does not claim to resolve the earlier dynamic-code fault or establish
+prolonged stability.
 
 ## Report a problem
 
