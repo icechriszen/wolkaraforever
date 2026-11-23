@@ -152,3 +152,11 @@ and caller offset before forwarding it unchanged. They do not turn a missing
 object into a valid object, suppress the system trap, or inspect object contents
 or stacks. This distinguishes an initial CoreFoundation failure from a later
 watchdog termination while the application writes its own crash report.
+
+Local AppKit event monitors now register on ordinary launches. The adapter uses
+its existing in-process event dispatcher and returns a real removable token for
+a valid handler; it no longer returns nil just because `--appkit-event-monitors`
+was absent. Matching callbacks may pass, replace or consume an event. Global
+monitoring of other applications remains unavailable on iOS. Registration logs
+are capped at eight per API and contain only handler/token availability. A unit
+test of monitor ownership does not establish client stability on a device.
