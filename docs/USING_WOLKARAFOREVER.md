@@ -120,3 +120,16 @@ If a failure offers **Technical details** in the Settings sheet, copy that messa
 the exact reason, and it matches a line in the log. Do not share credentials, pairing data,
 signing information, account information, or device identifiers, and do not delete the app
 as a first troubleshooting step — the log you need goes with it.
+
+### Memory permission diagnostics
+
+For a runtime permission failure, a private build with `WOLKARA_HOST_DIAGNOSTICS=1`
+also records bounded mapping provenance. Alternatively launch the normal shell with
+`--memory-permission-diagnostics`, then press Play yourself. The runtime retains the
+last 512 mapping operations and reports at most 64 executable requests plus eight
+failures, with requested permissions, API results, and caller image identifiers.
+An unknown origin means the mapping was not retained or its range changed; it is not
+evidence that no allocation occurred. Only API arguments and existing loader metadata
+are used; no application bytes, stack frames, credentials, or gameplay are inspected.
+The diagnostics preserve API results and errno. They do not enable JIT or claim to
+fix a client crash. Read the runtime log with `wolkaraforever/tools/device_log.sh`.

@@ -1,0 +1,123 @@
+# Record bounded memory permission provenance in the runtime only.
+# Preserve libc errno across logging; never alter protection results or guest bytes.
+# Enabled by --memory-permission-diagnostics or private WK_HOST_DIAGNOSTICS builds.
+
+--- a/runtime/NativeGuest.m
++++ b/runtime/NativeGuest.m
+@@ -10,6 +10,7 @@
+ #include "GuestFixups.h"
+ #include "GuestLink.h"
+ #include "NativeCxx.h"
++#include "MemoryTrace.h"
+ #include "GuestPaths.h"
+ #include "GuestVMBudget.h"
+ #include "GuestSoftwareVM.h"
+@@ -604,7 +605,25 @@
+ static int guest_madvise(void *address, size_t size, int advice) {
+     return gsv_enabled()?gsv_advise(address,size,advice):gv_advise(&vm_budget,address,size,advice);
+ }
+-static int guest_mprotect(void *address, size_t size, int prot) {
++static bool memory_permission_diagnostics;
++static int guest_mprotect(void *address, size_t size, int prot);
++// Attribute a call with already-loaded image metadata; no stack or code reads.
++static void memory_permission_record(WKMemoryEvent event, void *caller) {
++    int saved=errno;
++    uintptr_t pc=(uintptr_t)__builtin_extract_return_addr(caller);
++    const GuestLibrary *library=gl_library_at(&carried,pc);
++    if(library) {
++        event.caller_image=2+(int)(library-carried.libraries);
++        event.caller_offset=pc-(uintptr_t)(library->image.header_address+library->slide);
++    } else if(inside((void *)pc,1)) {
++        event.caller_image=1;
++        event.caller_offset=pc-(uintptr_t)guest.arena.executable;
++    }
++    event.arena=inside((void *)(event.operation==WK_MEMORY_MAP?event.result:event.address),event.size);
++    wk_memory_trace_record(event);
++    errno=saved;
++}
++static int guest_mprotect_impl(void *address, size_t size, int prot) {
+     if(trace_memory_operations()) LOG("[native] mprotect(%p,%#zx,%d)\n",address,size,prot);
+     // Local signing: shadow pages are plain writable anonymous memory; signed
+     // pages already have their final protection by construction.
+@@ -616,16 +635,16 @@
+     // code alias, or budget state to maintain.  The old tail was this call.
+     if (!trace_memory_operations() && !gsv_enabled() && !gv_enabled(&vm_budget) && !inside(address,size)) {
+         int result=mprotect(address,size,prot);
+-        if (result) LOG("[native] mprotect failed errno=%d\n",errno);
++        if (result) { int code=errno; LOG("[native] mprotect failed errno=%d\n",code); errno=code; }
+         return result;
+     }
+     // Keep executable backing RX; imported stores/copies use its shared RW view.
+     if (inside(address,size) && (prot & PROT_EXEC)) prot &= ~PROT_WRITE;
+     int result = gsv_enabled()?gsv_protect(address,size,prot):gv_protect(&vm_budget,address,size,prot);
+-    if (result) LOG("[native] mprotect failed errno=%d\n",errno);
++    if (result) { int code=errno; LOG("[native] mprotect failed errno=%d\n",code); errno=code; }
+     return result;
+ }
+-static int guest_munmap(void *address, size_t size) {
++static int guest_munmap_impl(void *address, size_t size) {
+     gsv_forget_code_alias(address,size);
+     if(trace_memory_operations()) LOG("[native] munmap(%p,%#zx)\n",address,size);
+     // Local signing: keep validated pages; shadow pages stay mapped+writable.
+@@ -642,7 +661,7 @@
+     if (inside(address,size)) return mprotect(address,size,PROT_NONE);
+     return gsv_enabled()?gsv_unmap(address,size):gv_unmap(&vm_budget,address,size);
+ }
+-static void *guest_mmap(void *address, size_t size, int prot, int flags, int fd, off_t offset) {
++static void *guest_mmap_impl(void *address, size_t size, int prot, int flags, int fd, off_t offset) {
+     if(trace_memory_operations()) LOG("[native] mmap(%p,%#zx,%d,%#x,%d,%lld)\n",address,size,prot,flags,fd,(long long)offset);
+     if (inside_exec(address,size) && (flags & MAP_ANON) && (flags & MAP_PRIVATE) &&
+         fd == -1 && offset == 0 && !((uintptr_t)address % GM_PAGE_SIZE) && size && !(size % GM_PAGE_SIZE)) {
+@@ -667,7 +686,7 @@
+     // both optional memory systems are disabled.
+     if (!trace_memory_operations() && !gsv_enabled() && !gv_enabled(&vm_budget)) {
+         void *result=mmap(address,size,prot,flags,fd,offset);
+-        if (result==MAP_FAILED) LOG("[native] mmap -> %p errno=%d\n",result,errno);
++        if (result==MAP_FAILED) { int code=errno; LOG("[native] mmap -> %p errno=%d\n",result,code); errno=code; }
+         return result;
+     }
+     void *result;
+@@ -680,8 +699,29 @@
+             log_once("[native] reservation of %zu MB downsized to %zu MB (TOLKARA_VM_BUDGET_MB)\n",size>>20,granted>>20);
+         errno=code;
+     } else result=gv_map(&vm_budget,address,size,prot,flags,fd,offset);
+-    if(trace_memory_operations() || result==MAP_FAILED) LOG("[native] mmap -> %p errno=%d\n",result,result==MAP_FAILED?errno:0);
++    if(trace_memory_operations() || result==MAP_FAILED) { int code=errno; LOG("[native] mmap -> %p errno=%d\n",result,result==MAP_FAILED?code:0); errno=code; }
+     return result;
++}
++static int guest_mprotect(void *address, size_t size, int prot) {
++    int result=guest_mprotect_impl(address,size,prot), code=errno;
++    if(memory_permission_diagnostics)memory_permission_record((WKMemoryEvent){
++        .operation=WK_MEMORY_PROTECT,.address=(uintptr_t)address,.size=size,.protection=prot,
++        .result=(uintptr_t)result,.failed=result!=0,.error=result?code:0},__builtin_return_address(0));
++    errno=code;return result;
++}
++static int guest_munmap(void *address, size_t size) {
++    int result=guest_munmap_impl(address,size), code=errno;
++    if(memory_permission_diagnostics)memory_permission_record((WKMemoryEvent){
++        .operation=WK_MEMORY_UNMAP,.address=(uintptr_t)address,.size=size,
++        .result=(uintptr_t)result,.failed=result!=0,.error=result?code:0},__builtin_return_address(0));
++    errno=code;return result;
++}
++static void *guest_mmap(void *address, size_t size, int prot, int flags, int fd, off_t offset) {
++    void *result=guest_mmap_impl(address,size,prot,flags,fd,offset);int code=errno;
++    if(memory_permission_diagnostics)memory_permission_record((WKMemoryEvent){
++        .operation=WK_MEMORY_MAP,.address=(uintptr_t)address,.size=size,.protection=prot,.flags=flags,
++        .result=(uintptr_t)result,.failed=result==MAP_FAILED,.error=result==MAP_FAILED?code:0},__builtin_return_address(0));
++    errno=code;return result;
+ }
+ static void guest_jit_protect(int enabled) { LOG("[native] jit write protection=%d (separate RW/RX views)\n",enabled); }
+ // compiler-rt's instruction cache flush, which iPadOS's libSystem does not
+@@ -1887,6 +1927,12 @@
+         }
+         if(owned_cxx.api)LOG("[native-cxx] allocator isolation ready; libc++=%u; strings and thread-local ownership\n",owned_cxx.api->libcxx_version);
+     }
++    memory_permission_diagnostics=WK_HOST_DIAGNOSTICS || [NSProcessInfo.processInfo.arguments containsObject:@"--memory-permission-diagnostics"];
++    wk_memory_trace_start(memory_permission_diagnostics?guest.log:NULL);
++    if(memory_permission_diagnostics)for(size_t i=0;i<carried.count;i++) {
++        const char *leaf=strrchr(carried.libraries[i].path,'/');
++        LOG("[memory-permission] image=%zu name=%s\n",i+2,leaf?leaf+1:carried.libraries[i].path);
++    }
+     trace_guest=[NSProcessInfo.processInfo.arguments containsObject:@"--trace-guest"];
+     gt_set_lifetime_trace(WK_HOST_DIAGNOSTICS || [NSProcessInfo.processInfo.arguments containsObject:@"--host-lifetime-diagnostics"]);
+     if (trace_guest) LOG("[native] tracing failed file access, created directories, getenv, sockets and the calls dlsym hands out (--trace-guest)\n");

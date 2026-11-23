@@ -267,7 +267,10 @@ wolkaraforever/Cxx/vendor/thread.cpp translation/OwnedCxx/vendor/thread.cpp add
 # Runtime: prepared dynamic-code pages and host-only regression fixtures
 wolkaraforever/Runtime/CodeRemap.c runtime/CodeRemap.c add
 wolkaraforever/Runtime/CodeRemap.h runtime/CodeRemap.h add
+wolkaraforever/Runtime/MemoryTrace.c runtime/MemoryTrace.c add
+wolkaraforever/Runtime/MemoryTrace.h runtime/MemoryTrace.h add
 wolkaraforever/Runtime/tests/test_code_remap.c tests/test_code_remap.c add
+wolkaraforever/Runtime/tests/test_memory_trace.c tests/test_memory_trace.c add
 #
 # Input: any button, on any controller, in one stream (diagnostic)
 wolkaraforever/Input/ControllerCommandIngress.h launcher/Input/ControllerCommandIngress.h add
