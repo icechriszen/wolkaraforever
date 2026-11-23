@@ -161,7 +161,7 @@ the existing resolver and direct gestures, with no resolution, add-on, saved-lay
 or fixed-offset changes. The signed iPhone build, layer/docs checks, and simulator
 SDK compilation of the host tap fixture passed. Both required simulator instances
 were absent; the fixture did not execute. The project installer refused replacement
-while a game session was live. No physical click-accuracy pass is claimed.
+while a game session was live. At that stage, no physical click-accuracy pass was claimed.
 
 ## Controller startup installation: iPhone 17, 2026-11-23
 
@@ -208,8 +208,14 @@ controller detection and both automatic loading and toolbar disabled. A read-onl
 capture showed CN character selection without the native bottom toolbar. The user
 confirmed that both touch UIs were hidden and the sticks and buttons worked. The
 client error count (27) and system crash count (12) did not increase in that check.
-This is user-operated physical evidence; Device Hub was unavailable. Unplugged
-restoration and icon-centre click accuracy remain pending.
+On the next launch after unplugging the controller, the user confirmed both touch
+UIs returned, the Chinese language and original layout were retained, and taps at
+wheel-icon centres triggered normally. Readback logged no physical controller and
+both features on; the TOC was byte-identical to the reviewed Chinese source again,
+with the temporary LoadOnDemand field removed. Together these user-operated runs pass
+the requested startup switching and reported touch-offset reproduction on this
+installed build. They do not measure every touch position or prolonged stability.
+This is user-operated physical evidence; Device Hub was unavailable.
 This change does not alter or claim to solve the dynamic-code fault recorded above.
 
 ## Report a problem
