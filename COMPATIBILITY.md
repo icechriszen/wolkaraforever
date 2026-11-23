@@ -331,7 +331,14 @@ Chinese strings, native controls and runtime unchanged. The Lua/Chinese suite
 passes, including alternating wheels, a late old-button release, pointer motion
 after release, fresh taps and protected combat cleanup. These fixtures establish
 the source failure and correction, not the cause or resolution of every physical
-gesture; installation and user-operated device validation are pending.
+gesture. Source `3d56adc` built successfully in Release with Developer service;
+the strict signature check and bundled-source hash comparison passed. Package
+verification, layer checks and documentation/catalog checks also passed. The
+layer gate reported its existing missing-upstream-merge-base limitation. Both
+required matrix simulators were absent, so no simulator interaction is claimed.
+The original state tool still found a live game process after the build. App
+replacement and user-operated device validation await the user's normal exit;
+the live game has not been stopped or overwritten.
 
 ## Report a problem
 
