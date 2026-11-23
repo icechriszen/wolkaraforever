@@ -95,6 +95,21 @@ interface and apply a change. The add-on uses the game's own fonts and its exist
 settings migration. Updating its package does not replace game archives or account
 SavedVariables. Unsupported game locales fall back to English.
 
+To use the existing add-on's default interface, keep **Mobile UI → General →
+Layout** on **Standard**. This is a saved layout choice within the current
+package, not a different upstream add-on. **Reset positions** restores placement
+without removing skills or changing language. `/mobile reset` resets the add-on's
+settings and positions while retaining its normal wheel/free-button spells;
+on a zhCN client the reset language choice follows the game and remains Chinese.
+Choose Standard again if needed, then close the settings panel to save/reload.
+The Standard chat panel has its own **X** close button. Only an active Duo chat
+pill replaces that button; disabling Duo restores the Standard close action.
+
+Movement comes from the app's on-screen gamepad, separately from the spell wheels.
+Expand the bottom toolbar and enable its gamepad button if the movement sticks are
+absent. The toolbar gear's **Reset to defaults** restores the native controls'
+positions and settings; it does not reset WolkaraRoue or its Chinese language.
+
 Each **Play** launch checks for an attached physical controller after sign-in and
 before the game starts. With a controller, WolkaraRoue does not automatically
 load and the native keyboard/controls toolbar is off. Without a controller, both

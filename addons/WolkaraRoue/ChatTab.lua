@@ -5,6 +5,7 @@ local ChatTab = ns.Register("Chat tab", {})
 ns.ChatTab = ChatTab
 
 local tab, typeRow
+local closeButtons = {}
 local unread = 0
 local state = "closed"
 local DEFAULTS = { enabled = true }
@@ -64,7 +65,12 @@ end
 local function Apply()
     if not tab then return end
     local panel, ticker = Panel(), Ticker()
-    if not On() then
+    local on = On()
+    -- Only the Duo chat pill replaces the panel's close button. Standard needs
+    -- its original X, including after changing layout or disabling the pill.
+    -- Never replace Show with Hide: that made the Standard panel unclosable.
+    for _, button in ipairs(closeButtons) do button:SetShown(not on) end
+    if not on then
         tab:Hide(); typeRow:Hide()
         if ticker and ns.db and ns.db.chat and ns.db.chat.custom and not (panel and panel:IsShown()) then ticker:Show() end
         return
@@ -154,7 +160,9 @@ local function Hook()
         Apply()
     end)
     for _, child in ipairs({ panel:GetChildren() }) do
-        if type(child.text) == "table" and child.text.GetText and child.text:GetText() == "X" then child:Hide(); child.Show = child.Hide end
+        if type(child.text) == "table" and child.text.GetText and child.text:GetText() == "X" then
+            closeButtons[#closeButtons + 1] = child
+        end
     end
 end
 

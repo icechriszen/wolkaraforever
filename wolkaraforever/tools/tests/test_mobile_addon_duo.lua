@@ -95,3 +95,76 @@ duo = false
 assert(ns.Quick:Enabled() == false, "the quick bar is on in the Standard interface")
 
 print("mobile add-on Duo arrangements: the fan and the quick bar fill their defaults, keep every stored value in range, repair a hand-edited one, take a pre-pages save once, and are on only in the Duo layout: PASS")
+
+-- ChatTab must leave the standard panel's own close action usable. Its former
+-- unconditional Hide plus Show=Hide removed the only exit even with Duo off.
+do
+    local frames = {}
+    local function Mock(name, parent)
+        local f = { shown = true, hooks = {}, scripts = {}, children = {}, textValue = "" }
+        function f:SetScript(event, fn) self.scripts[event] = fn end
+        function f:HookScript(event, fn)
+            self.hooks[event] = self.hooks[event] or {}
+            table.insert(self.hooks[event], fn)
+        end
+        function f:Fire(event)
+            if self.scripts[event] then self.scripts[event](self) end
+            for _, fn in ipairs(self.hooks[event] or {}) do fn(self) end
+        end
+        function f:Show() if not self.shown then self.shown = true; self:Fire("OnShow") end end
+        function f:Hide() if self.shown then self.shown = false; self:Fire("OnHide") end end
+        function f:SetShown(value) if value then self:Show() else self:Hide() end end
+        function f:IsShown() return self.shown end
+        function f:GetChildren() return unpack(self.children) end
+        function f:GetWidth() return 1200 end
+        function f:GetHeight() return 600 end
+        function f:GetFrameLevel() return 1 end
+        function f:GetFrameStrata() return "DIALOG" end
+        function f:SetText(text) self.textValue = text end
+        function f:GetText() return self.textValue end
+        setmetatable(f, { __index = function(_, key)
+            if key:match("^%u") then return function() end end
+        end })
+        if parent then table.insert(parent.children, f) end
+        if name then frames[name] = f; _G[name] = f end
+        return f
+    end
+    CreateFrame = function(_, name, parent) return Mock(name, parent) end
+    UIParent = Mock("UIParent")
+    local panel = Mock("WolkaraMobileChat", UIParent)
+    local ticker = Mock("WolkaraMobileChatTicker", UIParent)
+    panel:Hide()
+    local chat = { db = { layout = "standard", language = "zhCN", chat = { custom = true, fontSize = 16 } } }
+    function chat.Register(_, module) return module end
+    function chat.On() end
+    function chat.UIButton(parent, text, _, _, click)
+        local b = Mock(nil, parent); b.text = Mock(); b.text:SetText(text); b.back = Mock(); b.click = click; return b
+    end
+    function chat.Label(_, _, text) local f = Mock(); f:SetText(text or ""); return f end
+    function chat.Box() return Mock() end
+    GetLocale = function() return "zhCN" end
+    assert(loadfile(directory .. "/Language.lua"))("WolkaraRoue", chat)
+    local function Close() panel:Hide(); ticker:Show() end
+    local close = chat.UIButton(panel, "X", 44, 36, Close)
+    local originalShow = close.Show
+    chat.Chat = { Close = Close, Open = function() panel:Show(); ticker:Hide() end }
+    assert(loadfile(arg[2] or directory .. "/ChatTab.lua"))("WolkaraRoue", chat)
+    chat.ChatTab:Init(); chat.ChatTab:Layout()
+    assert(close:IsShown(), "Standard chat lost its close button")
+    assert(close.Show == originalShow, "ChatTab replaced the close button's Show method")
+    panel:Show(); close.click()
+    assert(not panel:IsShown() and ticker:IsShown(), "Standard close does not restore the chat strip")
+    assert(chat.db.language == "zhCN" and chat.ChatTab.button.text:GetText() == "聊天")
+    chat.db.layout = "duo"; chat.ChatTab:Layout()
+    assert(not close:IsShown() and chat.ChatTab.button:IsShown())
+    chat.db.chatTab.enabled = false; chat.ChatTab:Layout()
+    assert(close:IsShown() and not chat.ChatTab.button:IsShown(), "Disabled Duo pill must restore X")
+    chat.db.chatTab.enabled = true; chat.ChatTab:Layout()
+    assert(not close:IsShown())
+    chat.db.layout = "standard"; chat.ChatTab:Layout()
+    assert(close:IsShown() and close.Show == originalShow, "Returning to Standard did not restore X")
+    panel:Show(); close.click()
+    assert(not panel:IsShown() and ticker:IsShown())
+    assert(chat.db.language == "zhCN" and chat.db.layout == "standard")
+    print("mobile chat: Standard close/click, Duo pill gating, disabled-pill fallback, layout roundtrip, unmodified frame methods and Chinese preference: PASS")
+end

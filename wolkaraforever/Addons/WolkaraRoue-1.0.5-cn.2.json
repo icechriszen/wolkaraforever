@@ -1,5 +1,5 @@
 {
-  "archive": "WolkaraRoue-1.0.5-cn.1.zip",
+  "archive": "WolkaraRoue-1.0.5-cn.2.zip",
   "files": {
     "WolkaraRoue/Actions.lua": {
       "sha256": "29e0944b02e2423b25fc55fd1201ee3bf2da8ff6efc1fa10b8b79c85ca8279ed",
@@ -26,8 +26,8 @@
       "size": 22445
     },
     "WolkaraRoue/ChatTab.lua": {
-      "sha256": "26140c1760da46a14bbf01d695e3212728479b17c2be92d5ec7ab4842ec05a47",
-      "size": 6602
+      "sha256": "69e750eaf2867268557399a8d6ee95e3a8c8e506d371576d2eff06d0191ea02c",
+      "size": 6975
     },
     "WolkaraRoue/Controls.lua": {
       "sha256": "dcf5c7b89e0bab63cf0fefb8dc091649951735d8ef0c232609fbe3d97383b343",
@@ -138,14 +138,14 @@
       "size": 6648
     },
     "WolkaraRoue/WolkaraRoue.toc": {
-      "sha256": "2c6ae202d7169daa30d26774d43ebab70be576006ed8f7634a94dd63865bdb56",
+      "sha256": "c7d6eafcce5f5b494fe57e924c2db2a8ae0dfbd094c393d45aa33c7c528241d9",
       "size": 816
     }
   },
   "format": "wolkaraforever.addon",
   "interface": 16001,
   "name": "WolkaraRoue",
-  "release": "1.0.5-cn.1",
-  "sha256": "c124b29832b753bc8e07496a2d9ee49380e76256614569c086c43a232ec9a2e2",
+  "release": "1.0.5-cn.2",
+  "sha256": "28595eebd72d37862326bc1cf53021c93816c1f58587de8ccd0980a2e0b96fd0",
   "version": 1
 }
