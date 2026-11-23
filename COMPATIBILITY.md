@@ -163,7 +163,7 @@ SDK compilation of the host tap fixture passed. Both required simulator instance
 were absent; the fixture did not execute. The project installer refused replacement
 while a game session was live. No physical click-accuracy pass is claimed.
 
-## Controller startup candidate: iPhone 17, 2026-11-23
+## Controller startup installation: iPhone 17, 2026-11-23
 
 Candidate source `eb71444` combines the `bc25ca8` touch-mode correction with a
 launch-time controller policy. Immediately before Play enters the Forever guest,
@@ -181,10 +181,28 @@ verified that the toolbar override leaves persistent preferences unchanged. The
 service Release build and strict signature verification passed. Required iPhone Duo
 and iPad Pro 13-inch (M5) simulators were absent; no simulator execution is claimed.
 
-Installation and physical controller/touch validation are pending. The project
-tools still reported a live game, and the user confirmed continuing to play.
-The installed game session and client store were left in place. This candidate
-does not alter or claim to solve the dynamic-code fault recorded above.
+After the user exited the game, the original project installer replaced the app
+under its existing bundle identifier with source `4507666` (the runtime changes
+are `eb71444`). Device: iPhone 17, iOS 27.2.1, Developer service, unchanged CN
+Forever 1.60.1.71037 / zhCN. The ordinary launcher returned to **Ready to play**,
+and its own check finished with `state=3 error=none`, without starting the game.
+The install bridge could not repeat the USB enrollment handshake; the original
+installer retained the pre-existing enrollment, rather than replacing its identity.
+Guest execution with that enrollment is still a separate validation step.
+
+All 2,016 existing client files retained their paths, sizes and modification times,
+including 55 CASC archives. Six selected files also retained their SHA-256 digests:
+the zhCN add-on TOC and Language.lua, Config.wtf, the character add-on enable list,
+and the WolkaraRoue SavedVariables file and its backup. No client data was removed
+or downloaded. The new launch policy has not yet run in this preservation check.
+
+The state tool conservatively classified the new launcher as live from an old
+native-guest log. That log was byte-identical before and after installation; the
+current screenshot and launcher log instead showed the normal home page and a
+non-launching client check. The original install/stop guards were not changed or
+overridden. Physical controller, unplugged restoration and click-accuracy results
+remain pending; installation and file preservation do not prove those behaviors.
+This change does not alter or claim to solve the dynamic-code fault recorded above.
 
 ## Report a problem
 
