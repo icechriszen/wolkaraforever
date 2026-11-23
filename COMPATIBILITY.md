@@ -188,7 +188,8 @@ Forever 1.60.1.71037 / zhCN. The ordinary launcher returned to **Ready to play**
 and its own check finished with `state=3 error=none`, without starting the game.
 The install bridge could not repeat the USB enrollment handshake; the original
 installer retained the pre-existing enrollment, rather than replacing its identity.
-Guest execution with that enrollment is still a separate validation step.
+The subsequent user-operated Play launch reached CN character selection with the
+existing enrollment.
 
 All 2,016 existing client files retained their paths, sizes and modification times,
 including 55 CASC archives. Six selected files also retained their SHA-256 digests:
@@ -200,8 +201,15 @@ The state tool conservatively classified the new launcher as live from an old
 native-guest log. That log was byte-identical before and after installation; the
 current screenshot and launcher log instead showed the normal home page and a
 non-launching client check. The original install/stop guards were not changed or
-overridden. Physical controller, unplugged restoration and click-accuracy results
-remain pending; installation and file preservation do not prove those behaviors.
+overridden.
+
+In the attached GameSir USB controller test, the launcher logged physical
+controller detection and both automatic loading and toolbar disabled. A read-only
+capture showed CN character selection without the native bottom toolbar. The user
+confirmed that both touch UIs were hidden and the sticks and buttons worked. The
+client error count (27) and system crash count (12) did not increase in that check.
+This is user-operated physical evidence; Device Hub was unavailable. Unplugged
+restoration and icon-centre click accuracy remain pending.
 This change does not alter or claim to solve the dynamic-code fault recorded above.
 
 ## Report a problem
