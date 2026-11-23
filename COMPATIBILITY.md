@@ -394,11 +394,21 @@ times, including 55 CASC archives. The only metadata changes were protection
 extended attributes on 87 files; all six selected configuration/add-on digests
 matched the baseline. No client data or CN sign-in adaptation was replaced.
 
-Readback still showed installed game add-on `1.0.5-cn.5`; the new app bundles
-`1.0.5-cn.6` for the Add-on Manager update. The user is temporarily unable to test.
-Updating that installed add-on and validating actual ordinary-message delivery
-remain pending. No public chat message was sent by the agent, and no live-send
-success is claimed from the keyboard dispatch log or fixtures.
+The immediate post-install readback still showed game add-on `1.0.5-cn.5`, with
+`1.0.5-cn.6` available in the app's Add-on Manager. On the subsequent user test,
+the device TOC reported `1.0.5-cn.6`, but the user still saw no message. This
+candidate therefore does **not** pass the reported phone reproduction.
+
+The current session log records Classic direct, one command dispatch and two
+ordinary-message dispatches. Its capped initial dequeue trace confirms keyboard
+events were consumed, but cannot attribute every later event to a send. One F12
+also reached the text interpreter and was correctly rejected as printable text.
+There were no native fatal markers or Lua-error lines in that log; this log does
+not capture the add-on's internal error state, focus, submit callback or server
+echo, so those absences do not establish successful delivery. A local-only
+`/mobile error` result has been requested to distinguish a Lua failure from the
+remaining input/submit/display paths. No public chat message was sent by the
+agent and no new functional change was made from these logs alone.
 
 ## Report a problem
 
