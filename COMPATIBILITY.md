@@ -336,9 +336,24 @@ the strict signature check and bundled-source hash comparison passed. Package
 verification, layer checks and documentation/catalog checks also passed. The
 layer gate reported its existing missing-upstream-merge-base limitation. Both
 required matrix simulators were absent, so no simulator interaction is claimed.
-The original state tool still found a live game process after the build. App
-replacement and user-operated device validation await the user's normal exit;
-the live game has not been stopped or overwritten.
+After the user exited normally, the original tools verified no live game and
+installed source `ff5acbf` (runtime/add-on change `3d56adc`). The launcher returned
+to **Ready to play** and the installed-build signature and bundled-source hash
+checks passed. All 2,075 existing client files remained present, including 55
+CASC archives with unchanged metadata. The user's add-on update overlapped the
+post-install readback: Turn.lua, the generated HostTouchLayout.lua and the add-on
+manager record changed as expected, while 84 files gained/changed protection
+extended attributes. The first selected-file copy failed; the later read-only
+copies succeeded, so no all-files byte-for-byte preservation claim is made.
+
+Readback confirmed installed WolkaraRoue `1.0.5-cn.5`. Language.lua, AddOns.txt,
+and WolkaraRoue's SavedVariables and backup matched their pre-install SHA-256
+digests. The TOC carries the new version; Config.wtf retained zhCN and changed
+only `gameTip` and `perksActivitiesPendingCompletion`. The user reported all
+operations normal after the update, passing this reported wheel/stick coupling
+reproduction. This is user-operated iPhone evidence, not Device Hub automation
+or a prolonged stability test. No game process was forcibly stopped, no client
+archives were replaced, and the CN sign-in adaptations were retained.
 
 ## Report a problem
 
