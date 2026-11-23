@@ -383,6 +383,23 @@ ASCII text across the next frame, and a focus failure. The full Lua/Chinese and
 wheel suites pass. This establishes a source defect and candidate correction;
 it does not yet establish that this is the sole cause of the phone symptom.
 
+Source `e72e6e5` passed bundled-package verification, layer and documentation
+gates, the Release build and strict signature/bundled-source hash checks. The
+layer gate retained its existing missing-upstream-merge-base limitation. Neither
+required matrix simulator was available, and no simulator UI run is claimed.
+The original tools confirmed no live game, installed the app and returned it to
+**Ready to play** on the same iPhone 17 / iOS 27.2.1 / Developer service setup.
+All 2,083 pre-existing client files kept their paths, sizes and modification
+times, including 55 CASC archives. The only metadata changes were protection
+extended attributes on 87 files; all six selected configuration/add-on digests
+matched the baseline. No client data or CN sign-in adaptation was replaced.
+
+Readback still showed installed game add-on `1.0.5-cn.5`; the new app bundles
+`1.0.5-cn.6` for the Add-on Manager update. The user is temporarily unable to test.
+Updating that installed add-on and validating actual ordinary-message delivery
+remain pending. No public chat message was sent by the agent, and no live-send
+success is claimed from the keyboard dispatch log or fixtures.
+
 ## Report a problem
 
 Start with [Install WolkaraForever](docs/INSTALLATION.md) and [Use WolkaraForever](docs/USING_WOLKARAFOREVER.md). When you report a problem, follow [Send us a log](docs/SENDING_LOGS.md) and include the exact Technical details message if one was shown. Do not include credentials, signing material, pairing records, account information, or device identifiers.
