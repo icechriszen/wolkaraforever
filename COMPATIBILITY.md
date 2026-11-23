@@ -425,6 +425,32 @@ unavailable; no simulator UI run is claimed. The original device state tool
 reports a live game session, so installation and physical reproduction are
 pending the user's normal exit. This build makes no new chat-delivery claim.
 
+The diagnostic was subsequently installed using the original tools, returning
+the same iPhone to a ready launcher. The on-device add-on TOC then reported
+`1.0.5-cn.7`. A new user-started game session interrupted the immediate idle
+preservation comparison; after the user reproduced and exited normally, all
+55 CASC archive metadata records still matched the pre-install baseline. The
+16 retained index buckets remain present; 16 older index files and the previous
+LRU generation disappeared during that intervening session. The add-on gained
+ChatDiagnostics.lua, and its source/configuration files changed as expected
+after an update and normal save. The post-session snapshot is not a claim that
+all client files were byte-identical immediately after installation.
+
+The user still saw no message and confirmed both attempts contained Chinese.
+The saved cn.7 trace has two open/ready callbacks, two SendText/Return callbacks,
+zero non-empty text changes, zero send API calls and zero self echoes. Both
+modern/legacy API hooks and all edit-box hooks installed; observerErrors=0,
+the F12 binding matches, and the edit box has focus in SAY at each ready/submit
+stage. Native logs show the two keyboard bursts consumed. This localizes this
+reproduction before chat transmission, at committed text delivery.
+
+Patch 0079 addresses the host's missing Unicode commit route: unmapped software
+keyboard characters previously became raw `0xFF` key pairs. Private queue items
+now deliver those committed strings once through the public NSTextInputClient
+callback, without sending a key-up, remapping to a physical key, invoking a
+chat-send API or logging content. Delivery occurs in queue order in both polling
+and NSApplication-owned dispatch, not while peeking. Physical validation pending.
+
 ## Report a problem
 
 Start with [Install WolkaraForever](docs/INSTALLATION.md) and [Use WolkaraForever](docs/USING_WOLKARAFOREVER.md). When you report a problem, follow [Send us a log](docs/SENDING_LOGS.md) and include the exact Technical details message if one was shown. Do not include credentials, signing material, pairing records, account information, or device identifiers.

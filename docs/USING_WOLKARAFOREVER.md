@@ -124,6 +124,11 @@ fixed state labels are saved, never message text, names or recipients. After
 reproducing once, exit the game normally so the trace is saved; the next UI load
 starts a new trace. This diagnostic does not submit or retry messages, reset
 settings, or establish that the remaining chat failure is fixed.
+The host also carries a candidate Unicode input correction: committed Chinese
+and other characters without an ANSI key are queued for the game's public text
+input interface, in order between earlier keys and Return. They no longer rely
+on the game accepting the unmapped `0xFF` key position. This needs a physical
+chat-send check; the trace distinguishes text input from actual delivery.
 If the top Bags, Spells, Map and Menu buttons are absent in Standard, enter
 `/mobile`, select **Spell wheels → Shortcuts**, and set it to **On**. In Simplified
 Chinese these controls are **技能轮盘 → 快捷按钮 → 开启**. This switch restores the
