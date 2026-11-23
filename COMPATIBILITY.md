@@ -4,15 +4,16 @@
 
 WolkaraForever is a source-built project for an iPad or iPhone that you own and configure with your own Apple Developer account. The supported integrated route requires Developer Mode, current Xcode tooling, and an execution path that can prepare executable memory.
 
-## Wheel capacity and chat entry candidate: iPhone 17, 2026-11-23
+## Wheel capacity and chat entry acceptance: iPhone 17, 2026-11-23
 
 Source `7ccce97` was built, strictly signature-verified and installed with the
 original project tools on iPhone 17, iOS 27.2.1, Developer service, CN Forever
-1.60.1.71037. The ordinary launcher returned to **Ready to play**. All 2,069
-client files and 55 CASC archives retained identical metadata; the six selected
-configuration/add-on files retained identical SHA-256 hashes. This installation
-bundles `1.0.5-cn.4`; the already installed in-game add-on still requires its
-separate Add-On Manager update before its new behavior can be tested.
+1.60.1.71037. The ordinary launcher returned to **Ready to play**. At app
+replacement, all 2,069 client files and 55 CASC archives retained identical
+metadata; the six selected configuration/add-on files retained identical SHA-256
+hashes. The user subsequently updated the in-game add-on through Add-On Manager;
+readback with the original project tools confirmed `1.0.5-cn.4`. Saved settings
+readback retained `zhCN`, Standard and five slots per side.
 
 The user's saved Standard layout had five slots per side even though only three
 were visible. The updated production-Lua fixture checks five visible slots at the
@@ -20,9 +21,14 @@ phone's Standard UI scale, plus automatic visibility of newly added slots throug
 twelve on both sides. The same test fails against the preceding geometry. Lua,
 package verification (including nine rejected malformed packages), layer and
 documentation checks passed. The chat fixture also covers legacy/namespaced input
-APIs and Standard/Duo input hints; this does not yet establish the cause of the
-user's missing sent messages. Device Hub interaction and post-update game behavior
-remain unverified; no simulator execution is claimed.
+APIs and Standard/Duo input hints. After the update and world entry, the user
+reported that the requested acceptance checks were normal, covering wheel slot
+addition and chat sending. This is user-operated physical acceptance, not Device
+Hub interaction. The last selected chat delivery mode was Classic direct; a
+separate Review-mode retest, all twelve slots on the physical device, and extended
+stability were not independently measured. The precise client API availability
+was not captured, so the compatibility fallback is not asserted to be the sole
+cause of the earlier chat failure. No simulator execution is claimed.
 
 ## Supported boundary
 
