@@ -120,6 +120,29 @@ host-only code-remapping probes pass. Required simulator execution is still not
 claimed; the matrix instances were unavailable. Mac sanitizer checks, layer/docs
 checks, and the signed iPhone build passed.
 
+## Chinese touch add-on validation: iPhone 17, 2026-11-23
+
+Installed source `d17deea`, iOS 27.2.1, Developer service, CN Forever
+1.60.1.71037 / zhCN. The user updated the bundled WolkaraRoue package from an
+unmanaged 0.6.1 copy to 1.0.5-cn.1, entered the game, and confirmed that its menus
+were Chinese. Readback through the project tools verified that the installed TOC
+and Language.lua were byte-identical to the reviewed source. Game-owned menu
+labels prefer the client's zhCN strings; spell and item names use game APIs.
+
+The visible **Install Addons (Curse & Direct)** entry now exposes the bundled
+package. Its explicit Update action can adopt the old unmanaged folder through
+the existing transaction journal without inventing a provider link. Production
+archive/store tests passed for exact-folder restrictions, invalid-archive refusal,
+injected commit-failure rollback, unchanged SavedVariables and unrelated add-ons,
+and subsequent ordinary updates. General automatic-update ownership guards remain.
+
+Before the add-on update and game launch, replacement app installation preserved
+all 1,975 client files by path, size and modification time, including 55 CASC
+archives and 58 WTF files. CN web sign-in and the earlier runtime fixes were kept.
+The signed device build and layer/docs checks passed. The interface result is
+user-operated physical-device evidence; the required iPhone Duo and iPad Pro
+13-inch (M5) simulators were unavailable, so no simulator UI pass is claimed.
+
 ## Report a problem
 
 Start with [Install WolkaraForever](docs/INSTALLATION.md) and [Use WolkaraForever](docs/USING_WOLKARAFOREVER.md). When you report a problem, follow [Send us a log](docs/SENDING_LOGS.md) and include the exact Technical details message if one was shown. Do not include credentials, signing material, pairing records, account information, or device identifiers.
