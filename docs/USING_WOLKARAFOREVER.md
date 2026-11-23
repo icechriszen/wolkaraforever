@@ -133,3 +133,9 @@ evidence that no allocation occurred. Only API arguments and existing loader met
 are used; no application bytes, stack frames, credentials, or gameplay are inspected.
 The diagnostics preserve API results and errno. They do not enable JIT or claim to
 fix a client crash. Read the runtime log with `wolkaraforever/tools/device_log.sh`.
+
+The explicit `--local-code-swap-probe` diagnostic prepares two pages before any
+game entry, runs only our return-value functions, and tests replacing a writable
+view then restoring an executable view at the **originally prepared address**.
+It is separate from `--local-code-remap-probe`, which tries a new address. Neither
+path is enabled for the game. A Mac pass is not evidence of device execution.

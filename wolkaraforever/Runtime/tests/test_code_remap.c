@@ -15,6 +15,7 @@ int main(void) {
     assert(!mprotect(rx,size,PROT_READ|PROT_EXEC));
     NativeCodeMemory memory={.executable=rx,.writable=(void *)rw,.size=size,.published=true};
     assert(wk_code_remap_probe(&memory,stdout));
+    assert(wk_code_swap_probe(&memory,stdout));
     errno=0;assert(wk_code_remap(rx,rx,size,PROT_READ|PROT_EXEC)==-1 && errno==EINVAL);
     assert(wk_code_remap(rx,(void *)rw,size,PROT_READ|PROT_WRITE|PROT_EXEC)==-1);
     assert(wk_code_remap((char *)rx+1,(void *)rw,size,PROT_READ|PROT_EXEC)==-1);

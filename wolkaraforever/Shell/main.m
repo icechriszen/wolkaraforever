@@ -1723,13 +1723,14 @@ static NSString *AKAudioStateDescription(void) {
         return;
     }
     if([arguments containsObject:@"--local-connected-arena-probe"] || [arguments containsObject:@"--local-execution-probe"] ||
-       [arguments containsObject:@"--local-code-remap-probe"]) {
-        BOOL remapProbe=[arguments containsObject:@"--local-code-remap-probe"];
+       [arguments containsObject:@"--local-code-remap-probe"] || [arguments containsObject:@"--local-code-swap-probe"]) {
+        BOOL swapProbe=[arguments containsObject:@"--local-code-swap-probe"];
+        BOOL remapProbe=swapProbe || [arguments containsObject:@"--local-code-remap-probe"];
         BOOL executeProbe=[arguments containsObject:@"--local-execution-probe"];
 
         self.status.text=@"Preparing the authenticated local debugger…";
         [self.localAuthorization startAndPrepareLocalAuthorization:^(NSString *setup) {
-            NSString *path=[NSHomeDirectory() stringByAppendingPathComponent:remapProbe?@"Documents/local-code-remap-probe.txt":executeProbe?@"Documents/local-execution-probe.txt":@"Documents/local-connected-arena-probe.txt"];
+            NSString *path=[NSHomeDirectory() stringByAppendingPathComponent:swapProbe?@"Documents/local-code-swap-probe.txt":remapProbe?@"Documents/local-code-remap-probe.txt":executeProbe?@"Documents/local-execution-probe.txt":@"Documents/local-connected-arena-probe.txt"];
             [setup writeToFile:path atomically:YES encoding:NSUTF8StringEncoding error:NULL];
             // Run outside the main queue: the target can be paused by its helper
             // while UIKit and provider IPC still need normal run-loop servicing.
@@ -1753,9 +1754,9 @@ static NSString *AKAudioStateDescription(void) {
                 NSString *reportSetup=setup;
                 if(prepared && remapProbe) {
                     FILE *probeLog=fopen(path.fileSystemRepresentation,"a");
-                    BOOL passed=probeLog && wk_code_remap_probe(&memory,probeLog);
+                    BOOL passed=probeLog && (swapProbe?wk_code_swap_probe(&memory,probeLog):wk_code_remap_probe(&memory,probeLog));
                     if(probeLog)fclose(probeLog);
-                    outcome=passed?@"PASS: prepared pages support stable-address code remapping after detach.":@"FAIL: prepared-page code remapping did not complete.";
+                    outcome=passed?(swapProbe?@"PASS: original prepared address survived RW/RX view replacement.":@"PASS: prepared pages support remapping to a new address after detach."):@"FAIL: prepared-page code remapping did not complete.";
                     reportSetup=[NSString stringWithContentsOfFile:path encoding:NSUTF8StringEncoding error:NULL]?:setup;
                 }
                 nc_destroy(&memory);
