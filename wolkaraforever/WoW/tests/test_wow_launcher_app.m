@@ -1332,6 +1332,12 @@ static void TestIPadM5RenderProfile(void) {
     TKWoWAddonManagerViewController *page=(id)frame.topViewController;
     UITableView *table=page.tableView;
     [table layoutIfNeeded];
+    // The visible Install Addons row must expose the bundled package, even when
+    // the legacy recommendation control has no place on the home screen.
+    assert([page tableView:table numberOfRowsInSection:0] >= 2);
+    UITableViewCell *bundled=[page tableView:table cellForRowAtIndexPath:[NSIndexPath indexPathForRow:1 inSection:0]];
+    assert(Find(bundled, @"wow.addons.bundled.name") != nil);
+    assert(Find(bundled, @"wow.addons.bundled.install") != nil);
     UIView *header=table.tableHeaderView;
     [header layoutIfNeeded];
     UIView *panel=header.subviews.firstObject;

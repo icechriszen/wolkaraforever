@@ -2423,7 +2423,10 @@ static NSString *ElementLabel(NSString *element) {
     NSError *error=nil;
     NSString *addons=[self addOnsDirectoryWithError:&error];
     if (!addons) { [self presentAddonsUnavailable:error]; return; }
-    TKWoWAddonManagerViewController *manager=[[TKWoWAddonManagerViewController alloc] initWithAddOnsDirectory:addons edition:_product[@"name"]];
+    // The old recommendation row is no longer visible on the home screen.
+    // Keep the bundled package reachable from the visible Install Addons row.
+    TKWoWAddonManagerViewController *manager=[[TKWoWAddonManagerViewController alloc]
+        initWithAddOnsDirectory:addons edition:_product[@"name"] recommendation:TKAddonRecommendationWolkaraRoue];
     [self presentPage:manager];
 }
 

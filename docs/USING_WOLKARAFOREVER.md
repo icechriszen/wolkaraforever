@@ -72,7 +72,12 @@ In **Game Settings Manager**, choose **Arm network health for next launch** only
 
 ## Manage add-ons
 
-Open **Add-On Manager** to view recorded packages, install the bundled WolkaraRoue package, import a validated archive, or browse a supported provider. An optional provider key stays in the device Keychain. The app removes only add-ons it recorded as managed.
+On the home screen, select **Install Addons (Curse & Direct)** in the **Add-On Manager** card.
+The page opens on **My Add-ons** and includes **WolkaraRoue (bundled)** with its own
+**Install** or **Update** button. Use that row for the package included in this app;
+opening the page does not install anything. You can also view recorded packages,
+import a validated archive, or browse a supported provider. An optional provider key
+stays in the device Keychain. The app removes only add-ons it recorded as managed.
 
 The bundled touch add-on `WolkaraRoue` now includes Simplified Chinese. Install or
 update it from Add-On Manager after leaving the game; updating the launcher alone
