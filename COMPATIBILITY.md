@@ -163,6 +163,29 @@ SDK compilation of the host tap fixture passed. Both required simulator instance
 were absent; the fixture did not execute. The project installer refused replacement
 while a game session was live. No physical click-accuracy pass is claimed.
 
+## Controller startup candidate: iPhone 17, 2026-11-23
+
+Candidate source `eb71444` combines the `bc25ca8` touch-mode correction with a
+launch-time controller policy. Immediately before Play enters the Forever guest,
+an attached physical gamepad suppresses WolkaraRoue auto-loading and the native
+keyboard/controls toolbar. Without a gamepad, both are enabled. The add-on switch
+changes only its TOC loading field and its own entries in existing character
+AddOns.txt files; the toolbar uses a process-only defaults override. It neither
+resets SavedVariables nor replaces the Chinese package or Gamepad UI bindings.
+
+The production Foundation file-operation suite passed controller/unplugged/new
+character cases, unchanged Chinese bytes and saved layouts, idempotence, oversized
+file and symlink refusal, and rollback after an actual failed atomic write. It also
+verified that the toolbar override leaves persistent preferences unchanged. The
+37 UI archive checks, Lua/Chinese add-on tests, layer/docs checks, private Developer
+service Release build and strict signature verification passed. Required iPhone Duo
+and iPad Pro 13-inch (M5) simulators were absent; no simulator execution is claimed.
+
+Installation and physical controller/touch validation are pending. The project
+tools still reported a live game, and the user confirmed continuing to play.
+The installed game session and client store were left in place. This candidate
+does not alter or claim to solve the dynamic-code fault recorded above.
+
 ## Report a problem
 
 Start with [Install WolkaraForever](docs/INSTALLATION.md) and [Use WolkaraForever](docs/USING_WOLKARAFOREVER.md). When you report a problem, follow [Send us a log](docs/SENDING_LOGS.md) and include the exact Technical details message if one was shown. Do not include credentials, signing material, pairing records, account information, or device identifiers.
