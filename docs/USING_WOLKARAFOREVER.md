@@ -115,13 +115,14 @@ If the top Bags, Spells, Map and Menu buttons are absent in Standard, enter
 Chinese these controls are **技能轮盘 → 快捷按钮 → 开启**. This switch restores the
 bar without resetting the layout, assigned spells or language.
 
-Movement comes from the app's on-screen gamepad, separately from the spell wheels.
 The turning wheels expand to fit the default five skill slots where screen space
 allows, while leaving room for the native sticks, opposite wheel and upper HUD.
 Larger banks, or enlarged buttons on a small screen, rotate: swipe along a spell
 icon to bring the other slots into view. Increasing the left or right spell count
 brings the newest slot into view immediately. The limit remains twelve per side;
 this does not reset assigned spells, language or saved positions.
+
+Movement comes from the app's on-screen gamepad, separately from the spell wheels.
 Expand the bottom toolbar and enable its gamepad button if the movement sticks are
 absent. The toolbar gear's **Reset to defaults** restores the native controls'
 positions and settings; it does not reset WolkaraRoue or its Chinese language.
