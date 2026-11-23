@@ -13,7 +13,8 @@
 # unavailable client, metadata-only logs and a raw-key client that rejects 0xFF.
 # Both polling and NSApplication-owned dispatch consume the private event.
 # Applies after 0078; platform/ stays byte-identical to its pinned upstream.
-# Upstream: candidate; physical Chinese-send validation pending.
+# Upstream: candidate. Chinese input/send/self-echo/display confirmed by a user
+# test and saved metadata on iPhone 17, Developer service, 2026-11-23.
 #
 --- a/translation/AKSupport/TextInput.h
 +++ b/translation/AKSupport/TextInput.h

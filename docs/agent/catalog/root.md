@@ -1,18 +1,18 @@
 # Root catalog
 
-> Verified: 2026-11-23 · Source: `5299a4d` · Proof: SHA-256 of each tracked file
+> Verified: 2026-11-23 · Source: `b535ee4` · Proof: SHA-256 of each tracked file
 
 | Path | Folder | Type | Purpose | Contents/function | Dependencies | Human-doc impact | Proof |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| .gitignore | . | repository file | Repository-level file | Repository file supporting repository operation or policy | . | None | `sha256:3e4b80c9e1871761ff90c8ee004404fd821f5bfbb3a64bee21298ed2308aa324`; `5299a4d`; 2026-11-23 |
-| AGENTS.md | . | documentation | Repository-level file | Documentation supporting repository operation or policy | . | None | `sha256:90237190002e7f9ef6b0d9c5abcce4d3dd57143f3445a42369671e8a69c2cc7e`; `5299a4d`; 2026-11-23 |
-| CHANGELOG.md | . | documentation | Repository-level file | Documentation supporting repository operation or policy | . | None | `sha256:7ebd41dedf1ec55d704d27cc056465a842c2f6d346e38ad13ab1d66e111f9174`; `5299a4d`; 2026-11-23 |
-| COMPATIBILITY.md | . | documentation | Repository-level file | Documentation supporting repository operation or policy | . | None | `sha256:e62c7f831ed224910bb1263529d348b6939a98049604c6af5988ee8a3be97932`; `5299a4d`; 2026-11-23 |
-| CONTRIBUTORS.md | . | documentation | Repository-level file | Documentation supporting repository operation or policy | . | None | `sha256:03e1e65c416fe9e1facd40b4a1614d367a8265c61a0528f8783553d7007f8687`; `5299a4d`; 2026-11-23 |
-| LICENSE | . | repository file | Repository-level file | Repository file supporting repository operation or policy | . | None | `sha256:ddbec1870d68d8671e611b68dab33fbc23582f5d8c78d5942ab147bc829d5287`; `5299a4d`; 2026-11-23 |
-| NOTICE.md | . | documentation | Repository-level file | Documentation supporting repository operation or policy | . | None | `sha256:5cab6af887818458da097e8cfcbb58790fcee169d8bb6eca992d7a5bf3ffa5df`; `5299a4d`; 2026-11-23 |
-| README.md | . | documentation | Repository-level file | Documentation supporting repository operation or policy | . | None | `sha256:3d084ef2e427b0c76f418dded25a65d7c5a2d19faf5b1cb75cc31009c21efbf1`; `5299a4d`; 2026-11-23 |
-| SECURITY.md | . | documentation | Repository-level file | Documentation supporting repository operation or policy | . | None | `sha256:8d8d0eaecb2b7256e0a5d28d19b9c00ac757b562a1e7c8b21f22b90145219fac`; `5299a4d`; 2026-11-23 |
-| local.env.example | . | repository file | Repository-level file | Repository file supporting repository operation or policy | . | None | `sha256:c61500c39d38772a0858ea72f416f398da25540a549b7daebd66734feace6871`; `5299a4d`; 2026-11-23 |
-| local.test.env.example | . | repository file | Repository-level file | Repository file supporting repository operation or policy | . | None | `sha256:69afcbbd9a40fecd71389d052abe46f98b581942926a059f2a34d1991bbf67fc`; `5299a4d`; 2026-11-23 |
-| logo.png | . | asset | Repository-level file | Asset supporting repository operation or policy | . | None | `sha256:c0e931f9a074a71dd84112a47f0378b004ca01075b538ee137647d7ca55f6498`; `5299a4d`; 2026-11-23 |
+| .gitignore | . | repository file | Repository-level file | Repository file supporting repository operation or policy | . | None | `sha256:3e4b80c9e1871761ff90c8ee004404fd821f5bfbb3a64bee21298ed2308aa324`; `b535ee4`; 2026-11-23 |
+| AGENTS.md | . | documentation | Repository-level file | Documentation supporting repository operation or policy | . | None | `sha256:90237190002e7f9ef6b0d9c5abcce4d3dd57143f3445a42369671e8a69c2cc7e`; `b535ee4`; 2026-11-23 |
+| CHANGELOG.md | . | documentation | Repository-level file | Documentation supporting repository operation or policy | . | None | `sha256:7ebd41dedf1ec55d704d27cc056465a842c2f6d346e38ad13ab1d66e111f9174`; `b535ee4`; 2026-11-23 |
+| COMPATIBILITY.md | . | documentation | Repository-level file | Documentation supporting repository operation or policy | . | None | `sha256:ef2b7803e495098811edf162cf2a54dfc58285bef10fe9cfa8acbd3a8278b670`; `b535ee4`; 2026-11-23 |
+| CONTRIBUTORS.md | . | documentation | Repository-level file | Documentation supporting repository operation or policy | . | None | `sha256:03e1e65c416fe9e1facd40b4a1614d367a8265c61a0528f8783553d7007f8687`; `b535ee4`; 2026-11-23 |
+| LICENSE | . | repository file | Repository-level file | Repository file supporting repository operation or policy | . | None | `sha256:ddbec1870d68d8671e611b68dab33fbc23582f5d8c78d5942ab147bc829d5287`; `b535ee4`; 2026-11-23 |
+| NOTICE.md | . | documentation | Repository-level file | Documentation supporting repository operation or policy | . | None | `sha256:5cab6af887818458da097e8cfcbb58790fcee169d8bb6eca992d7a5bf3ffa5df`; `b535ee4`; 2026-11-23 |
+| README.md | . | documentation | Repository-level file | Documentation supporting repository operation or policy | . | None | `sha256:3d084ef2e427b0c76f418dded25a65d7c5a2d19faf5b1cb75cc31009c21efbf1`; `b535ee4`; 2026-11-23 |
+| SECURITY.md | . | documentation | Repository-level file | Documentation supporting repository operation or policy | . | None | `sha256:8d8d0eaecb2b7256e0a5d28d19b9c00ac757b562a1e7c8b21f22b90145219fac`; `b535ee4`; 2026-11-23 |
+| local.env.example | . | repository file | Repository-level file | Repository file supporting repository operation or policy | . | None | `sha256:c61500c39d38772a0858ea72f416f398da25540a549b7daebd66734feace6871`; `b535ee4`; 2026-11-23 |
+| local.test.env.example | . | repository file | Repository-level file | Repository file supporting repository operation or policy | . | None | `sha256:69afcbbd9a40fecd71389d052abe46f98b581942926a059f2a34d1991bbf67fc`; `b535ee4`; 2026-11-23 |
+| logo.png | . | asset | Repository-level file | Asset supporting repository operation or policy | . | None | `sha256:c0e931f9a074a71dd84112a47f0378b004ca01075b538ee137647d7ca55f6498`; `b535ee4`; 2026-11-23 |

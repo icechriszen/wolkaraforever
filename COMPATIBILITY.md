@@ -449,7 +449,33 @@ keyboard characters previously became raw `0xFF` key pairs. Private queue items
 now deliver those committed strings once through the public NSTextInputClient
 callback, without sending a key-up, remapping to a physical key, invoking a
 chat-send API or logging content. Delivery occurs in queue order in both polling
-and NSApplication-owned dispatch, not while peeking. Physical validation pending.
+and NSApplication-owned dispatch, not while peeking.
+
+Source `b535ee4` passed the focused Foundation text-input fixture with ASan/UBSan
+and warnings-as-errors, including modern/legacy text clients, Unicode/mixed-text
+ordering, copied queued text, exactly-once delivery, an unavailable client and
+metadata-only logging. Layer/documentation gates, the Release build and strict
+signature checks passed. The required two simulators were unavailable; no
+simulator UI or Device Hub interaction is claimed.
+
+The original tools installed that source on the same iPhone 17 / iOS 27.2.1 /
+Developer service / CN Forever 1.60.1.71037 setup and returned the normal ready
+launcher. The user then sent a Chinese message and confirmed it appeared. Native
+metadata records two one-unit commits through the modern text-client callback.
+The saved cn.7 trace records six UTF-8 bytes entering SAY, exactly one modern
+send API call, one self echo and one visible add-on display, with zero observer
+errors. This passes the original empty-Chinese-message reproduction, rather
+than relying on a dispatch-only log or a local command response.
+
+The new user-started test again preceded the idle post-install file capture.
+After normal exit, all 55 CASC archives remained present: 54 metadata records
+were identical, and data.000 grew by 63,234 bytes during the game session. The
+LRU generation advanced and two index files appeared; no archive was removed.
+All non-diagnostic WolkaraRoue settings compare structurally identical, and the
+Chinese language source, add-on TOC and enable list retain their hashes.
+Config.wtf differs only in gameTip; display and region settings are unchanged.
+This is post-test preservation evidence, not an all-file byte-identical claim.
+The ordinary launcher was restored after collecting the saved diagnostic.
 
 ## Report a problem
 
