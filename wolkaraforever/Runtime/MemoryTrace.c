@@ -36,7 +36,8 @@ void wk_memory_trace_record(WKMemoryEvent e) {
     if(!output) goto done;
     // Retain a separate failure budget so successful executable requests cannot hide a failure.
     bool report=e.failed ? failures<8 :
-        (e.operation!=WK_MEMORY_UNMAP && (e.protection&PROT_EXEC) && reports<WK_MEMORY_REPORT_LIMIT);
+        (e.operation!=WK_MEMORY_UNMAP && ((e.protection&PROT_EXEC) ||
+         (e.operation==WK_MEMORY_MAP && e.address)) && reports<WK_MEMORY_REPORT_LIMIT);
     if(report) {
         if(e.failed) failures++; else reports++;
         const char *names[]={"mmap","mprotect","munmap"};

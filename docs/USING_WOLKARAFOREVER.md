@@ -126,7 +126,7 @@ as a first troubleshooting step — the log you need goes with it.
 For a runtime permission failure, a private build with `WOLKARA_HOST_DIAGNOSTICS=1`
 also records bounded mapping provenance. Alternatively launch the normal shell with
 `--memory-permission-diagnostics`, then press Play yourself. The runtime retains the
-last 512 mapping operations and reports at most 64 executable requests plus eight
+last 512 mapping operations and reports at most 64 executable or non-null hinted requests plus eight
 failures, with requested permissions, API results, and caller image identifiers.
 An unknown origin means the mapping was not retained or its range changed; it is not
 evidence that no allocation occurred. Only API arguments and existing loader metadata
@@ -146,3 +146,9 @@ The existing explicit fixed-map and MAP_JIT image-rewrite adapters are retained.
 This corrects mapping ownership; it does not itself grant execution permission to
 new dynamic code on iPhone. Memory diagnostics distinguish the requested hint
 from the returned allocation address.
+
+The same private diagnostics attribute a `CFRetain(NULL)` call to its loaded image
+and caller offset before forwarding it unchanged. They do not turn a missing
+object into a valid object, suppress the system trap, or inspect object contents
+or stacks. This distinguishes an initial CoreFoundation failure from a later
+watchdog termination while the application writes its own crash report.

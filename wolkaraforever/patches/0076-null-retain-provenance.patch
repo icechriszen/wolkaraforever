@@ -1,0 +1,39 @@
+# Identify the caller of a NULL retain without masking CoreFoundation's trap.
+# Uses only API arguments and the loader's existing image metadata.
+
+--- a/runtime/NativeGuest.m
++++ b/runtime/NativeGuest.m
+@@ -724,6 +724,25 @@
+         .result=(uintptr_t)result,.failed=result==MAP_FAILED,.error=result==MAP_FAILED?code:0},__builtin_return_address(0));
+     errno=code;return result;
+ }
++// Diagnostic only: preserve CoreFoundation's actual retain behavior, including
++// its NULL trap. Attribute the API boundary without reading a stack or object.
++static CFTypeRef guest_cf_retain(CFTypeRef value) {
++    if(!value && memory_permission_diagnostics) {
++        int saved=errno;
++        uintptr_t caller=(uintptr_t)__builtin_extract_return_addr(__builtin_return_address(0));
++        const GuestLibrary *library=gl_library_at(&carried,caller);
++        unsigned image=0;uintptr_t offset=0;
++        if(library) {
++            image=2+(unsigned)(library-carried.libraries);
++            offset=caller-(uintptr_t)(library->image.header_address+library->slide);
++        } else if(inside((void *)caller,1)) {
++            image=1;offset=caller-(uintptr_t)guest.arena.executable;
++        }
++        LOG("[native-cf] CFRetain(NULL) caller=%u+%#lx; forwarding unchanged\n",image,(unsigned long)offset);
++        errno=saved;
++    }
++    return CFRetain(value);
++}
+ static void guest_jit_protect(int enabled) { LOG("[native] jit write protection=%d (separate RW/RX views)\n",enabled); }
+ // compiler-rt's instruction cache flush, which iPadOS's libSystem does not
+ // export: after code is written, before it runs.
+@@ -890,6 +909,7 @@
+     HOOK("sigaction",guest_sigaction);
+     HOOK("__ulock_wait",guest_ulock_wait);
+     HOOK("CFBundleGetMainBundle",guest_cf_main_bundle);
++    if(memory_permission_diagnostics) { HOOK("CFRetain",guest_cf_retain); }
+     HOOK("_NSGetExecutablePath",guest_executable_path);
+     HOOK("_tlv_bootstrap",guest_tlv_bootstrap);
+     HOOK("dyld_stub_binder",guest_unexpected_lazy_bind);
