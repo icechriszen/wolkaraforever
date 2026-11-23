@@ -416,7 +416,14 @@ events. A 32-entry ring stores only counters, lengths, fixed enums and numeric
 error IDs in the existing per-character save. It never invokes a send API or
 changes input/submit behavior. Missing hooks and observer failures are recorded
 separately so a zero API count is not mistaken for proof when instrumentation
-is unavailable. Physical reproduction with this diagnostic is pending.
+is unavailable. Source `b806ad6` passes the full Lua/Chinese/wheel suite, new
+modern/legacy chat-observation fixtures (including post-Enter clearing, self
+echo, unavailable hooks, secret values, bounded metadata and zero automatic
+sends), bundled-package verification, layer and documentation gates, a Release
+build and strict signature/source-byte checks. The two matrix simulators remain
+unavailable; no simulator UI run is claimed. The original device state tool
+reports a live game session, so installation and physical reproduction are
+pending the user's normal exit. This build makes no new chat-delivery claim.
 
 ## Report a problem
 
