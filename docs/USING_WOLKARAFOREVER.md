@@ -104,6 +104,10 @@ on a zhCN client the reset language choice follows the game and remains Chinese.
 Choose Standard again if needed, then close the settings panel to save/reload.
 The Standard chat panel has its own **X** close button. Only an active Duo chat
 pill replaces that button; disabling Duo restores the Standard close action.
+If the top Bags, Spells, Map and Menu buttons are absent in Standard, enter
+`/mobile`, select **Spell wheels → Shortcuts**, and set it to **On**. In Simplified
+Chinese these controls are **技能轮盘 → 快捷按钮 → 开启**. This switch restores the
+bar without resetting the layout, assigned spells or language.
 
 Movement comes from the app's on-screen gamepad, separately from the spell wheels.
 Expand the bottom toolbar and enable its gamepad button if the movement sticks are

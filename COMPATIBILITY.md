@@ -218,6 +218,34 @@ installed build. They do not measure every touch position or prolonged stability
 This is user-operated physical evidence; Device Hub was unavailable.
 This change does not alter or claim to solve the dynamic-code fault recorded above.
 
+## Standard layout and chat validation: iPhone 17, 2026-11-23
+
+Source `a7a1f22`, with bundled WolkaraRoue `1.0.5-cn.2`, was installed using the
+original project installer after the user exited the game. Device: iPhone 17,
+iOS 27.2.1, Developer service, CN Forever 1.60.1.71037 / zhCN. The ordinary
+launcher reached **Ready to play**. All 2,030 existing client files, including
+55 CASC archives, retained their paths, sizes and modification times across the
+app replacement; six selected configuration/add-on files retained their SHA-256
+digests. The later bundled add-on update intentionally replaces add-on code.
+
+ChatTab previously hid the chat panel's X button unconditionally and replaced its
+Show method. The fix leaves the method intact and hides the X only while the Duo
+chat pill is active. The original code fails the new Standard close-button
+regression; the fixed Standard/Duo visibility and close-action fixture, Lua/Chinese
+suite, package verifier, layer/docs checks, Release build and strict signature
+check passed. Required matrix simulators were absent; no simulator run is claimed.
+
+Before installation, the user confirmed default UI restoration, Chinese text and
+native joystick movement. A read-only settings copy showed Standard / zhCN with
+`shortcuts.enabled=false`, accounting for the missing top bar; it does not establish
+which action disabled that setting. After the user updated the bundled add-on and
+enabled **Spell wheels → Shortcuts**, they confirmed that the top buttons returned
+and the chat X closed the panel. A subsequent read-only device TOC copy confirmed
+`1.0.5-cn.2`. These are user-operated physical results; Device Hub was unavailable.
+The current upstream add-on remains installed, with its Standard layout selected.
+No game binary, runtime or controller startup policy changed in this UI fix, and
+the previously recorded dynamic-code failure remains outside this validation.
+
 ## Report a problem
 
 Start with [Install WolkaraForever](docs/INSTALLATION.md) and [Use WolkaraForever](docs/USING_WOLKARAFOREVER.md). When you report a problem, follow [Send us a log](docs/SENDING_LOGS.md) and include the exact Technical details message if one was shown. Do not include credentials, signing material, pairing records, account information, or device identifiers.
