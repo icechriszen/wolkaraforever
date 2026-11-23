@@ -143,6 +143,26 @@ The signed device build and layer/docs checks passed. The interface result is
 user-operated physical-device evidence; the required iPhone Duo and iPad Pro
 13-inch (M5) simulators were unavailable, so no simulator UI pass is claimed.
 
+## Cold-launch and touch follow-up: iPhone 17, 2026-11-23
+
+Installed source `d17deea`, iOS 27.2.1, Developer service, unchanged CN Forever
+1.60.1.71037 / zhCN, WolkaraRoue 1.0.5-cn.1. A later character-selection session
+froze before any touch-fix installation. The client reported a protection fault;
+the system report retained an instruction-abort permission fault on a worker
+thread, with PC equal to the fault address inside the recorded 64 KiB anonymous
+mapping. Its RW-to-RX `mprotect` had returned success. The final process termination
+was a scene-update watchdog, not the initial fault. Dynamic-code execution remains
+unresolved; the earlier successful world-entry session is not a cold-launch guarantee.
+
+The user also reported that tapping button centres missed while nearby taps worked.
+Candidate `bc25ca8` fixes a separate, confirmed mode-resolution mismatch: the toolbar
+accepted Automatic/iOS Duo while the host recognised only explicit iOS. It shares
+the existing resolver and direct gestures, with no resolution, add-on, saved-layout,
+or fixed-offset changes. The signed iPhone build, layer/docs checks, and simulator
+SDK compilation of the host tap fixture passed. Both required simulator instances
+were absent; the fixture did not execute. The project installer refused replacement
+while a game session was live. No physical click-accuracy pass is claimed.
+
 ## Report a problem
 
 Start with [Install WolkaraForever](docs/INSTALLATION.md) and [Use WolkaraForever](docs/USING_WOLKARAFOREVER.md). When you report a problem, follow [Send us a log](docs/SENDING_LOGS.md) and include the exact Technical details message if one was shown. Do not include credentials, signing material, pairing records, account information, or device identifiers.
