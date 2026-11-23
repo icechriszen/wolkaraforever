@@ -79,6 +79,12 @@ opening the page does not install anything. You can also view recorded packages,
 import a validated archive, or browse a supported provider. An optional provider key
 stays in the device Keychain. The app removes only add-ons it recorded as managed.
 
+If an older WolkaraRoue copy was installed outside the manager, this bundled
+**Update** action can adopt it. The replacement must contain exactly its existing
+folder names; the update journal restores the old folder and ownership state if
+the replacement fails. It does not require linking a CurseForge project or removing
+the old copy first, and does not replace account SavedVariables.
+
 The bundled touch add-on `WolkaraRoue` now includes Simplified Chinese. Install or
 update it from Add-On Manager after leaving the game; updating the launcher alone
 does not replace an already installed add-on. Its **Mobile UI → Controls → General

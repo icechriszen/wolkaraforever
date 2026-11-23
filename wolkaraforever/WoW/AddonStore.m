@@ -693,8 +693,14 @@ BOOL TKAddonProviderIsCurseForge(NSDictionary *provider) {
     }
     [fm removeItemAtPath:[_support stringByAppendingPathComponent:UpdateBackupName] error:NULL];
     [fm removeItemAtPath:journalPath error:NULL];
-    TKAddonHubLog(TKAddonHubEventRollback, @{ TKAddonHubKeyOutcome: @"restored",
-        TKAddonHubKeyIdentifier: [record[@"identifier"] isKindOfClass:NSString.class] ? record[@"identifier"] : nil });
+    // Validation can fail before a journal exists. In that case nothing was
+    // moved, and there is no rollback identifier to put in a dictionary.
+    if ([record isKindOfClass:NSDictionary.class]) {
+        NSMutableDictionary *fields = [@{ TKAddonHubKeyOutcome: @"restored" } mutableCopy];
+        if ([record[@"identifier"] isKindOfClass:NSString.class])
+            fields[TKAddonHubKeyIdentifier] = record[@"identifier"];
+        TKAddonHubLog(TKAddonHubEventRollback, fields);
+    }
 }
 
 - (BOOL)updateRecord:(TKAddonRecord *)record archiveURL:(NSURL *)url
@@ -705,11 +711,22 @@ BOOL TKAddonProviderIsCurseForge(NSDictionary *provider) {
 - (BOOL)updateRecord:(TKAddonRecord *)record archiveURL:(NSURL *)url
             provider:(NSDictionary *)provider provenance:(NSString *)provenance
                error:(NSError **)error {
-    // A folder this store did not install may still be updated once the player has named its
-    // project: that is an explicit ownership transfer, not a guess. Updating it adopts it, and
-    // the same journal that protects a managed update protects this one, so a failure restores
-    // the player's folder exactly as it was.
-    if (!record.managed && !record.linked)
+    return [self updateRecord:record archiveURL:url provider:provider provenance:provenance
+              adoptingExisting:NO error:error];
+}
+- (BOOL)adoptExistingRecord:(TKAddonRecord *)record archiveURL:(NSURL *)url error:(NSError **)error {
+    if (record.managed || record.linked)
+        return Fail(error, @"This package already has an update source. Use its normal update action.");
+    return [self updateRecord:record archiveURL:url provider:nil provenance:TKAddonProvenanceFiles
+              adoptingExisting:YES error:error];
+}
+- (BOOL)updateRecord:(TKAddonRecord *)record archiveURL:(NSURL *)url
+            provider:(NSDictionary *)provider provenance:(NSString *)provenance
+    adoptingExisting:(BOOL)explicitAdoption error:(NSError **)error {
+    // A folder this store did not install may be adopted after the player names
+    // its project or explicitly selects its replacement archive. Both routes use
+    // the managed-update journal; only the latter requires exactly the same folders.
+    if (!record.managed && !record.linked && !explicitAdoption)
         return Fail(error, @"WolkaraForever only updates a folder it installed, or one you have linked to its project.");
     if (record.pinned) return Fail(error, @"This package is pinned. Unpin it before updating.");
     // An update records the route it arrived by unless the caller names one, and never invents
@@ -736,11 +753,16 @@ BOOL TKAddonProviderIsCurseForge(NSDictionary *provider) {
             NSMutableArray *packages = [self mutablePackages];
             NSUInteger index = NSNotFound;
             NSMutableDictionary *item = [[self packageForRecord:record packages:packages index:&index] mutableCopy];
-            BOOL adopting = (item == nil && record.linked && !record.managed);
+            BOOL adopting = (item == nil && (record.linked || explicitAdoption) && !record.managed);
             if (!item && !adopting) return Fail(error, @"The package ownership record is missing.");
             BOOL disabled = [item[@"disabled"] boolValue];
             NSString *base = disabled ? [[_support stringByAppendingPathComponent:@"disabled"] stringByAppendingPathComponent:record.identifier] : _directory;
             NSArray *oldFolders = [item[@"folders"] isKindOfClass:NSArray.class] ? item[@"folders"] : record.folders;
+            // Explicit replacement is narrower than a provider-linked update: no
+            // extra folder may be acquired and no existing folder may be dropped.
+            if (explicitAdoption && (!oldFolders.count || oldFolders.count != newFolders.count ||
+                ![[NSSet setWithArray:oldFolders] isEqual:[NSSet setWithArray:newFolders]]))
+                return Fail(error, @"The replacement archive must contain exactly this add-on's existing folders.");
             if (![NSFileManager.defaultManager fileExistsAtPath:base])
                 return Fail(error, @"The package's folders are not where the record says they are.");
             // A folder this package does not own must not be overwritten, and must not be

@@ -155,6 +155,11 @@ FOUNDATION_EXPORT BOOL TKAddonProviderIsCurseForge(NSDictionary *_Nullable provi
             provider:(nullable NSDictionary *)provider provenance:(nullable NSString *)provenance
                error:(NSError **)error;
 
+// Explicit user-selected replacement of an unmanaged package (for example an old
+// copy of the bundled add-on). The archive must contain exactly the same folders.
+// Uses the update journal and records Files provenance; automatic updates never adopt.
+- (BOOL)adoptExistingRecord:(TKAddonRecord *)record archiveURL:(NSURL *)url error:(NSError **)error;
+
 - (BOOL)setDisabled:(BOOL)disabled record:(TKAddonRecord *)record error:(NSError **)error;
 - (BOOL)removeRecord:(TKAddonRecord *)record error:(NSError **)error;
 - (BOOL)setPinned:(BOOL)pinned record:(TKAddonRecord *)record error:(NSError **)error;

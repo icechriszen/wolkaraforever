@@ -9,6 +9,26 @@ static TKAddonRecord *ManagedRecord(TKAddonStore *store) {
     for (TKAddonRecord *record in store.records) if (record.managed) return record;
     return nil;
 }
+static TKAddonRecord *RecordNamed(TKAddonStore *store, NSString *identifier) {
+    for (TKAddonRecord *record in store.records) if ([record.identifier isEqual:identifier]) return record;
+    return nil;
+}
+@interface TKAddonStore (FixtureCommit)
+- (BOOL)writePackages:(NSArray *)packages error:(NSError **)error;
+@end
+@interface TKAdoptionFailureStore : TKAddonStore
+@property(nonatomic) BOOL failNextCommit;
+@end
+@implementation TKAdoptionFailureStore
+- (BOOL)writePackages:(NSArray *)packages error:(NSError **)error {
+    if (self.failNextCommit) {
+        self.failNextCommit = NO;
+        if (error) *error = [NSError errorWithDomain:NSCocoaErrorDomain code:NSFileWriteUnknownError userInfo:nil];
+        return NO;
+    }
+    return [super writePackages:packages error:error];
+}
+@end
 int TestRealAddonImport(const char *fixtures, const char *temporary) {
     @autoreleasepool {
         NSString *root = [NSString stringWithUTF8String:temporary];
@@ -230,7 +250,48 @@ int TestBundledPackageInstall(const char *packageFixtures, const char *temporary
             [@"tampered" stringByAppendingPathComponent:archiveName]]];
         CHECK(![store importZIPAtURL:tampered error:&error], "a tampered bundled archive is refused");
         CHECK([before isEqual:[NSData dataWithContentsOfFile:toc]], "and nothing installed was replaced");
-        puts("BUNDLED PACKAGE PASS: installs, updates in place, refuses a tampered archive");
+
+        // Reproduce an old 0.6.1 copy with no manager ownership entry, as found
+        // on the device. Normal updates must still refuse it; only the explicit
+        // bundled replacement may adopt the exact same folder transactionally.
+        NSString *legacyGame = [root stringByAppendingPathComponent:@"BundledLegacy"];
+        NSString *legacyDirectory = [legacyGame stringByAppendingPathComponent:@"Interface/AddOns"];
+        NSString *legacyFolder = [legacyDirectory stringByAppendingPathComponent:@"WolkaraRoue"];
+        NSString *otherFolder = [legacyDirectory stringByAppendingPathComponent:@"Other"];
+        NSString *variablesDirectory = [legacyGame stringByAppendingPathComponent:@"WTF/Account/Fixture/SavedVariables"];
+        for (NSString *path in @[legacyFolder, otherFolder, variablesDirectory])
+            CHECK([fm createDirectoryAtPath:path withIntermediateDirectories:YES attributes:nil error:&error], "create legacy fixture folders");
+        NSString *legacyTOC = [legacyFolder stringByAppendingPathComponent:@"WolkaraRoue.toc"];
+        NSString *otherTOC = [otherFolder stringByAppendingPathComponent:@"Other.toc"];
+        NSString *variables = [variablesDirectory stringByAppendingPathComponent:@"WolkaraRoue.lua"];
+        NSData *oldTOC = [@"## Interface: 16001\n## Title: Old touch UI\n## Version: 0.6.1\n" dataUsingEncoding:NSUTF8StringEncoding];
+        NSData *otherBytes = [@"## Title: Other\n## Interface: 16001\n" dataUsingEncoding:NSUTF8StringEncoding];
+        NSData *savedBytes = [@"WolkaraRoueDB = { entries = { 123 }, scale = 170 }\n" dataUsingEncoding:NSUTF8StringEncoding];
+        CHECK([oldTOC writeToFile:legacyTOC options:0 error:&error], "write old unmanaged TOC");
+        CHECK([otherBytes writeToFile:otherTOC options:0 error:&error], "write unrelated add-on");
+        CHECK([savedBytes writeToFile:variables options:0 error:&error], "write saved character settings");
+        TKAdoptionFailureStore *legacyStore = [[TKAdoptionFailureStore alloc] initWithAddOnsDirectory:legacyDirectory product:@"wowf" gameVersion:@"1.60.1"];
+        TKAddonRecord *legacyRecord = RecordNamed(legacyStore, @"WolkaraRoue");
+        CHECK(legacyRecord && !legacyRecord.managed && !legacyRecord.linked, "old copy has no ownership or invented project link");
+        CHECK(![legacyStore updateRecord:legacyRecord archiveURL:archive provider:nil error:&error], "normal updates still refuse unmanaged packages");
+        CHECK(![legacyStore adoptExistingRecord:RecordNamed(legacyStore, @"Other") archiveURL:archive error:&error], "replacement refuses a different folder set");
+        CHECK(![legacyStore adoptExistingRecord:legacyRecord archiveURL:tampered error:&error], "invalid archive cannot adopt an existing folder");
+        CHECK([oldTOC isEqual:[NSData dataWithContentsOfFile:legacyTOC]], "refusals preserve old add-on bytes");
+        legacyStore.failNextCommit = YES;
+        CHECK(![legacyStore adoptExistingRecord:legacyRecord archiveURL:archive error:&error], "failed ownership commit reports failure");
+        CHECK([oldTOC isEqual:[NSData dataWithContentsOfFile:legacyTOC]], "failed adoption restores old add-on bytes");
+        CHECK(![fm fileExistsAtPath:[legacyFolder stringByAppendingPathComponent:@"Language.lua"]], "failed adoption removes staged replacement files");
+        CHECK(!RecordNamed(legacyStore, @"WolkaraRoue").managed, "failed adoption leaves ownership unchanged");
+        CHECK([legacyStore adoptExistingRecord:RecordNamed(legacyStore, @"WolkaraRoue") archiveURL:archive error:&error], "explicit bundled update adopts the old copy");
+        TKAddonRecord *adopted = RecordNamed(legacyStore, @"WolkaraRoue");
+        CHECK(adopted.managed && !adopted.linked && adopted.provider == nil, "adoption records ownership without a fictitious provider");
+        CHECK([adopted.provenance isEqual:TKAddonProvenanceFiles], "adoption records Files provenance");
+        CHECK([[NSData dataWithContentsOfFile:toc] isEqual:[NSData dataWithContentsOfFile:legacyTOC]], "the installed copy equals the reviewed bundle");
+        CHECK([otherBytes isEqual:[NSData dataWithContentsOfFile:otherTOC]], "unrelated add-on stays untouched");
+        CHECK([savedBytes isEqual:[NSData dataWithContentsOfFile:variables]], "SavedVariables stay byte-identical");
+        CHECK([legacyStore updateRecord:adopted archiveURL:archive provider:nil error:&error], "subsequent normal updates work without another adoption");
+        CHECK(legacyStore.records.count == 2, "adoption and repeated update never duplicate packages");
+        puts("BUNDLED PACKAGE PASS: install, update, unmanaged adoption, exact-folder guard, commit-failure rollback and SavedVariables preservation");
         return 0;
     }
 }
