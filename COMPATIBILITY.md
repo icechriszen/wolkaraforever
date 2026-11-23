@@ -83,6 +83,43 @@ persistent in-app sign-in, and the earlier C++ ownership fix were kept. The ordi
 launcher was restored after both probes. Required simulator execution remains
 unavailable; a Mac fixture pass is not an iOS permission pass.
 
+## CN world-entry validation: iPhone 17, 2026-11-23
+
+Installed source `1e783f7`, iOS 27.2.1, Developer service, unchanged CN Forever
+1.60.1.71037 / zhCN, with host diagnostics enabled. This result supersedes the
+failed character-screen/world-entry status above for this tested combination:
+
+- `5cf5bb9` corrects ordinary anonymous `mmap` address hints inside the reserved
+  image: a non-fixed, non-MAP_JIT hint no longer clears or reprotects occupied
+  image pages. The Mac ASan/UBSan regression verifies relocation and preservation
+  of existing and adjacent bytes. Explicit fixed-map and MAP_JIT image-rewrite
+  handling remains unchanged.
+- After that correction, the next reproduced failure was a `CFRetain(NULL)` trap,
+  followed by the client's reporting path and a system watchdog termination.
+  The adapter had returned nil when a valid local event monitor was registered
+  without a development flag. `1e783f7` registers it with the existing dispatcher
+  on ordinary launches and returns the real removable token. It does not suppress
+  CoreFoundation's NULL trap. The ownership regression covers CF retention,
+  callback removal, token destruction, filtering, replacement and consumption.
+- The user reported a stable character/graphics screen with a working keyboard,
+  then successful world entry with normal rendering and keyboard interaction.
+  Fresh project-tool captures confirmed a registered local-monitor token, no
+  `CFRetain(NULL)`, Lua PANIC or reported `mprotect` failure, and no additional
+  client error file or system crash report. The game was left running.
+- Replacement installation preserved all 1,909 existing client files by path,
+  size and modification time, including 55 CASC archives. CN/zhCN, persistent
+  in-app web sign-in, and the C++ allocation boundary fix were retained. No game
+  executable or downloaded archive was edited.
+
+This is one successful game session, not a repeated cold-launch or long-duration
+stability result. A carried library's MAP_JIT request still returned errno 1;
+continued world entry shows that this observed denial alone did not terminate
+this session. These fixes do not grant arbitrary new anonymous pages execution
+permission, establish that Lua JIT compiled a trace, or make the earlier failed
+host-only code-remapping probes pass. Required simulator execution is still not
+claimed; the matrix instances were unavailable. Mac sanitizer checks, layer/docs
+checks, and the signed iPhone build passed.
+
 ## Report a problem
 
 Start with [Install WolkaraForever](docs/INSTALLATION.md) and [Use WolkaraForever](docs/USING_WOLKARAFOREVER.md). When you report a problem, follow [Send us a log](docs/SENDING_LOGS.md) and include the exact Technical details message if one was shown. Do not include credentials, signing material, pairing records, account information, or device identifiers.
