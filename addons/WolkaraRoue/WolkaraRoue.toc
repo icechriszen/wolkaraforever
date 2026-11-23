@@ -4,7 +4,7 @@
 ## Title-zhCN: 触屏界面 |cff66ccff(WolkaraForever)|r
 ## Notes-zhCN: 为触屏设计的技能轮盘、快捷按钮、生命条和聊天界面。
 ## Author: scarrdi94, pookee (ExoGroupe)
-## Version: 1.0.5-cn.5
+## Version: 1.0.5-cn.6
 ## SavedVariablesPerCharacter: WolkaraRoueDB
 
 Core.lua

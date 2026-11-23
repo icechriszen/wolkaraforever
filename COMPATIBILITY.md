@@ -355,6 +355,34 @@ reproduction. This is user-operated iPhone evidence, not Device Hub automation
 or a prolonged stability test. No game process was forcibly stopped, no client
 archives were replaced, and the CN sign-in adaptations were retained.
 
+## Chat input initialization investigation: iPhone 17, 2026-11-23
+
+After accepting `1.0.5-cn.5` wheel behavior, the user again reported no chat
+message after pressing Send. The current native log confirmed stored
+`classicDirect`, the system draft keyboard and one ordinary-message dispatch.
+That log records an input request, not server receipt. The user could not yet
+repeat the explicit `/s ` comparison; account/channel restrictions and actual
+Unicode delivery remain unmeasured on this run.
+
+The source path sends F12, the committed line and Return together. The
+[game UI opener](https://github.com/Gethe/wow-ui-source/blob/live/Interface/AddOns/Blizzard_ChatFrameBase/Shared/ChatFrameUtil.lua)
+activates the edit box immediately but defers the supplied prefix, and the
+[edit box update](https://github.com/Gethe/wow-ui-source/blob/live/Interface/AddOns/Blizzard_ChatFrameBase/Shared/ChatFrameEditBox.lua)
+writes and parses it on a later frame. This leaves a channel-selection and text
+overwrite race. The default upstream Chat.lua still uses that prefix-based
+opener; the earlier local namespace compatibility fix did not address timing.
+
+The `1.0.5-cn.6` candidate activates through the game's API, resolves the actual
+active edit box, clears pending initialization, then sets/parses the selected
+prefix synchronously with send=0. It never calls a chat-send API or retries a
+message. The existing keyboard Return is still the submit action. The fixture
+models the deferred initialization and immediate text burst; source `63fff04`
+fails the new test. The candidate passes modern/legacy API fallbacks, five
+destinations, a previous pending prefix, preservation of subsequent Chinese and
+ASCII text across the next frame, and a focus failure. The full Lua/Chinese and
+wheel suites pass. This establishes a source defect and candidate correction;
+it does not yet establish that this is the sole cause of the phone symptom.
+
 ## Report a problem
 
 Start with [Install WolkaraForever](docs/INSTALLATION.md) and [Use WolkaraForever](docs/USING_WOLKARAFOREVER.md). When you report a problem, follow [Send us a log](docs/SENDING_LOGS.md) and include the exact Technical details message if one was shown. Do not include credentials, signing material, pairing records, account information, or device identifiers.

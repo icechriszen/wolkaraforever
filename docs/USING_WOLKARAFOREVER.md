@@ -110,6 +110,11 @@ In Standard, write with the app's keyboard button below the chat. The inline
 **Tap to type** row belongs to the active Duo chat button. The add-on's F12
 entry supports both the older `ChatFrame_OpenChat` and newer
 `ChatFrameUtil.OpenChat` client APIs; a missing entry reports an error locally.
+In **Classic direct**, ordinary messages use the conversation selected in the
+add-on. The input and channel are prepared before the app's text events arrive,
+so deferred chat initialization cannot overwrite the new line. The game still
+sends on Return; slash commands retain their existing path. No language or
+layout reset is needed when updating the bundled add-on.
 If the top Bags, Spells, Map and Menu buttons are absent in Standard, enter
 `/mobile`, select **Spell wheels → Shortcuts**, and set it to **On**. In Simplified
 Chinese these controls are **技能轮盘 → 快捷按钮 → 开启**. This switch restores the

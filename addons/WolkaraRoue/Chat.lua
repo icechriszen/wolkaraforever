@@ -187,12 +187,31 @@ end
 Chat.Prefix = Prefix
 
 local function OpenInput()
-    local open = ChatFrameUtil and ChatFrameUtil.OpenChat or ChatFrame_OpenChat
-    if type(open) == "function" then
-        open(Prefix(), DEFAULT_CHAT_FRAME)
-    elseif ns.Print then
-        ns.Print(ns.T("Chat input is unavailable on this client."))
+    local util = ChatFrameUtil
+    local open = util and util.OpenChat
+    if type(open) ~= "function" then open = ChatFrame_OpenChat end
+    if type(open) ~= "function" then
+        if ns.Print then ns.Print(ns.T("Chat input is unavailable on this client.")) end
+        return
     end
+    -- The host queues F12, text and Return together. OpenChat(prefix) defers
+    -- that prefix to the next OnUpdate, which can overwrite the queued text or
+    -- leave it on the previous channel. Activate through the game API, then
+    -- finish only its input initialization synchronously; never send from Lua.
+    local box = open(nil, DEFAULT_CHAT_FRAME)
+    if not box then
+        local active = util and util.GetActiveWindow or ChatEdit_GetActiveWindow
+        if type(active) == "function" then box = active() end
+    end
+    box = box or (DEFAULT_CHAT_FRAME and DEFAULT_CHAT_FRAME.editBox) or _G.ChatFrame1EditBox
+    if not box or type(box.SetText) ~= "function" or (box.HasFocus and not box:HasFocus()) then
+        if ns.Print then ns.Print(ns.T("Chat input is unavailable on this client.")) end
+        return
+    end
+    box.setText, box.text, box.desiredCursorPosition = 0, nil, nil
+    box:SetText(Prefix())
+    if type(box.ParseText) == "function" then box:ParseText(0, true)
+    elseif type(ChatEdit_ParseText) == "function" then ChatEdit_ParseText(box, 0, true) end
 end
 
 local function Paint(button, selected)
