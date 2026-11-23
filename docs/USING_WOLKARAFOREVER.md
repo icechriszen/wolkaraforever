@@ -64,7 +64,7 @@ This feature can stop working without notice. Do not include credentials, ticket
 
 ## Change app language or interface
 
-Open **Settings** to choose an app language. Open **Launcher Manager** to choose **iPadOS** or **iOS on Duo**. Interface selection changes the arrangement only; it does not change game data or add-ons.
+Open **Settings** to choose an app language. Open **Launcher Manager** to choose **iPadOS** or **iOS on Duo**. Interface selection changes the arrangement only; it does not change game data or add-ons. Automatic on an iPhone, iOS, and iOS on Duo use the same direct-touch gestures when trackpad mode is off: a tap first moves the pointer to the finger, then clicks when the finger lifts. The touch toolbar and host now resolve the same interface setting. This does not change the game resolution or add a fixed tap offset.
 
 ## Optional network-health diagnostics
 

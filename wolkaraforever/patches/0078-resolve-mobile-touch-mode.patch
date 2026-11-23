@@ -1,0 +1,106 @@
+# WolkaraForever: keep host touch routing consistent with the launcher.
+# Automatic on a phone and iosduo previously used a mobile toolbar but the
+# Standard immediate-button path. They now share the existing direct gestures,
+# including positioning the pointer before a tap. No coordinate offsets or
+# resolution changes. The fixture feeds our own host only, never a game.
+
+--- a/translation/AppKit/AppKit.m
++++ b/translation/AppKit/AppKit.m
+@@ -3,6 +3,7 @@
+ #import "Images.h"
+ #import "TextInput.h"
+ #import "TouchControls.h"
++#import "InterfaceMode.h"
+ #import "AKTouchEventPump.h"
+ #import "TouchGamepadLayout.h"
+
+@@ -290,13 +291,11 @@
+ - (BOOL)ak_needsTrackingEvents;
+ @end
+
+-// The interface the user chose: "ios" is the mobile (iPhone/Duo) arrangement, anything
+-// else - including a missing or hand-edited value - is iPadOS, the interface every release
+-// through v1.0.7 has had. Read on each use, so a value written between two guests in one
+-// process is seen by the second. The launcher owns the key; the layer only reads it.
++// Use the same resolver as the launcher and toolbar: Automatic on a phone and
++// iOS on Duo must enter the direct-touch path as explicit iOS does. Read on each
++// use so a later session sees a preference changed by the launcher.
+ static BOOL AKMobileInterface(void) {
+-    id value = [NSUserDefaults.standardUserDefaults objectForKey:@"WolkaraForeverInterfaceModeV1"];
+-    return [value isKindOfClass:NSString.class] && [(NSString *)value isEqualToString:@"ios"];
++    return AKInterfaceModeIsMobile();
+ }
+
+ @implementation AKHostView { CGPoint _last; NSEventModifierFlags _mods; BOOL _pressedRight, _pressedLeft, _pointerInside, _softwareCursor; UIImageView *_cursorView; UIPointerInteraction *_pointer; UIPointerStyle *_gamePointerStyle; unsigned _hoverUpdates, _pointerUpdates, _cursorVisibilityReasons; NSTimeInterval _pointerReportTime; CGPoint _cursorHotSpot;
+
+--- a/tests/test_appkit_views.m
++++ b/tests/test_appkit_views.m
+@@ -59,6 +59,23 @@
+ - (void)touchMoveBy:(CGPoint)delta;
+ - (void)touchScrollBy:(CGPoint)delta;
+ - (void)touchButton:(unsigned)button pressed:(BOOL)pressed;
++@end
++// A finger/event pair for the host adapter, with no imported application.
++@interface FixtureFinger : NSObject
++@property CGPoint point;
++@property UITouchPhase phase;
++@property(weak) UIView *view;
++@end
++@implementation FixtureFinger
++- (UITouchType)type { return UITouchTypeDirect; }
++- (CGPoint)locationInView:(UIView *)view { (void)view; return self.point; }
++@end
++@interface FixtureFingerEvent : NSObject
++@property NSSet *allTouches;
++@end
++@implementation FixtureFingerEvent
++- (UIEventButtonMask)buttonMask { return 0; }
++- (UIKeyModifierFlags)modifierFlags { return 0; }
+ @end
+ @interface FixtureKeyResponder : NSResponder
+ @property unsigned downs, ups;
+@@ -187,11 +204,39 @@
+     [defaults setBool:NO forKey:AKTouchControlsDefaultsKey];
+     plainHost=[NSClassFromString(@"AKHostView") new];
+     assert(![plainHost valueForKey:@"_touchControls"] && !plainHost.multipleTouchEnabled);
+-    // Mobile (WolkaraForeverInterfaceModeV1 = ios): the direct gestures need a second finger
+-    // for their pinch, so the host takes several fingers whether or not the trackpad is on.
+-    [defaults setObject:@"ios" forKey:@"WolkaraForeverInterfaceModeV1"];
+-    plainHost=[NSClassFromString(@"AKHostView") new];
+-    assert(plainHost.multipleTouchEnabled && [plainHost valueForKey:@"_pinch"] != nil);
++    // Explicit iOS/Duo and Automatic on a phone all use the same direct-tap
++    // contract. Standard/Automatic on an iPad retain their old gesture policy.
++    for (NSString *mode in @[@"ios", @"iosduo", @"auto", @"ipados"]) {
++        [defaults setObject:mode forKey:@"WolkaraForeverInterfaceModeV1"];
++        BOOL mobile = ![mode isEqualToString:@"ipados"] &&
++            (![mode isEqualToString:@"auto"] || UIDevice.currentDevice.userInterfaceIdiom == UIUserInterfaceIdiomPhone);
++        UIView *tapHost = [[NSClassFromString(@"AKHostView") alloc] initWithFrame:CGRectMake(0,0,874,402)];
++        [tapHost setValue:window forKey:@"nsWindow"];
++        assert(tapHost.multipleTouchEnabled == mobile);
++        assert(([tapHost valueForKey:@"_pinch"] != nil) == mobile);
++        // Corners and centre, including the same location twice. The game-facing
++        // point must not depend on where a previous tap left the pointer.
++        const CGPoint points[] = {{24,24},{850,24},{437,201},{24,378},{850,378},{850,378}};
++        for (unsigned i=0;i<sizeof(points)/sizeof(points[0]);i++) {
++            FixtureFinger *finger=[FixtureFinger new];
++            finger.point=points[i];finger.phase=UITouchPhaseBegan;finger.view=tapHost;
++            NSSet *touches=[NSSet setWithObject:finger];
++            FixtureFingerEvent *event=[FixtureFingerEvent new];event.allTouches=touches;
++            [tapHost touchesBegan:(id)touches withEvent:(id)event];
++            CGPoint expected=CGPointMake(points[i].x,402-points[i].y);
++            if(mobile) {
++                NSEvent *move=next_input();
++                assert(move.type==NSEventTypeMouseMoved && CGPointEqualToPoint(move.locationInWindow,expected));
++                assert([NSApp nextEventMatchingMask:UINT64_MAX untilDate:NSDate.distantPast
++                    inMode:NSDefaultRunLoopMode dequeue:YES]==nil); // no click until release
++            }
++            finger.phase=UITouchPhaseEnded;
++            [tapHost touchesEnded:(id)touches withEvent:(id)event];
++            NSEvent *down=next_input(), *up=next_input();
++            assert(down.type==NSEventTypeLeftMouseDown && up.type==NSEventTypeLeftMouseUp);
++            assert(CGPointEqualToPoint(down.locationInWindow,expected) && CGPointEqualToPoint(up.locationInWindow,expected));
++        }
++    }
+     [defaults removeObjectForKey:@"WolkaraForeverInterfaceModeV1"];
+     [defaults setBool:YES forKey:AKTouchControlsDefaultsKey];
+     id host=[NSClassFromString(@"AKHostView") new];
