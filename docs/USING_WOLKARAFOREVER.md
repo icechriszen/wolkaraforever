@@ -139,3 +139,10 @@ game entry, runs only our return-value functions, and tests replacing a writable
 view then restoring an executable view at the **originally prepared address**.
 It is separate from `--local-code-remap-probe`, which tries a new address. Neither
 path is enabled for the game. A Mac pass is not evidence of device execution.
+
+Ordinary anonymous mappings now honor an address as a hint: a hint inside the
+loaded image no longer clears or changes the protection of existing image pages.
+The existing explicit fixed-map and MAP_JIT image-rewrite adapters are retained.
+This corrects mapping ownership; it does not itself grant execution permission to
+new dynamic code on iPhone. Memory diagnostics distinguish the requested hint
+from the returned allocation address.

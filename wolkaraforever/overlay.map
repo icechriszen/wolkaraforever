@@ -265,10 +265,12 @@ wolkaraforever/Cxx/vendor/string.cpp translation/OwnedCxx/vendor/string.cpp add
 wolkaraforever/Cxx/vendor/thread.cpp translation/OwnedCxx/vendor/thread.cpp add
 #
 # Runtime: prepared dynamic-code pages and host-only regression fixtures
+wolkaraforever/Runtime/ArenaMapping.h runtime/ArenaMapping.h add
 wolkaraforever/Runtime/CodeRemap.c runtime/CodeRemap.c add
 wolkaraforever/Runtime/CodeRemap.h runtime/CodeRemap.h add
 wolkaraforever/Runtime/MemoryTrace.c runtime/MemoryTrace.c add
 wolkaraforever/Runtime/MemoryTrace.h runtime/MemoryTrace.h add
+wolkaraforever/Runtime/tests/test_arena_mapping.c tests/test_arena_mapping.c add
 wolkaraforever/Runtime/tests/test_code_remap.c tests/test_code_remap.c add
 wolkaraforever/Runtime/tests/test_memory_trace.c tests/test_memory_trace.c add
 #

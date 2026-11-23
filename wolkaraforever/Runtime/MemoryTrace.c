@@ -53,8 +53,8 @@ void wk_memory_trace_record(WKMemoryEvent e) {
                 uintptr_t start=p.operation==WK_MEMORY_MAP?p.result:p.address;
                 if(!overlap(start,p.size,e.address,e.size))continue;
                 if(p.operation==WK_MEMORY_MAP && contains(start,p.size,e.address,e.size)) {
-                    fprintf(output,"[memory-permission] origin seq=%" PRIu64 " address=%#" PRIxPTR " size=%#zx prot=%d flags=%#x arena=%d caller=%d+%#" PRIxPTR "\n",
-                        n,start,p.size,p.protection,p.flags,p.arena,p.caller_image,p.caller_offset);
+                    fprintf(output,"[memory-permission] origin seq=%" PRIu64 " requested=%#" PRIxPTR " address=%#" PRIxPTR " size=%#zx prot=%d flags=%#x arena=%d caller=%d+%#" PRIxPTR "\n",
+                        n,p.address,start,p.size,p.protection,p.flags,p.arena,p.caller_image,p.caller_offset);
                     found=true;
                 }
                 break; // A partial unmap/replacement makes older provenance ambiguous.

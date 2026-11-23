@@ -33,7 +33,7 @@ int main(void) {
     // Failed unmap does not invalidate the mapping.
     wk_memory_trace_start(f);wk_memory_trace_record(map(0x200000));
     wk_memory_trace_record((WKMemoryEvent){.operation=WK_MEMORY_UNMAP,.address=0x200000,.size=0x4000,.failed=true,.error=EINVAL});
-    wk_memory_trace_record(failure(0x200000));s=read_log(f);assert(strstr(s,"origin seq=0 address=0x200000"));free(s);
+    wk_memory_trace_record(failure(0x200000));s=read_log(f);assert(strstr(s,"origin seq=0 requested=0 address=0x200000"));free(s);
     // Wrap and concurrent traffic remain bounded; errno is thread-local and unchanged.
     pthread_t threads[4];for(int i=0;i<4;i++)assert(!pthread_create(&threads[i],NULL,worker,NULL));
     for(int i=0;i<4;i++)assert(!pthread_join(threads[i],NULL));
