@@ -1,13 +1,13 @@
 {
-  "archive": "WolkaraRoue-1.0.5-cn.2.zip",
+  "archive": "WolkaraRoue-1.0.5-cn.3.zip",
   "files": {
     "WolkaraRoue/Actions.lua": {
       "sha256": "29e0944b02e2423b25fc55fd1201ee3bf2da8ff6efc1fa10b8b79c85ca8279ed",
       "size": 13410
     },
     "WolkaraRoue/Bags.lua": {
-      "sha256": "581dffb7c3fa1e72fbfdd7102001f17c9079dafaa724d90f99311134ce710dbc",
-      "size": 1932
+      "sha256": "bfefaafb9811460d852bbd35106c101030b668d9a02fee8ac9d881ac74cb7572",
+      "size": 2121
     },
     "WolkaraRoue/Bindings.lua": {
       "sha256": "8b118cf6a108ecd6dbccc3ee604b42b187228d5ea6da8b7f38160d7c75db1a30",
@@ -50,8 +50,12 @@
       "size": 22646
     },
     "WolkaraRoue/Free.lua": {
-      "sha256": "b3de667fd0167109971e4cc3ffee884c04eff398ab6b1db535884f0744df2afc",
-      "size": 5204
+      "sha256": "37ba9c63123df449ef1f16369c5fb5215d598c31f62b2619e6a8eae17608706b",
+      "size": 5598
+    },
+    "WolkaraRoue/HostTouchLayout.lua": {
+      "sha256": "0e674b44a977e5bbbd80d189d6f1cd72fdf992ed02c3c75fc7a0ac9ccbae4e53",
+      "size": 82
     },
     "WolkaraRoue/Hud.lua": {
       "sha256": "7f1c636ec64ddc1f31adc55e568a1a2d51fc1bb79e758384e51af52e9c4edf69",
@@ -62,8 +66,8 @@
       "size": 371
     },
     "WolkaraRoue/Language.lua": {
-      "sha256": "b9876ce88f66504cf90f4c50ba6377aa00038fb6f6ed5ca410833c52ae12059e",
-      "size": 53921
+      "sha256": "a5f93a8c40287f42b1d86897df188b53bc28794a7e86a85a1fc6b06826da9916",
+      "size": 53935
     },
     "WolkaraRoue/Menu.lua": {
       "sha256": "93dcb3aea4c5935283a4e11ed0153fafe696f7affdfa085b8170f804c28df761",
@@ -125,27 +129,31 @@
       "sha256": "eac88bdf59a5780659a748d589cc332331e5df6813b314a4d16661d01f01d268",
       "size": 25358
     },
+    "WolkaraRoue/TouchLayout.lua": {
+      "sha256": "63f5f1a8d98af14ad442ca479e15fe8256efc61aa71b09a52e5892c9e8ea937a",
+      "size": 1321
+    },
     "WolkaraRoue/Turn.lua": {
-      "sha256": "2ea27d7c24d5f0fb6a9edc76939b3c356e3ad04ce316a4d8d9b5f1c1c4d30909",
-      "size": 11574
+      "sha256": "78976b1051a7b332f77dcc2deb96b59c49736672f0ab7f21b8b4a941a9b07780",
+      "size": 12675
     },
     "WolkaraRoue/Wheels.lua": {
       "sha256": "eb29156801d5cfd95393ed29a447ddba6e08658882a5fede26365ae23c35d0d4",
       "size": 7652
     },
     "WolkaraRoue/Windows.lua": {
-      "sha256": "b2dbe3e824ed86f62ebf23608bb7bc94e08fe6b6abd3ec539af8bfde46ae1266",
-      "size": 6648
+      "sha256": "9dc840518853eb8152c5d93c7868ae4270186e6968d5212dd772da76c4692a00",
+      "size": 7509
     },
     "WolkaraRoue/WolkaraRoue.toc": {
-      "sha256": "c7d6eafcce5f5b494fe57e924c2db2a8ae0dfbd094c393d45aa33c7c528241d9",
-      "size": 816
+      "sha256": "3cc3a3c7112ad8c81f201f23b4edeee2755ce1691c7dda8f69a80c5f2d0536af",
+      "size": 852
     }
   },
   "format": "wolkaraforever.addon",
   "interface": 16001,
   "name": "WolkaraRoue",
-  "release": "1.0.5-cn.2",
-  "sha256": "28595eebd72d37862326bc1cf53021c93816c1f58587de8ccd0980a2e0b96fd0",
+  "release": "1.0.5-cn.3",
+  "sha256": "a8d218d3a4f4426d93d986084217af4c437f4cb95c732f96015692c9efc8e983",
   "version": 1
 }

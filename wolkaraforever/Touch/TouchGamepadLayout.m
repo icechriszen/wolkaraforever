@@ -1,4 +1,5 @@
 #import "TouchGamepadLayout.h"
+#import "ControlGeometry.h"
 #import "InterfaceMode.h"
 #import "LayoutStore.h"
 #import "TouchControllerLog.h"
@@ -161,13 +162,7 @@ NSString *AKGamepadStickButtonElement(NSString *element) {
 - (void)setRearScale:(CGFloat)value { _rearScale = Clamp(value,0.8,1.5,1); }
 - (void)setFrontScale:(CGFloat)value { _frontScale = Clamp(value,0.65,1.4,1); }
 - (CGRect)frameForItem:(NSString *)item defaultFrame:(CGRect)frame inBounds:(CGRect)bounds {
-    CGFloat width = MAX(0,MIN(frame.size.width,bounds.size.width));
-    CGFloat height = MAX(0,MIN(frame.size.height,bounds.size.height));
-    CGFloat dx = MAX(0,bounds.size.width-width), dy = MAX(0,bounds.size.height-height);
-    NSArray *point = [self positions][item];
-    CGFloat x = point ? [point[0] doubleValue]*dx : frame.origin.x-bounds.origin.x;
-    CGFloat y = point ? [point[1] doubleValue]*dy : frame.origin.y-bounds.origin.y;
-    return CGRectMake(bounds.origin.x+Clamp(x,0,dx,0),bounds.origin.y+Clamp(y,0,dy,0),width,height);
+    return AKTouchSavedFrame(frame, bounds, [self positions][item]);
 }
 - (void)moveItem:(NSString *)item toFrame:(CGRect)frame inBounds:(CGRect)bounds {
     CGFloat dx = MAX(0,bounds.size.width-frame.size.width), dy = MAX(0,bounds.size.height-frame.size.height);

@@ -94,6 +94,8 @@ an explicit supported choice is retained. Save and close the panel to reload the
 interface and apply a change. The add-on uses the game's own fonts and its existing
 settings migration. Updating its package does not replace game archives or account
 SavedVariables. Unsupported game locales fall back to English.
+The Chinese menu and shortcut entries use the short labels **法术书** and **地图**,
+even when the client supplies longer window titles for those buttons.
 
 To use the existing add-on's default interface, keep **Mobile UI → General →
 Layout** on **Standard**. This is a saved layout choice within the current
@@ -113,6 +115,15 @@ Movement comes from the app's on-screen gamepad, separately from the spell wheel
 Expand the bottom toolbar and enable its gamepad button if the movement sticks are
 absent. The toolbar gear's **Reset to defaults** restores the native controls'
 positions and settings; it does not reset WolkaraRoue or its Chinese language.
+The compact jump button below the camera stick has no visible text; its touch
+area, binding and accessibility label are unchanged.
+For Standard with fixed compact sticks, each Play launch exports the native
+controls' actual positions to the installed add-on. The spell wheels clear the
+stick hit areas; menus, settings, bags and game windows fit between or above the
+controls, with room left for the keyboard toolbar. The export uses a dedicated
+add-on data file and does not reset SavedVariables or saved native positions.
+After moving or resizing native controls, restart the game to refresh the shared
+geometry. Floating sticks and the Duo layout retain their existing arrangements.
 
 Each **Play** launch checks for an attached physical controller after sign-in and
 before the game starts. With a controller, WolkaraRoue does not automatically

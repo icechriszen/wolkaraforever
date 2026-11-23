@@ -141,3 +141,37 @@ module:Layout()
 assert(Rel(QuestFrame) < before, "an open window kept its old size")
 
 print("mobile add-on game windows: never enlarged, quests between the sticks, wide ones above, map on the whole screen, protected after the fight, late windows caught: PASS")
+
+-- Actual fixed-control geometry from the iPhone viewport, not the old Duo ratios.
+assert(loadfile((path:gsub("[A-Za-z]+%.lua$", "TouchLayout.lua"))))("WolkaraRoue", ns)
+ns.DuoLayout = function() return false end
+ns.HostTouchLayout = { version = 1, bottom = 81/402 }
+for _, side in ipairs({ "left", "right" }) do
+    local x = side == "left" and 176 or 698
+    local wide = side == "left" and 52 or 146 * math.sin(math.pi / 3)
+    local down = side == "left" and 52 or 146
+    for key, value in pairs({ X=x/874, Y=135/402, Radius=52/402,
+        MinX=(x-wide)/874, MaxX=math.min(874,x+wide)/874,
+        MinY=math.max(0,135-down)/402, MaxY=187/402 }) do ns.HostTouchLayout[side..key] = value end
+end
+assert(ns.TouchLayout.Active())
+
+W, H, UI = 874, 402, 1
+WolkaraMobileMenu = { card = Window(nil, 720, 520) }
+WolkaraMobileControls = Window("WolkaraMobileControls", 720, 520)
+handlers.ADDON_LOADED("WolkaraRoue")
+assert(WolkaraMobileMenu.card.hooks.OnShow and WolkaraMobileControls.hooks.OnShow)
+for _, frame in ipairs({ WolkaraMobileMenu.card, WolkaraMobileControls,
+    Window("ContainerFrameCombinedBags", 460, 650), Window("WorldMapFrame", 1100, 760) }) do
+    Open(frame)
+    local room = Room(frame)
+    local l, r, b, t = room.left, W-room.right, room.bottom, H-room.top
+    assert(frame.width*Rel(frame) <= r-l+1e-6 and frame.height*Rel(frame) <= t-b+1e-6)
+    for _, side in ipairs({ "left", "right" }) do
+        local d = ns.HostTouchLayout
+        local sl, sr, sb, st = W*d[side.."MinX"], W*d[side.."MaxX"], H*d[side.."MinY"], H*d[side.."MaxY"]
+        assert(r <= sl or l >= sr or t <= sb or b >= st, "window may overlap native control hit area")
+    end
+    assert(b > H*ns.HostTouchLayout.bottom, "window may overlap keyboard toolbar")
+end
+print("mobile native-aligned windows: own menu/settings, bags and map stay outside native control/toolbar areas PASS")

@@ -93,6 +93,10 @@ intent() {
     git ls-files wolkaraforever/Bridge | while read -r f; do
         case "$f" in
             wolkaraforever/Bridge/tests/*) dst=tests/${f#wolkaraforever/Bridge/tests/};;
+            wolkaraforever/Bridge/ControlGeometry.h)
+                echo "$f translation/AppKit/ControlGeometry.h add"
+                echo "$f launcher/WoW/ControlGeometry.h add"
+                continue;;
             wolkaraforever/Bridge/BackgroundPacing.m) dst=translation/Metal/BackgroundPacing.m;;
             wolkaraforever/Bridge/DisplayRate.m) dst=translation/Metal/DisplayRate.m;;
             # Battery Saver's contract is one source compiled into three images: the launcher,

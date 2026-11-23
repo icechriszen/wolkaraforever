@@ -233,3 +233,52 @@ lefts[4].hooks.OnMouseUp()
 assert(AtLeft(2) and ns.db.freeLeft.turnOffset == 2 and lefts[4].swiped == true)
 
 print(string.format("mobile add-on turning wheels: secure angle within %.2f deg (left %.2f); swipe on a spell turns without casting, touch casts, nothing else caught, arc mode inert, left is the mirror, no shadow: PASS", worst, worstLeft))
+
+-- Actual fixed-control geometry from the iPhone viewport, not the old Duo ratios.
+assert(loadfile((path:gsub("[A-Za-z]+%.lua$", "TouchLayout.lua"))))("WolkaraRoue", ns)
+ns.DuoLayout = function() return false end
+ns.HostTouchLayout = { version = 1, bottom = 81/402 }
+for _, side in ipairs({ "left", "right" }) do
+    local x = side == "left" and 176 or 698
+    local wide = side == "left" and 52 or 146 * math.sin(math.pi / 3)
+    local down = side == "left" and 52 or 146
+    for key, value in pairs({ X=x/874, Y=135/402, Radius=52/402,
+        MinX=(x-wide)/874, MaxX=math.min(874,x+wide)/874,
+        MinY=math.max(0,135-down)/402, MaxY=187/402 }) do ns.HostTouchLayout[side..key] = value end
+end
+assert(ns.TouchLayout.Active())
+
+for _, uiScale in ipairs({ 1, 1.7, 2 }) do
+    W, H = 874 / uiScale, 402 / uiScale
+    for _, buttonScale in ipairs({ 0.5, 1, 1.5 }) do
+        for _, side in ipairs({ "left", "right" }) do
+            local key = side == "left" and "freeLeft" or "free"
+            ns.db[key].turn, ns.db[key].turnOffset, ns.db[key].scale = true, 0, buttonScale * 100
+        end
+        Turn:Layout()
+        for _, pair in ipairs({ { "left", left, lefts }, { "right", band, buttons } }) do
+            local side, owner, list = unpack(pair)
+            local cx, cy, cr = ns.TouchLayout.Stick(side, W, H)
+            assert(math.abs(owner.points[4] - cx) < 1e-6 and math.abs(owner.points[5] - cy) < 1e-6)
+            local visible = 0
+            for _, button in ipairs(list) do
+                local x, y = Where(button)
+                x, y = x * buttonScale, y * buttonScale
+                if math.abs(x) < 10000 then
+                    visible = visible + 1
+                    local half = 32 * buttonScale
+                    local dx, dy = math.max(0, math.abs(x) - half), math.max(0, math.abs(y) - half)
+                    assert(dx*dx + dy*dy > cr*cr, "spell hit box overlaps native stick")
+                    assert(y >= 0, "spell enters the jump sector below the stick")
+                end
+            end
+            assert(visible >= 2 and visible < #list, "wheel does not clip its inactive slots")
+        end
+        combat = true
+        band.GetMousePosition = function() return 0.4, 0.6 end
+        Run(buttons[1], "OnMouseDown"); Run(buttons[1], "OnMouseUp")
+        assert(Run(buttons[1], "OnClick") == nil, "ordinary touch no longer casts")
+        combat = false
+    end
+end
+print("mobile native-aligned wheels: both stick centres, scaled hit-box clearance, inactive slots and secure touch PASS")

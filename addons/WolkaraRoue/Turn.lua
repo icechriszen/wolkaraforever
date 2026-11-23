@@ -44,7 +44,16 @@ end
 -- La roue est centrée sur le coin bas ; son rayon passe au-dessus du stick.
 -- Les sorts s'y suivent serrés : d'un centre au suivant, 1,25 taille de sort à « Écart des
 -- sorts » 100 %, de 1,11 (presque bord à bord) à 60 % jusqu'à 1,53 à 180 %.
-function Turn.Geometry(width, height, count, spread)
+function Turn.Geometry(width, height, count, spread, side, scale)
+    if ns.TouchLayout and side then
+        local x, y, stickRadius = ns.TouchLayout.Stick(side, width, height)
+        if x then
+            scale = scale or 1
+            local radius = stickRadius + SIZE * scale / math.sqrt(2) + 10
+            local apart = SIZE * scale * (0.9 + 0.35 * (spread or 100) / 100)
+            return radius, math.deg(2 * math.asin(math.min(1, apart / (2 * radius)))), x, y
+        end
+    end
     local stick = math.sqrt((width * ns.STICK_X) ^ 2 + (height * ns.STICK_Y) ^ 2)
     local radius = stick + height * 0.15
     local apart = SIZE * (0.9 + 0.35 * (spread or 100) / 100)
@@ -59,6 +68,9 @@ function Turn.Angle(index, offset, count, step)
 end
 
 local function Point(wheel, radius, degrees)
+    -- The old corner layout clipped the rest of the wheel off-screen. A wheel
+    -- around a real stick must likewise keep its inactive half out of the game.
+    if wheel.hostCoordinates and (degrees < 90 or degrees > 180) then return 100000, 100000 end
     local angle = math.rad(degrees)
     local x, y = radius * math.cos(angle), radius * math.sin(angle)
     if wheel.mirror then x = -x end
@@ -83,8 +95,9 @@ local function CursorAngle(wheel)
     local x, y = GetCursorPosition()
     local scale = UIParent:GetEffectiveScale()
     x, y = x / scale, y / scale
-    local inward = wheel.mirror and x or UIParent:GetWidth() - x
-    return math.deg(math.atan2(y, -inward))
+    local originX = wheel.originX or (wheel.mirror and 0 or UIParent:GetWidth())
+    local inward = wheel.mirror and x - originX or originX - x
+    return math.deg(math.atan2(y - (wheel.originY or 0), -inward))
 end
 
 -- Le même angle dans le code sécurisé, qui n'a que l'arithmétique : la position du doigt sur
@@ -214,7 +227,13 @@ local function LayoutWheel(wheel)
     if not turning then band:Hide(); return end
     local settings = Settings(wheel)
     local count = math.max(0, math.min(settings.count, #buttons))
-    local radius, step = Turn.Geometry(UIParent:GetWidth(), UIParent:GetHeight(), count, settings.spread)
+    local radius, step, cx, cy = Turn.Geometry(UIParent:GetWidth(), UIParent:GetHeight(), count,
+        settings.spread, wheel.side, (settings.scale or 100) / 100)
+    wheel.hostCoordinates = cx ~= nil
+    wheel.originX, wheel.originY = cx, cy
+    band:ClearAllPoints()
+    if cx then band:SetPoint(wheel.corner, UIParent, "BOTTOMLEFT", cx, cy)
+    else band:SetPoint(wheel.corner, UIParent, wheel.corner) end
     local size = radius + SIZE
     band.radius = radius
     band.buttonScale = (settings.scale or 100) / 100

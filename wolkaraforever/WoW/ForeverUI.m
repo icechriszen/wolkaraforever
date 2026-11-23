@@ -1,5 +1,6 @@
 #import "ForeverUI.h"
 #import "../App/WKLocalization.h"
+#include <math.h>
 
 NSErrorDomain const TKForeverUIErrorDomain = @"WolkaraForever.ForeverUI";
 // The released Forever product. It was `wow_classic_beta` while the game was in
@@ -155,6 +156,43 @@ static BOOL TKTouchAddonFile(NSString *root, NSString *path, NSError **error) {
 }
 
 @implementation TKForeverUI
+
++ (BOOL)prepareTouchGeometry:(NSDictionary<NSString *, NSNumber *> *)geometry
+         inWorkingDirectory:(NSString *)directory error:(NSError **)error {
+    NSString *path = [directory stringByAppendingPathComponent:@"Interface/AddOns/WolkaraRoue/HostTouchLayout.lua"];
+    if (![NSFileManager.defaultManager fileExistsAtPath:path]) return YES;
+    if (!TKTouchAddonFile(directory, path, error)) return NO;
+    NSData *before = [NSData dataWithContentsOfFile:path options:0 error:error];
+    NSString *marker = @"-- Wolkara generated touch geometry v1\n";
+    if (!before || ![[[NSString alloc] initWithData:before encoding:NSUTF8StringEncoding] hasPrefix:marker]) {
+        if (error && before) *error = TKError(WKLocalized(@"forever.error.touchAddonSwitch"));
+        return NO;
+    }
+    NSMutableString *text = [NSMutableString stringWithFormat:@"%@local _, ns = ...\nns.HostTouchLayout = ", marker];
+    if (!geometry) [text appendString:@"nil\n"];
+    else {
+        NSArray *keys = @[@"leftX", @"leftY", @"leftRadius", @"leftMinX", @"leftMaxX", @"leftMinY", @"leftMaxY",
+            @"rightX", @"rightY", @"rightRadius", @"rightMinX", @"rightMaxX", @"rightMinY", @"rightMaxY", @"bottom"];
+        [text appendString:@"{ version = 1,\n"];
+        for (NSString *key in keys) {
+            id value = geometry[key];
+            if (![value isKindOfClass:NSNumber.class] || !isfinite([value doubleValue]) ||
+                [value doubleValue] < 0 || [value doubleValue] > 1) {
+                if (error) *error = TKError(WKLocalized(@"forever.error.touchAddonSwitch"));
+                return NO;
+            }
+            [text appendFormat:@"    %@ = %.9f,\n", key, [value doubleValue]];
+        }
+        [text appendString:@"}\n"];
+    }
+    NSData *after = [text dataUsingEncoding:NSUTF8StringEncoding];
+    if ([before isEqual:after]) return YES;
+    if (![after writeToFile:path options:NSDataWritingAtomic error:error]) return NO;
+    if ([[NSData dataWithContentsOfFile:path options:0 error:error] isEqual:after]) return YES;
+    [before writeToFile:path options:NSDataWritingAtomic error:nil];
+    if (error && !*error) *error = TKError(WKLocalized(@"forever.error.touchAddonSwitch"));
+    return NO;
+}
 
 + (void)prepareTouchControlsForPhysicalController:(BOOL)connected defaults:(NSUserDefaults *)defaults {
     NSMutableDictionary *arguments = [[defaults volatileDomainForName:NSArgumentDomain] mutableCopy] ?: [NSMutableDictionary new];

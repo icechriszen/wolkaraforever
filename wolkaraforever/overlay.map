@@ -209,6 +209,8 @@ wolkaraforever/Bridge/BatterySaverPolicy.h launcher/WoW/BatterySaverPolicy.h add
 wolkaraforever/Bridge/BatterySaverPolicy.m translation/Metal/BatterySaverPolicy.m add
 wolkaraforever/Bridge/BatterySaverPolicy.m translation/AppKit/BatterySaverPolicy.m add
 wolkaraforever/Bridge/BatterySaverPolicy.m launcher/WoW/BatterySaverPolicy.m add
+wolkaraforever/Bridge/ControlGeometry.h translation/AppKit/ControlGeometry.h add
+wolkaraforever/Bridge/ControlGeometry.h launcher/WoW/ControlGeometry.h add
 wolkaraforever/Bridge/DisplayRate.m translation/Metal/DisplayRate.m add
 wolkaraforever/Bridge/EnrollmentReference.swift authorization/Storage/EnrollmentReference.swift add
 wolkaraforever/Bridge/LocalServiceRetry.h authorization/App/LocalServiceRetry.h add
@@ -303,8 +305,8 @@ wolkaraforever/CoreAudio/tests/test_audio_tone.m tests/test_audio_tone.m add
 # reviewed Lua in addons/WolkaraRoue, and the manifest that binds it to its release
 # and to every file's hash. A fixture rebuilds both from the sources and compares,
 # so the archive the app ships cannot drift from the Lua that was reviewed.
-wolkaraforever/Addons/WolkaraRoue-1.0.5-cn.2.json launcher/Addons/WolkaraRoue-1.0.5-cn.2.json add
-wolkaraforever/Addons/WolkaraRoue-1.0.5-cn.2.zip launcher/Addons/WolkaraRoue-1.0.5-cn.2.zip add
+wolkaraforever/Addons/WolkaraRoue-1.0.5-cn.3.json launcher/Addons/WolkaraRoue-1.0.5-cn.3.json add
+wolkaraforever/Addons/WolkaraRoue-1.0.5-cn.3.zip launcher/Addons/WolkaraRoue-1.0.5-cn.3.zip add
 #
 # Notices: this repository's own licence and notice, which the packaged app must
 # carry. The prepared tree already has a LICENSE and a NOTICE.md at its top level,

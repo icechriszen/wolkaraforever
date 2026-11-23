@@ -115,7 +115,7 @@ local L = {
         ["Character"] = "角色",
         ["Spells"] = "技能",
         ["Quests"] = "任务",
-        ["Map"] = "世界地图",
+        ["Map"] = "地图",
         ["Game Menu"] = "主菜单",
         ["Game Settings"] = "设置选项",
         ["Mobile UI"] = "触屏界面",
@@ -875,6 +875,8 @@ end
 -- client. Keep preference keys (including quick-menu entries) in English.
 -- Context matters: a spell picker is not the spellbook button, and the General
 -- chat channel is not the add-on's general settings page.
+-- The compact Spellbook and Map entries retain their requested short Chinese
+-- names instead of the client's longer window titles.
 local CHINESE_CONTEXT = {
     ["menu:Spells"] = "法术书",
     ["menu:Quests"] = "任务日志",
@@ -883,9 +885,7 @@ local CHINESE_CONTEXT = {
 }
 local GAME_STRINGS = {
     ["Character"] = { "CHARACTER_BUTTON" },
-    ["menu:Spells"] = { "SPELLBOOK_ABILITIES_BUTTON", "SPELLBOOK_BUTTON" },
     ["menu:Quests"] = { "QUESTLOG_BUTTON" },
-    ["Map"] = { "WORLDMAP_BUTTON" },
     ["Professions"] = { "PROFESSIONS_BUTTON" },
     ["Talents"] = { "TALENTS" },
     ["Social"] = { "SOCIAL_BUTTON" },

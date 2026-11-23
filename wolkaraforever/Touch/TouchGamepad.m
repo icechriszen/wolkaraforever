@@ -1,4 +1,5 @@
 #import "TouchGamepad.h"
+#import "ControlGeometry.h"
 #import "TouchGamepadLayout.h"
 #import "AKHostLocalization.h"
 #import "InterfaceMode.h"
@@ -663,7 +664,7 @@ static const CGFloat AKFloatRightMinX = 0.64, AKFloatRightMinY = 0.25, AKFloatRi
         BOOL jump = [button.slot isEqualToString:GCInputButtonA];
         if (sticksOnly) button.hidden = !jump;
         else if (![placed containsObject:button]) button.hidden = NO;
-        if (jump) [button setTitle:sticksOnly ? AKHostLocalized(@"touch.gamepad.jump") : @"A" forState:UIControlStateNormal];
+        if (jump) [button setTitle:sticksOnly ? @"" : @"A" forState:UIControlStateNormal];
     }
     // Simple is the same layout with fewer controls drawn: both sticks, the four face buttons,
     // the two shoulders and the menu. The triggers and the D-pad sectors are not there, and
@@ -845,9 +846,9 @@ static const CGFloat AKJumpReachOuter = 146, AKJumpReachInner = 50, AKJumpReachA
     CGFloat bottom = CGRectGetMaxY(safe)-6, top = CGRectGetMinY(safe)+8;
     BOOL floating = [self floatingActive];
     if (!(floating && _leftStick.held))
-        [self place:@"left" frame:CGRectMake(left,bottom-side,side,side) baseSize:CGSizeMake(216,216) safe:safe];
+        [self place:@"left" frame:AKTouchDefaultStickFrame(safe,_preferences.frontScale,NO) baseSize:CGSizeMake(216,216) safe:safe];
     if (!(floating && _rightStick.held))
-        [self place:@"right" frame:CGRectMake(right-side,bottom-side,side,side) baseSize:CGSizeMake(216,216) safe:safe];
+        [self place:@"right" frame:AKTouchDefaultStickFrame(safe,_preferences.frontScale,YES) baseSize:CGSizeMake(216,216) safe:safe];
     _leftStick.frame = _rightStick.frame = CGRectMake(56,56,104,104);
     NSArray *leftNames = @[@"dpad.up",@"dpad.right",@"dpad.down",@"dpad.left"];
     NSArray *rightNames = @[GCInputButtonY,GCInputButtonB,GCInputButtonA,GCInputButtonX];

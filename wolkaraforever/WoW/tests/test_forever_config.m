@@ -4,6 +4,7 @@
 // Through the prepared tree's layout, like every other test of layer code: this suite is built
 // there too, so the header it tests is the one the app compiles against.
 #import "../launcher/WoW/ForeverUI.h"
+#import "../launcher/WoW/ControlGeometry.h"
 #include <assert.h>
 
 static NSString *Read(NSString *path) {
@@ -113,6 +114,47 @@ static void TestTouchStartup(NSString *root) {
     [defaults removeVolatileDomainForName:NSArgumentDomain];
     [defaults removePersistentDomainForName:suite];
     puts("TOUCH_STARTUP_PASS: controller/unplugged/new-character policy, byte-preserved Chinese/configuration, idempotence, invalid-file refusal, write-failure rollback, and nonpersistent toolbar override.");
+}
+
+static void TestTouchGeometry(NSString *root) {
+    NSString *suite = [@"test.touch.geometry." stringByAppendingString:NSUUID.UUID.UUIDString];
+    NSUserDefaults *defaults = [[NSUserDefaults alloc] initWithSuiteName:suite];
+    CGRect bounds = CGRectMake(0, 0, 874, 402), safe = CGRectMake(62, 0, 750, 381);
+    NSDictionary *geometry = AKTouchExportGeometry(defaults, bounds, safe, YES);
+    assert(fabs([geometry[@"leftX"] doubleValue] * 874 - 176) < 0.001);
+    assert(fabs([geometry[@"leftY"] doubleValue] * 402 - 135) < 0.001);
+    assert(fabs([geometry[@"leftRadius"] doubleValue] * 402 - 52) < 0.001);
+    assert([geometry[@"rightMinY"] doubleValue] == 0);
+    assert([geometry[@"rightMinX"] doubleValue] < [geometry[@"rightX"] doubleValue]);
+    NSString *path = [root stringByAppendingPathComponent:@"Interface/AddOns/WolkaraRoue/HostTouchLayout.lua"];
+    NSError *error = nil;
+    assert([TKForeverUI prepareTouchGeometry:geometry inWorkingDirectory:root error:&error]);
+    assert(![NSFileManager.defaultManager fileExistsAtPath:path]);
+    NSString *stub = @"-- Wolkara generated touch geometry v1\nlocal _, ns = ...\nns.HostTouchLayout = nil\n";
+    Write(path, stub);
+    NSString *config = Read(ConfigPath(root));
+    assert([TKForeverUI prepareTouchGeometry:geometry inWorkingDirectory:root error:&error]);
+    NSString *exported = Read(path);
+    assert([exported containsString:@"leftX = "] && [exported containsString:@"version = 1"]);
+    assert([Read(ConfigPath(root)) isEqual:config]);
+    assert([TKForeverUI prepareTouchGeometry:geometry inWorkingDirectory:root error:&error]);
+    assert([Read(path) isEqual:exported]);
+    NSMutableDictionary *bad = [geometry mutableCopy]; bad[@"leftX"] = @"not a number";
+    assert(![TKForeverUI prepareTouchGeometry:bad inWorkingDirectory:root error:&error]);
+    assert([Read(path) isEqual:exported]);
+    assert([TKForeverUI prepareTouchGeometry:nil inWorkingDirectory:root error:&error]);
+    assert([Read(path) isEqual:stub]);
+    Write(path, @"-- user-owned file\n");
+    assert(![TKForeverUI prepareTouchGeometry:geometry inWorkingDirectory:root error:&error]);
+    assert([Read(path) isEqual:@"-- user-owned file\n"]);
+    [defaults setObject:@{@"version":@2, @"sticksOnly":@YES, @"positions":@{@"left":@[@0.5,@0.5]}} forKey:@"WolkaraForeverTouchLayoutV1"];
+    geometry = AKTouchExportGeometry(defaults, bounds, safe, YES);
+    assert(fabs([geometry[@"leftX"] doubleValue] - 0.5) < 0.001);
+    assert(AKTouchExportGeometry(defaults, bounds, safe, NO) == nil);
+    [defaults setObject:@{@"version":@2, @"sticksOnly":@YES, @"floatingSticks":@YES} forKey:@"WolkaraForeverTouchLayoutV1"];
+    assert(AKTouchExportGeometry(defaults, bounds, safe, YES) == nil);
+    [defaults removePersistentDomainForName:suite];
+    puts("TOUCH_GEOMETRY_PASS: native phone geometry, saved positions, bounded export, idempotence, opt-out and configuration preservation.");
 }
 
 int main(void) {
@@ -295,6 +337,7 @@ int main(void) {
         assert(resolved != nil && [resolved hasPrefix:root]);
 
         TestTouchStartup(root);
+        TestTouchGeometry(root);
         [files removeItemAtPath:root error:NULL];
         [files removeItemAtPath:bare error:NULL];
         [files removeItemAtPath:outside error:NULL];

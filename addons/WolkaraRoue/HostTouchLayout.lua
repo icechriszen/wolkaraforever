@@ -1,0 +1,3 @@
+-- Wolkara generated touch geometry v1
+local _, ns = ...
+ns.HostTouchLayout = nil

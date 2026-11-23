@@ -28,6 +28,11 @@ FOUNDATION_EXPORT NSString *const TKForeverUIEdition;
 // Does not overwrite the player's persistent on-screen controls preferences.
 + (void)prepareTouchControlsForPhysicalController:(BOOL)connected defaults:(NSUserDefaults *)defaults;
 
+// Before entry: update only the installed add-on's owned geometry data file.
+// Missing/older add-ons are untouched; nil removes a previous session's geometry.
++ (BOOL)prepareTouchGeometry:(nullable NSDictionary<NSString *, NSNumber *> *)geometry
+         inWorkingDirectory:(NSString *)directory error:(NSError **)error;
+
 // WTF/Config.wtf, with every GamePadEnable assignment normalised to exactly one
 // `SET GamePadEnable "1"`. Other lines keep their bytes. Reads the file back and
 // fails unless exactly one assignment with value 1 is present.

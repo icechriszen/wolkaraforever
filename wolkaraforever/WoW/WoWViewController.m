@@ -26,6 +26,7 @@
 // The arrangement the on-screen controls read, as data: the same functions the adapter uses, so
 // a choice made here is what the next guest starts with.
 #import "LayoutStore.h"
+#import "ControlGeometry.h"
 // The game's sound without iOS's HAL: the switch's key, from the one header both audio adapters read it with.
 #import "AKAudioModel.h"
 #import <GameController/GameController.h>
@@ -868,6 +869,16 @@ static dispatch_queue_t TKForeverUIQueue(void) {
             return;
         }
         [TKForeverUI prepareTouchControlsForPhysicalController:physical defaults:NSUserDefaults.standardUserDefaults];
+        CGRect bounds = self.view.window.bounds;
+        CGRect safe = UIEdgeInsetsInsetRect(bounds, self.view.window.safeAreaInsets);
+        NSDictionary *geometry = physical ? nil : AKTouchExportGeometry(NSUserDefaults.standardUserDefaults,
+            bounds, safe, AKInterfaceModeIsMobile());
+        if (![TKForeverUI prepareTouchGeometry:geometry inWorkingDirectory:directory error:&error]) {
+            WKLog("wow", @"touch geometry export failed (%@, %ld)", error.domain, (long)error.code);
+            [TKBattleNetSession clear];
+            [self finishStartupWithMessage:WKLocalized(@"forever.error.touchAddonSwitch") failed:YES];
+            return;
+        }
         WKLog("wow", @"touch startup: physical controller=%@; WolkaraRoue auto-load and toolbar=%@",
             physical ? @"yes" : @"no", physical ? @"off" : @"on");
     }
