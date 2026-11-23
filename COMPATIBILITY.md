@@ -246,6 +246,34 @@ The current upstream add-on remains installed, with its Standard layout selected
 No game binary, runtime or controller startup policy changed in this UI fix, and
 the previously recorded dynamic-code failure remains outside this validation.
 
+## Native control geometry installation: iPhone 17, 2026-11-23
+
+Source `9af9e57` was installed with the original project tools after they verified
+the user had dismissed the background game process. Device: iPhone 17, iOS 27.2.1,
+Developer service, CN Forever 1.60.1.71037 / zhCN. The ordinary launcher returned
+to **Ready to play**. All 2,037 existing client files and 55 CASC archives retained
+their paths, sizes and modification times. Six selected configuration/add-on
+files retained their SHA-256 digests. The only metadata differences were data
+protection extended attributes added to 73 files by the iOS container manager;
+none of the archives' metadata changed.
+
+The candidate exports fixed compact native control geometry before Play into an
+owned add-on data file. Standard spell wheels use those centres and keep their
+hit boxes clear of the sticks. Add-on menus/settings, bags and game windows fit
+between or above the native hit regions and keyboard toolbar. Saved native
+positions, skill assignments and Chinese preferences are retained. The bundled
+`1.0.5-cn.3` package also uses the short Chinese menu labels 法术书 and 地图; the
+host's compact jump control retains its binding and hit area without visible text.
+
+The actual phone viewport regression covers both spell wheels at several UI and
+button scales, plus menu/settings, bag and map exclusion rectangles. The previous
+Turn and Windows implementations fail those regressions. The Lua/Chinese suite,
+native geometry/export and configuration-preservation tests, 37 archive checks,
+package verifier, layer/docs gates, Release build and strict signature check
+passed. These source fixtures do not establish live interaction success; no
+simulator UI execution is claimed. Manual bundled update and user-operated
+physical overlap/input validation are pending on this installed build.
+
 ## Report a problem
 
 Start with [Install WolkaraForever](docs/INSTALLATION.md) and [Use WolkaraForever](docs/USING_WOLKARAFOREVER.md). When you report a problem, follow [Send us a log](docs/SENDING_LOGS.md) and include the exact Technical details message if one was shown. Do not include credentials, signing material, pairing records, account information, or device identifiers.
