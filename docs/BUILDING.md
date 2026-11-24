@@ -1,6 +1,6 @@
 # Build and run WolkaraForever
 
-> Reviewed: 2026-11-23 · Source behavior: `0a38398`
+> Reviewed: 2026-11-24 · Source behavior: `0a38398`
 
 This guide covers the mechanisms behind a WolkaraForever build: how the tree is assembled, the
 three ways the runtime can execute an application, and the commands that build, install, run,
@@ -31,10 +31,10 @@ scripts under `build/platform/tools/` are never called directly for a normal bui
 
 ## Fork source and storage
 
-Build the published `integration/cn-ios-validated` branch from this fork for the CN,
-Standard touch and Unicode fixes. `docs/cn-ios-guide` changes documentation only on
-top of that code. `jklock/wolkaraforever` remains the primary upstream; fetching a
-new upstream revision is separate from reproducing a validated source SHA.
+Build the default `main` branch from this fork for the integrated CN, Standard touch
+and Unicode fixes and their documentation. `jklock/wolkaraforever` remains the primary
+upstream; fetching a new upstream revision is separate from reproducing a validated
+source SHA. See Compatibility for the installed source and the later merge checks.
 
 The checkout and its `build/` directory may live on an external SSD. Keep one stable
 private `local.env` with the same signing team, bundle ID and Keychain group for
@@ -93,10 +93,10 @@ development launch can override it for one run with `--execution-mode=`.
 | Local signing | A page container derived from the application's code pages, signed with your own developer identity on a Mac, copied to the app's `Documents/LocalSigning/` | A signed page container (`SignedImage`) |
 | External JIT | A JIT enabler that attaches at launch, prepares memory, and detaches again | The `DebuggerArena`; the runtime refuses guest entry while anything is still attached |
 
-Before starting the game, Developer service verifies that every byte of its reserved memory is zero.
-It uses binary reads when the debugger supports them and hexadecimal reads otherwise. Both
-formats verify the entire reservation before the first page write. A short or nonzero read
-stops preparation.
+Before starting the game, Developer service proves that every byte of its reserved arena is zero.
+It reads each region back over the debug wire in hex-encoded chunks and rejects any nonzero byte;
+only after all of them pass does it write one zero byte at the start of each 16 KiB page and read
+that back. A short, nonzero, or failed read stops preparation before the first page write.
 
 Which build offers which mode:
 
@@ -105,10 +105,13 @@ Which build offers which mode:
 | `Tolkara` (the app `install.sh` builds) | Yes | Yes | Shown as unavailable: not included in this build |
 | `TolkaraDiagnostics` (the unsigned `.ipa`) | Shown as unavailable | Yes | Yes |
 
-The ordinary Forever home uses the route carried by the build and its saved setting;
-it does not present an execution-mode picker. `local.env.example` selects Developer
-service for integrated source builds. A development launch can use `--execution-mode=`
-for a single run. The internal library's chooser is not a normal home-screen setup step.
+A launch starts the game the way the build was made: `install.sh` builds `Tolkara`, which starts
+through the **Developer service**, and the unsigned package is built with **External JIT**
+preselected. The route is stored on first use, so later launches do not ask, and the shipped home page
+has no chooser. `TOLKARA_MODE` in `local.env` is what a build carries; a development launch can
+override it for one run with `--execution-mode=`. The chooser and the library's **Execution Mode**
+button belong to the development screens (`TolkaraDiagnostics` with a non-plain launch), not to the
+app a user installs.
 
 Each mode's own setup, and what to do when it is not ready, is in
 [Install WolkaraForever](INSTALLATION.md) and in
@@ -130,7 +133,7 @@ cp local.env.example local.env     # once: DEVELOPMENT_TEAM, TOLKARA_BUNDLE_ID
 wolkaraforever/tools/install.sh
 ```
 
-`install.sh` runs five steps and stops on the first failure:
+`install.sh` runs six numbered stages and stops on the first failure:
 
 0. **Guard** — refuses to install while the app or the game is running. Replacing the app
    underneath a live client corrupted its update index once; `--replace-running` stops it
@@ -167,12 +170,13 @@ wolkaraforever/tools/device_log.sh          # Documents/native-guest.log
 
 `launch.sh` refuses to launch while the app is already running rather than replacing the process,
 and it records the newest client error file before launching so the run can be judged afterwards.
-`--restart` stops the session with SIGTERM first so the client can close its own stores.
+`--restart` sends SIGTERM and waits 20 seconds, then escalates to SIGKILL and waits again, so a
+session that does not act on SIGTERM still closes its stores first where it can.
 
 `pilot.sh` is the scripted version of the same loop and is deliberately willing to refuse:
 `state`, `stop`, `install`, `launch`, `game`, `wait`, `view`, `crash`, `log`, `leave`, `return`,
-`restore`, `selftest`, `cycle`. Every command that launches records baselines first, so "did it
-fail?" is answered by comparison — a new file in `Documents/World of Warcraft/_forever_/Errors/`
+`restore`, `selftest`, `controls`, `cycle`. Every command that launches records baselines first, so
+"did it fail?" is answered by comparison — a new file in `Documents/World of Warcraft/_forever_/Errors/`
 or a new crash report means the launch failed.
 An idle launcher opened after a client `_exit` is distinguished from the old session
 only when the log has the complete no-observer exit sequence and the latest client
@@ -231,11 +235,17 @@ sideloading tool — or a JIT enabler it installs — signs the app with your ow
 provides the memory that External JIT needs.
 
 `package_altstore_ipa.sh` refuses a dirty source tree and verifies the result before reporting
-success. A maintainer can publish the same artifact for an existing tag with the manual
-**Experimental IPA** workflow, which builds and verifies it the same way; nothing is built or
-published on a tag push. `package_ipa.sh` writes its default output, and resolves any relative
-output path, from the repository root. For example, `build/ipa/Tolkara-unsigned.ipa` survives
-the next `prepare.sh` and is the same path a release workflow uploads.
+success; its default output is `build/ipa/wolkaraforever-unsigned.ipa`. A maintainer can publish
+the same artifact for an existing tag with the manual **Experimental IPA** workflow, which builds
+and verifies it the same way; nothing is built or published on a tag push. Both wrappers resolve a
+relative output path from the repository root, so `build/ipa/wolkaraforever-unsigned.ipa` survives
+the next `prepare.sh` and is the name the release workflow uploads. `package_ipa.sh` on its own
+keeps the engine packager's default name, `Tolkara-unsigned.ipa`, in the repository root.
+
+The app inside is `TolkaraDiagnostics.app` with External JIT preselected, and it appears on the
+device as **Tolkara**. [Install the unsigned External JIT app](SIDELOADING.md) is the page a user
+follows once they have the package: what the build can and cannot do, signing with their own Apple
+ID, the JIT enabler each launch needs, and the failures worth recognising.
 
 ## Test devices
 

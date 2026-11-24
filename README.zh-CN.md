@@ -4,8 +4,8 @@
 
 本仓库是 [icechriszen/wolkaraforever](https://github.com/icechriszen/wolkaraforever)，
 默认上游为 [jklock/wolkaraforever](https://github.com/jklock/wolkaraforever)。
-`integration/cn-ios-validated` 保存本地已验证的累计代码；`docs/cn-ios-guide`
-在相同代码上整理文档。这些分支尚不是新的正式发行版。
+默认 `main` 分支已整合本地验证的国服 / iPhone 修改及使用文档。
+本次合并不代表新发行版或 IPA 发布；实机验证范围和待验证项目见下文。
 
 ## 已验证范围
 
@@ -29,7 +29,7 @@ Apple Developer 团队，以及开启开发者模式并信任 Mac 的 iPhone / i
 手机上为游戏和更新预留约 70 GB；源码和构建可以放在外置 SSD 上。
 
 ```sh
-git clone --branch integration/cn-ios-validated https://github.com/icechriszen/wolkaraforever.git
+git clone https://github.com/icechriszen/wolkaraforever.git
 cd wolkaraforever
 cp local.env.example local.env
 ```

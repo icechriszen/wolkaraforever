@@ -1,15 +1,17 @@
 # Install WolkaraForever
 
-> Reviewed: 2026-11-23 · Source behavior: `0a38398`
+> Reviewed: 2026-11-24 · Source behavior: `0a38398`
 
 Install WolkaraForever from source on an iPad or iPhone. This guide uses the supported Developer-service route; [Build and run WolkaraForever](BUILDING.md) covers the other execution modes and the build itself.
 
 ## Requirements
 
-- Apple-silicon Mac with current Xcode, Xcode command-line tools, XcodeGen, and Python 3.
+- Apple-silicon Mac with current Xcode, Xcode command-line tools, XcodeGen, and Python 3. An Intel
+  Mac runs the same commands but `install_prerequisites.sh --check` warns that the documented path
+  and the device builds are arm64.
 - Paid Apple Developer membership.
 - Unlocked iPad or iPhone in Developer Mode that trusts your Mac.
-- At least 70 GB free for a Forever installation.
+- About 70 GB free for the Forever game data and its updates (the launcher also keeps a 1 GB reserve).
 - Your own eligible game account and game data.
 
 ## Configure the build
@@ -17,7 +19,7 @@ Install WolkaraForever from source on an iPad or iPhone. This guide uses the sup
 1. Clone the repository and create your private configuration.
 
    ```sh
-   git clone --branch integration/cn-ios-validated https://github.com/icechriszen/wolkaraforever.git
+   git clone https://github.com/icechriszen/wolkaraforever.git
    cd wolkaraforever
    cp local.env.example local.env
    ```

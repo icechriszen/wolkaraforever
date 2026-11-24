@@ -1,14 +1,16 @@
 # Compatibility and support boundary
 
-> Reviewed: 2026-11-23 · Source behavior: `0a38398`
+> Reviewed: 2026-11-24 · Source behavior: `0a38398`
 
 WolkaraForever is a source-built project for an iPad or iPhone that you own and configure with your own Apple Developer account. The supported integrated route requires Developer Mode, current Xcode tooling, and an execution path that can prepare executable memory.
 
 ## Current fork status
 
-The published code branch is `integration/cn-ios-validated`; the latest installed
-runtime fix is `b535ee4`, with source snapshot `0a38398` and add-on `1.0.5-cn.7`.
-No new release tag or general device-support claim is implied.
+The default `main` branch integrates the CN/iPhone work and refreshed documentation.
+The latest installed runtime fix remains `b535ee4`, with phone-tested source snapshot
+`0a38398` and add-on `1.0.5-cn.7`. The later `85d500f` integration retains those runtime,
+login and add-on sources and adds existing main-line diagnostic logging and reference
+documentation. No new release tag or general device-support claim is implied.
 
 | Area | Measured status |
 | --- | --- |
@@ -26,6 +28,23 @@ The sections below are dated investigation records: a failed earlier candidate i
 historical evidence, not the status of a later fix. In particular, early Lua/code
 permission observations do not establish a general JIT remedy or an official option
 to disable it. The final Chinese-chat before/after evidence is in the last investigation.
+
+## Main integration checks: 2026-11-24
+
+`85d500f` reconciles the validated snapshot with existing fork main `fd4350c`.
+The original game runtime patches, C++ layer, CN browser/session code, touch controls,
+`ForeverUI.m` and bundled add-on sources are byte-identical to `0a38398`.
+Existing main changes add diagnostic log calls, test/guide support and documentation.
+
+On this merged source, `check_layers.sh`, `test_mobile_addon.sh`,
+`test_network_health.sh` (10 checks), and `install.sh --build-only` passed on the
+Apple-silicon Mac. The build-only installer skipped device operations. The merged
+documentation also passed `check_docs.sh` and its catalog check.
+
+The project simulator resolver reports that both required matrix instances are
+absent. There is no new simulator, Device Hub, long-session, security-audit or phone
+acceptance claim for this merge. The repository owner requested landing these PRs;
+that publication decision does not close the outstanding validation gaps.
 
 ## Publication checks: 2026-11-23
 

@@ -1,13 +1,16 @@
 # Human documentation map
 
-> Verified: 2026-11-23 · Source: `0a38398` · Proof: source review and dated compatibility records
+> Verified: 2026-11-24 · Source: `85d500f` · Proof: merged-source review and dated compatibility records
 
 | Change | Update this human document |
 | --- | --- |
 | Installation, signing, prerequisites, first launch | [Installation](../INSTALLATION.md) |
 | Build assembly, execution modes, run commands, simulator runs, unsigned IPA packaging | [Build and run WolkaraForever](../BUILDING.md) |
-| Download, update, language, add-ons, recovery, controls, voice, battery-saving sound | [Using WolkaraForever](../USING_WOLKARAFOREVER.md) |
+| Sideloading the unsigned External JIT package: signing, JIT, adding a game, its limits | [Install the unsigned External JIT app](../SIDELOADING.md) |
+| Download, update, language, add-ons, recovery, controls, voice, Battery Saver, battery-saving sound | [Using WolkaraForever](../USING_WOLKARAFOREVER.md) |
+| A single control: what it does, how to use it, and its picture | [What every control does](../UI_REFERENCE.md) and the [UI catalog](UI_CATALOG.md) |
 | Phone layout, mobile interface, phone hardware | [iPhone](../IPHONE.md) |
+| Getting a log off the device, and what to include | [Send us a log](../SENDING_LOGS.md) |
 | Product positioning and quick start | [README](../../README.md), [Chinese guide](../../README.zh-CN.md) |
 | Support boundary or issue-reporting expectations | [Compatibility](../../COMPATIBILITY.md) |
 | Security reporting | [Security](../../SECURITY.md) |

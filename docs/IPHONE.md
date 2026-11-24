@@ -1,6 +1,6 @@
 # Use WolkaraForever on iPhone
 
-> Reviewed: 2026-11-23 · Source behavior: `0a38398`
+> Reviewed: 2026-11-24 · Source behavior: `0a38398`
 
 [简体中文指南](../README.zh-CN.md) · [Installation](INSTALLATION.md) · [Measured compatibility](../COMPATIBILITY.md#current-fork-status)
 
