@@ -1,6 +1,6 @@
 # Send us a log when something goes wrong
 
-> Verified: 2026-11-21 · Source: `8375cbb`
+> Reviewed: 2026-11-24 · Source behavior: `0a38398`
 
 A log is a text file that records what the app was doing. When something fails, the log
 usually says why, and it saves a lot of guessing. You do not need a Mac, a computer cable,
@@ -74,6 +74,36 @@ TolkaraDiagnostics reports are accepted. Resource reports do not count as crashe
 match their timestamps and recorded action to the failed attempt before drawing a conclusion.
 The selected report is copied into the pilot session's local `crash/` directory.
 
+## Chat sends nothing
+
+Start with the app build and the installed **WolkaraRoue (bundled)** version; an app
+update does not automatically update an existing add-on. The Chinese-input runtime
+fix was validated at `b535ee4` with add-on `1.0.5-cn.7` in **Classic direct** mode.
+
+1. Note the keyboard/delivery mode and whether the attempted text was Chinese,
+   ASCII or mixed. Do not include the message body.
+2. `/mobile error` reports the add-on's last Lua exception. “No errors” does not
+   prove that text reached the input box or that a message was sent.
+3. `/mobile chatdiag` prints local counters for opening the input, non-empty text,
+   Return, modern/legacy send API calls, self echo and display processing.
+4. After one reproduction, exit the game normally to save the trace and do not
+   reopen it before collection. The next UI load starts a fresh trace. A crash may
+   leave no saved trace for that attempt.
+
+The cn.7 trace keeps at most 32 events plus counters: lengths, fixed state names,
+numeric error IDs and hook availability. It records no message body, character
+name, recipient or player identifier. A send API count is an attempt; self echo
+and visible display are separate evidence. Check hook availability and observer
+errors before interpreting a zero. Running `/mobile chatdiag` is itself an input
+command and may increase input counters.
+
+The native log's `keyboard: a line went to the chat` means events were queued,
+not that delivery succeeded. `text commit: units=… modern=… legacy=…` confirms the
+Unicode bridge was invoked; it also does not replace the self-echo check. Avoid
+raw key tracing when collecting login/chat evidence, and do not post complete
+account SavedVariables files. Provide the summary or the requested redacted
+metadata through [this fork's issues](https://github.com/icechriszen/wolkaraforever/issues).
+
 ## Opt-in host lifetime diagnostics
 
 For a Developer service freeze or allocator failure, run the installer with
@@ -122,9 +152,10 @@ if you can.
 
 ## What is in a log, and what is not
 
-The logs are technical text: timings, file names, error messages, and what the game asked
-for. They do **not** contain your Apple Account password, payment details, or your pairing
-or signing files.
+The launcher avoids recording passwords and login tickets. Native run logs also
+contain output from the game itself and may contain local paths or other context;
+review and redact them before sharing. Do not assume that a complete run log is
+anonymous. The bounded chat trace above deliberately excludes message content.
 
 `wolkaraforever.log` is one line per event, shaped like `10:44:03.912 [ui] …`. The word in
 brackets is the topic, and it is the quickest way to find the part of a log a report is about:
@@ -134,7 +165,7 @@ brackets is the topic, and it is the quickest way to find the part of a log a re
 | `host` | The app itself: launch, arguments, which screens opened, a failed start |
 | `ui` | What you chose and what the page did: interface mode, layouts, Battery Saver, device and render profiles, backups, the controller touchpad pointer |
 | `wow` | The game check, update progress, verification counts, install state |
-| `battle-login` | The experimental sign-in and the saved password — never the password itself |
+| `battle-login` | Experimental sign-in and password-setting actions; no password or ticket value |
 | `voice` | Dictation: learning the button, starting and stopping capture, recognition |
 | `audio` | The audio session and the battery-saving sound path |
 | `input`, `controller-input` | Input routing and controller commands |
@@ -156,7 +187,7 @@ you which lines matter; you can blank the rest.
 
 Never send:
 
-- passwords, or an Apple Account e-mail and password;
+- passwords, account details, complete browser return URLs or `ST`/launch tickets;
 - signing certificates, provisioning profiles, or anything from your keychain;
 - pairing records or anything from `authorized_keys`-style files.
 

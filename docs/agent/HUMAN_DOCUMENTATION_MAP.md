@@ -1,6 +1,6 @@
 # Human documentation map
 
-> Verified: 2026-11-21 · Source: `8375cbb` · Proof: current human-guide scope
+> Verified: 2026-11-24 · Source: `85d500f` · Proof: merged-source review and dated compatibility records
 
 | Change | Update this human document |
 | --- | --- |
@@ -11,7 +11,7 @@
 | A single control: what it does, how to use it, and its picture | [What every control does](../UI_REFERENCE.md) and the [UI catalog](UI_CATALOG.md) |
 | Phone layout, mobile interface, phone hardware | [iPhone](../IPHONE.md) |
 | Getting a log off the device, and what to include | [Send us a log](../SENDING_LOGS.md) |
-| Product positioning and quick start | [README](../../README.md) |
+| Product positioning and quick start | [README](../../README.md), [Chinese guide](../../README.zh-CN.md) |
 | Support boundary or issue-reporting expectations | [Compatibility](../../COMPATIBILITY.md) |
 | Security reporting | [Security](../../SECURITY.md) |
 | Release summary | [Changelog](../../CHANGELOG.md) |

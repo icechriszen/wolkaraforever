@@ -1,8 +1,18 @@
 # Repository status
 
-> Verified: 2026-11-21 · Source: `8375cbb` · Proof: Git history and `git status --short`
+> Verified: 2026-11-24 · Source: `85d500f` · Proof: merged-source review and dated compatibility records
 
-WolkaraForever is a source-built iPad and iPhone launcher layer for WoW Forever over the immutable Tolkara vendor tree. The newest release tag is `v1.0.21`; `main` carries unreleased work beyond it, listed under **Unreleased** in [Changelog](../../CHANGELOG.md).
+This downstream fork uses jklock as its primary upstream. Its default `main` branch
+integrates the cumulative CN/iPhone implementation and refreshed documentation.
+Runtime `b535ee4` was installed on the user's iPhone 17; the phone-tested snapshot
+is `0a38398` and bundled WolkaraRoue is `1.0.5-cn.7`. Integration `85d500f` retains
+those runtime/login/add-on sources and reconciles existing main-line logging and docs.
+Do not treat an upstream tag as this fork's release number.
+
+CN login, user-operated world entry, Standard touch/controller switching and Chinese
+chat acceptance are recorded in `COMPATIBILITY.md`. Required simulator instances
+were unavailable, and no Device Hub run or broad long-session pass is claimed.
+Older experimental worktrees are not part of the published validated snapshot.
 
 ## Execution modes
 

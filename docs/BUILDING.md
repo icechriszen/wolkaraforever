@@ -1,6 +1,6 @@
 # Build and run WolkaraForever
 
-> Verified: 2026-11-21 · Source: `8375cbb`
+> Reviewed: 2026-11-24 · Source behavior: `0a38398`
 
 This guide covers the mechanisms behind a WolkaraForever build: how the tree is assembled, the
 three ways the runtime can execute an application, and the commands that build, install, run,
@@ -29,6 +29,17 @@ A command sequence, therefore, is always "prepare, then run the engine's own scr
 prepared tree". The wrappers in `wolkaraforever/tools/` do exactly that, which is why the engine
 scripts under `build/platform/tools/` are never called directly for a normal build.
 
+## Fork source and storage
+
+Build the default `main` branch from this fork for the integrated CN, Standard touch
+and Unicode fixes and their documentation. `jklock/wolkaraforever` remains the primary
+upstream; fetching a new upstream revision is separate from reproducing a validated
+source SHA. See Compatibility for the installed source and the later merge checks.
+
+The checkout and its `build/` directory may live on an external SSD. Keep one stable
+private `local.env` with the same signing team, bundle ID and Keychain group for
+updates. Do not copy a different test app's identifiers onto an existing installation.
+
 ## C++ allocator ownership
 
 A native application can replace C++ `operator new` and `operator delete`. Binding its own
@@ -55,6 +66,20 @@ control and old loader path must respectively pass and reproduce the ownership d
 the adapted path must pass string operations, multi-thread cleanup, future readiness, host
 object survival, configuration guards, and ASan/UBSan. These checks are component-level Mac
 evidence; iPhone game stability requires a separate test of the installed build.
+
+## Unicode text and chat
+
+Software keyboard characters with no ANSI key are retained as private queued text
+commits. The host calls the active public text-input client in order between the
+preceding keys and Return, once per commit; it does not invent a physical key for
+Chinese, invoke a chat-send API, or retry messages. Both event polling and the
+application-owned dispatcher support this path. ASCII and control keys retain their
+key-event path. This lives in patch 0079 and requires an app update.
+
+WolkaraRoue separately initializes its selected chat channel synchronously and
+supports modern and legacy client UI APIs. Its cn.7 diagnostic distinguishes input,
+Return, send attempts, self echo and display. See [chat diagnostics](SENDING_LOGS.md#chat-sends-nothing)
+and [the measured result](../COMPATIBILITY.md#current-fork-status).
 
 ## Execution modes
 
@@ -240,7 +265,7 @@ authorization, or performance; say which device ran when you report a result.
 | Problem | What to do |
 | --- | --- |
 | `prepare.sh` says the tree is dirty | Expected while developing; commit before producing evidence. |
-| `install.sh` refuses to replace the app | Something is running. Stop it from the app, or use `--replace-running`. |
+| `install.sh` refuses to replace the app | Exit the game normally, wait for saving, close Wolkara in the app switcher, then retry with the same configuration. |
 | The build fails and nothing reached the iPad | Rerun with `--build-only` and read `build/platform/logs/install-*.log`. |
 | Developer service is "not ready" | The enrollment is missing: run `wolkaraforever/tools/install.sh` again with `TOLKARA_MODE=developer-service`, which enrolls for you. |
 | The app says a page container is missing | Build with `TOLKARA_MODE=local-signing`, or copy the container for this executable's SHA-256 into `Documents/LocalSigning/`. |
