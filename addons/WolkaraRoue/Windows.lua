@@ -41,6 +41,16 @@ local busy = false
 -- rapport à l'interface), puis ce qu'elle doit laisser libre sur chaque côté et en bas.
 -- `largest` est son échelle d'origine : on ne l'agrandit jamais.
 function Windows.Placement(W, H, width, height, largest, whole)
+    local areas = ns.TouchLayout and ns.TouchLayout.Areas(W, H)
+    if areas then
+        local best, chosen = -1, nil
+        for _, area in ipairs(areas) do
+            local scale = math.min(largest, (W - area.left - area.right) / width,
+                (H - area.bottom - area.top) / height)
+            if scale > best then best, chosen = scale, area end
+        end
+        if best > 0 then return best, chosen.left, chosen.bottom, chosen.right, chosen.top end
+    end
     if whole then
         return math.min(largest, (W - 2 * MARGIN) / width, (H - 2 * MARGIN) / height), MARGIN, MARGIN
     end
@@ -76,13 +86,13 @@ function Windows.Fit(frame)
     local parent = frame:GetParent()
     local parentScale = parent and parent:GetEffectiveScale() / ui or 1
     local right, top = Overhang(frame)
-    local scale, side, low = Windows.Placement(UIParent:GetWidth(), UIParent:GetHeight(), width + right,
+    local scale, side, low, otherSide, high = Windows.Placement(UIParent:GetWidth(), UIParent:GetHeight(), width + right,
         height + top, natural[frame] * parentScale, WHOLE_SCREEN[frame:GetName() or ""])
     busy = true
     if math.abs(frame:GetScale() - scale / parentScale) > 0.001 then frame:SetScale(scale / parentScale) end
     frame:SetClampedToScreen(true)
     -- Les marges se comptent dans les unités de la fenêtre : une unité y vaut `scale` de l'interface.
-    frame:SetClampRectInsets(-side / scale, side / scale + right, MARGIN / scale + top, -low / scale)
+    frame:SetClampRectInsets(-side / scale, (otherSide or side) / scale + right, (high or MARGIN) / scale + top, -low / scale)
     busy = false
 end
 
@@ -100,6 +110,12 @@ end
 
 local function WatchKnown()
     for _, name in ipairs(NAMES) do Windows.Watch(_G[name]) end
+    if ns.TouchLayout and ns.TouchLayout.Active() then
+        local menu = _G.WolkaraMobileMenu
+        Windows.Watch(menu and menu.card)
+        for _, name in ipairs({ "WolkaraMobileControls", "WolkaraMobileSettings", "WolkaraMobilePicker",
+            "WolkaraMobileBuffPanel", "WolkaraMobileBags" }) do Windows.Watch(_G[name]) end
+    end
 end
 
 function Windows:Init()

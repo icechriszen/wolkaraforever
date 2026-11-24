@@ -78,6 +78,10 @@ static void TestInstall(void) {
         @{@"tags":@{@"1":@[@"OSX"],@"2":@[@"arm64"],@"3":@[@"enUS"],@"4":@[@"EU"]}}
     ];
     assert(TKWoWMacFiles(files,@"enUS",@"eu").count==1);
+    NSDictionary *china=@{@"tags":@{@"1":@[@"OSX"],@"2":@[@"arm64"],@"3":@[@"zhCN"],@"4":@[@"CN"]}};
+    NSArray *chinaFiles=[files arrayByAddingObject:china];
+    assert([TKWoWMacFiles(chinaFiles,@"zhCN",@"cn") isEqual:@[china]]);
+    assert(TKWoWMacFiles(chinaFiles,@"zhTW",@"cn").count==0);
 }
 static void TestManyChunks(void) {
     // A mutable download with hundreds of chunks caught a whole-buffer copy per

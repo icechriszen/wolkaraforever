@@ -49,7 +49,7 @@ xcrun clang -fobjc-arc -Wall -Wextra -Werror -Wno-deprecated-declarations \
 xcrun clang -fobjc-arc -Wall -Wextra -Werror -Wno-deprecated-declarations \
     -Ilauncher/WoW -c tests/test_forever_config.m -o "$build/test_forever_config.o"
 xcrun clang -fobjc-arc "$build/ForeverUI.o" "$build/WKLocalization.o" "$build/test_forever_config.o" \
-    -framework Foundation -o "$build/test_forever_config"
+    -framework Foundation -framework CoreGraphics -o "$build/test_forever_config"
 "$build/test_forever_config"
 
 # The archive writer and restorer.

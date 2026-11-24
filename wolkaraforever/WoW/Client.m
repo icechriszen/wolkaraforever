@@ -298,14 +298,16 @@ static BOOL RetryableNetworkError(NSError *error) {
 - (BOOL)validProduct:(NSString *)product region:(NSString *)region error:(NSError **)error {
     BOOL known=NO;
     for (NSDictionary *entry in TKWoWProducts()) if ([entry[@"id"] isEqualToString:product]) known=YES;
-    if (!known || ![@[@"eu",@"us",@"kr",@"tw"] containsObject:region]) {
+    if (!known || ![@[@"eu",@"us",@"kr",@"tw",@"cn"] containsObject:region]) {
         if (error) *error=TKWoWError(@"Unknown product or region.");
         return NO;
     }
     return YES;
 }
 - (NSURL *)endpoint:(NSString *)product region:(NSString *)region name:(NSString *)name {
-    return [NSURL URLWithString:[NSString stringWithFormat:@"https://%@.version.battle.net/v2/products/%@/%@",region,product,name]];
+    NSString *host=[region isEqualToString:@"cn"] ? @"cn.version.battlenet.com.cn" :
+        [NSString stringWithFormat:@"%@.version.battle.net",region];
+    return [NSURL URLWithString:[NSString stringWithFormat:@"https://%@/v2/products/%@/%@",host,product,name]];
 }
 - (NSDictionary *)versionForProduct:(NSString *)product region:(NSString *)region error:(NSError **)error {
     if (![self validProduct:product region:region error:error]) return nil;
@@ -322,8 +324,9 @@ static NSArray<NSString *> *Words(NSString *text) {
     return [[text componentsSeparatedByCharactersInSet:NSCharacterSet.whitespaceCharacterSet]
         filteredArrayUsingPredicate:[NSPredicate predicateWithFormat:@"length > 0"]];
 }
-static BOOL SupportedCDNHost(NSString *host) {
-    return [host hasSuffix:@".blizzard.com"] || [host hasSuffix:@".akamaihd.net"];
+static BOOL SupportedCDNHost(NSString *host, NSString *region) {
+    return [host hasSuffix:@".blizzard.com"] || [host hasSuffix:@".akamaihd.net"] ||
+        ([region isEqual:@"cn"] && [host isEqual:@"blzdist-wow.necdn.leihuo.netease.com"]);
 }
 - (NSDictionary *)cdnInfo:(NSString *)product region:(NSString *)region error:(NSError **)error {
     NSDictionary *row=[self rowAt:[self endpoint:product region:region name:@"cdns"] field:@"Name" value:region error:error];
@@ -337,7 +340,9 @@ static BOOL SupportedCDNHost(NSString *host) {
         NSURL *url=[NSURL URLWithString:server];
         NSString *host=url.host.lowercaseString;
         if ((![url.scheme isEqualToString:@"https"] && ![url.scheme isEqualToString:@"http"]) ||
-            url.user || url.password || url.port || !SupportedCDNHost(host)) continue;
+            url.user || url.password || url.port || !SupportedCDNHost(host,region)) continue;
+        // The China exception is exact-host and HTTPS-only, including stored metadata.
+        if ([host isEqual:@"blzdist-wow.necdn.leihuo.netease.com"] && ![url.scheme isEqual:@"https"]) continue;
         [servers addObject:server];
         if (![derivedHosts containsObject:host]) [derivedHosts addObject:host];
         if (!cdn && [url.scheme isEqualToString:@"https"])
@@ -350,7 +355,7 @@ static BOOL SupportedCDNHost(NSString *host) {
     NSMutableArray<NSString *> *hosts=[NSMutableArray new];
     for (NSString *host in Words(row[@"Hosts"])) {
         NSString *lower=host.lowercaseString;
-        if (SupportedCDNHost(lower) && ![hosts containsObject:lower]) [hosts addObject:lower];
+        if (SupportedCDNHost(lower,region) && ![hosts containsObject:lower]) [hosts addObject:lower];
     }
     if (!hosts.count) hosts=derivedHosts;
     return @{@"cdn":cdn, @"servers":[servers componentsJoinedByString:@" "],
@@ -382,7 +387,7 @@ static NSUInteger ManifestSize(NSString *text) {
     return TKWoWDecode(data,keys[1],keys[0],ManifestSize(sizes[0]),256*1024*1024,error);
 }
 - (NSDictionary *)planForProduct:(NSString *)product region:(NSString *)region locale:(NSString *)locale error:(NSError **)error {
-    if (![@[@"enUS",@"esES",@"deDE",@"frFR",@"itIT",@"esMX",@"ptBR",@"ruRU",@"koKR",@"zhTW"] containsObject:locale]) {
+    if (![@[@"enUS",@"esES",@"deDE",@"frFR",@"itIT",@"esMX",@"ptBR",@"ruRU",@"koKR",@"zhTW",@"zhCN"] containsObject:locale]) {
         if (error) *error=TKWoWError(@"Unsupported locale."); return nil;
     }
     NSDictionary *version=[self versionForProduct:product region:region error:error];

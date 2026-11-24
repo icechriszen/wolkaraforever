@@ -543,6 +543,8 @@ SlashCmdList.WOLKARAMOBILE = function(message)
     local command = ((message or ""):match("^%s*(%S*)") or ""):lower()
     if command == "erreur" or command == "error" then
         ns.Print(ns.lastError or ns.T("no errors."))
+    elseif command == "chatdiag" and ns.ChatDiagnostics then
+        ns.ChatDiagnostics:Report()
     elseif command == "personnaliser" or command == "modifier" or command == "edit" or command == "customize" then
         ns.SetEditing(not ns.editing)
     elseif command == "reset" then

@@ -93,6 +93,10 @@ intent() {
     git ls-files wolkaraforever/Bridge | while read -r f; do
         case "$f" in
             wolkaraforever/Bridge/tests/*) dst=tests/${f#wolkaraforever/Bridge/tests/};;
+            wolkaraforever/Bridge/ControlGeometry.h)
+                echo "$f translation/AppKit/ControlGeometry.h add"
+                echo "$f launcher/WoW/ControlGeometry.h add"
+                continue;;
             wolkaraforever/Bridge/BackgroundPacing.m) dst=translation/Metal/BackgroundPacing.m;;
             wolkaraforever/Bridge/DisplayRate.m) dst=translation/Metal/DisplayRate.m;;
             # Battery Saver's contract is one source compiled into three images: the launcher,
@@ -136,6 +140,29 @@ intent() {
         case "$f" in
             wolkaraforever/NetworkHealth/tests/*) dst=tests/${f#wolkaraforever/NetworkHealth/tests/};;
             *) dst=runtime/${f#wolkaraforever/NetworkHealth/};;
+        esac
+        echo "$f $dst $(intent "$dst")"
+    done
+    echo "#"
+    echo "# Cxx: isolated allocator-owning standard-library APIs and loader policy"
+    git ls-files wolkaraforever/Cxx | while read -r f; do
+        case "$f" in
+            wolkaraforever/Cxx/tests/*) dst=tests/cxx/${f#wolkaraforever/Cxx/tests/};;
+            wolkaraforever/Cxx/NativeCxx.*) dst=runtime/${f#wolkaraforever/Cxx/};;
+            wolkaraforever/Cxx/OwnedCxx.h)
+                dst=runtime/OwnedCxx.h
+                echo "$f $dst $(intent "$dst")"
+                dst=translation/OwnedCxx/OwnedCxx.h;;
+            *) dst=translation/OwnedCxx/${f#wolkaraforever/Cxx/};;
+        esac
+        echo "$f $dst $(intent "$dst")"
+    done
+    echo "#"
+    echo "# Runtime: prepared dynamic-code pages and host-only regression fixtures"
+    git ls-files wolkaraforever/Runtime | while read -r f; do
+        case "$f" in
+            wolkaraforever/Runtime/tests/*) dst=tests/${f#wolkaraforever/Runtime/tests/};;
+            *) dst=runtime/${f#wolkaraforever/Runtime/};;
         esac
         echo "$f $dst $(intent "$dst")"
     done

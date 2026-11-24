@@ -16,7 +16,7 @@ static void SetValue(NSString *domain, NSString *name, id value) {
     CFPreferencesAppSynchronize((__bridge CFStringRef)domain);
 }
 static BOOL Empty(NSString *domain) {
-    for (NSString *name in @[@"WEB_TOKEN",@"REGION",@"LOCALE",@"GAME_ACCOUNT",@"ACCOUNT_TS"])
+    for (NSString *name in @[@"WEB_TOKEN",@"REGION",@"LOCALE",@"GAME_ACCOUNT",@"ACCOUNT_TS",@"CONNECTION_STRING"])
         if (Value(domain,name)) return NO;
     return YES;
 }
@@ -55,6 +55,76 @@ int main(void) { @autoreleasepool {
         assert(TKBattleNetFederatedURL([NSURL URLWithString:good]));
     for (NSString *bad in @[@"http://accounts.google.com", @"https://user@accounts.google.com", @"https://accounts.google.com:8443", @"file:///provider"])
         assert(!TKBattleNetFederatedURL([NSURL URLWithString:bad]));
+
+    assert([TKBattleNetLoginURL(@"cn").absoluteString isEqual:@"https://account.battlenet.com.cn/login/zh/?externalChallenge=login&app=WOW"]);
+    assert([TKBattleNetLoginURL(@"CN") isEqual:TKBattleNetLoginURL(@"cn")]);
+    assert([TKBattleNetLoginURL(@"eu").host isEqual:@"eu.battle.net"]);
+    assert([TKBattleNetLoginURL(@"TW").absoluteString isEqual:@"https://tw.battle.net/login/zh/?externalChallenge=login&app=WoW"]);
+    assert(!TKBattleNetLoginURL(@"cn.evil.test"));
+    for (NSString *host in @[@"account.battlenet.com.cn",@"www.battlenet.com.cn",@"blizzard.cn",@"www.blizzard.cn"])
+        assert(TKBattleNetTrustedURL([NSURL URLWithString:[@"https://" stringByAppendingString:host]]));
+    for (NSString *url in @[@"https://battlenet.com.cn.evil.test",@"https://evilbattlenet.com.cn",
+        @"http://account.battlenet.com.cn",@"https://account.battlenet.com.cn:8443",@"https://blizzard.cn.evil.test"])
+        assert(!TKBattleNetTrustedURL([NSURL URLWithString:url]));
+    // China tickets use the same one-use lifecycle and retain CN / zhCN at handoff.
+    NSString *chinaTicket=@"CN-0123456789abcdef0123456789abcdef-123456789";
+    assert([TKBattleNetCallbackTicket([NSURL URLWithString:[@"http://localhost:0/?ST=" stringByAppendingString:chinaTicket]]) isEqual:chinaTicket]);
+    // Explicit paste tolerates Safari display formatting without weakening automatic callbacks.
+    NSString *chinaCallback=[@"http://localhost:0/?ST=" stringByAppendingString:chinaTicket];
+    for (NSString *good in @[chinaCallback, [@" \n" stringByAppendingFormat:@"%@\r\n",chinaCallback],
+        [chinaCallback substringFromIndex:7],
+        [chinaCallback stringByReplacingOccurrencesOfString:@"http://localhost:0/" withString:@"localhost:0"]]) {
+        NSString *failure=@"stale";
+        assert([TKBattleNetPastedCallbackTicket(good,&failure) isEqual:chinaTicket]);
+        assert(!failure);
+    }
+    assert([TKBattleNetPastedCallbackTicket(chinaCallback,NULL) isEqual:chinaTicket]);
+    assert(!TKBattleNetCallbackTicket([NSURL URLWithString:[chinaCallback substringFromIndex:7]]));
+    NSArray *rejected=@[
+        @[@" \r\n",@"empty"],
+        @[[chinaCallback stringByPaddingToLength:8193 withString:@"x" startingAtIndex:0],@"length"],
+        @[[[chinaCallback substringFromIndex:7] stringByPaddingToLength:8190 withString:@"x" startingAtIndex:0],@"length"],
+        @[@"https://account.battlenet.com.cn/login/zh/",@"endpoint"],
+        @[chinaTicket,@"endpoint"],
+        @[[chinaCallback stringByReplacingOccurrencesOfString:@"http:" withString:@"https:"],@"endpoint"],
+        @[[chinaCallback stringByReplacingOccurrencesOfString:@":0/" withString:@"/"],@"endpoint"],
+        @[[chinaCallback stringByReplacingOccurrencesOfString:@":0/" withString:@":80/"],@"endpoint"],
+        @[[chinaCallback stringByReplacingOccurrencesOfString:@"localhost" withString:@"user@localhost"],@"endpoint"],
+        @[[chinaCallback stringByReplacingOccurrencesOfString:@"localhost" withString:@"localhost.evil.test"],@"endpoint"],
+        @[[chinaCallback stringByReplacingOccurrencesOfString:@"/?" withString:@"/other?"],@"endpoint"],
+        @[[chinaCallback stringByAppendingString:@"#fragment"],@"endpoint"],
+        @[@"http://localhost:0/",@"missing"],
+        @[@"http://localhost:0/?st=synthetic",@"missing"],
+        @[[chinaCallback stringByAppendingFormat:@"&ST=%@",chinaTicket],@"duplicate"],
+        @[[chinaCallback stringByAppendingString:@"&ST="],@"duplicate"],
+        @[@"http://localhost:0/?ST=",@"format"],
+        @[@"http://localhost:0/?ST=synthetic-private-value",@"format"]];
+    for (NSArray *row in rejected) {
+        NSString *failure=nil;
+        assert(!TKBattleNetPastedCallbackTicket(row[0],&failure));
+        assert([failure isEqual:row[1]]); // A fixed category, never any part of the pasted input.
+    }
+    puts("PASS explicit Safari paste formatting and private validation categories (Mac Foundation)");
+    NSString *chinaDomain=Domain();
+    SetValue(chinaDomain,@"CONNECTION_STRING",@"synthetic stale connection");
+    SetValue(chinaDomain,@"GAME_ACCOUNT",@"synthetic stale account");
+    assert([TKBattleNetSession acceptTicket:chinaTicket region:@"cn" locale:@"zhCN"]);
+    assert([TKBattleNetSession handOffForProfile:@"wow-forever" domain:chinaDomain clearAfter:30].count==3);
+    assert([Value(chinaDomain,@"REGION") isEqual:@"CN"] && [Value(chinaDomain,@"LOCALE") isEqual:@"zhCN"]);
+    assert(!Value(chinaDomain,@"CONNECTION_STRING") && !Value(chinaDomain,@"GAME_ACCOUNT"));
+    assert([TKBattleNetSession handOffForProfile:@"wow-forever" domain:chinaDomain clearAfter:30].count==0);
+    [TKBattleNetSession gameEnded];
+    assert(Empty(chinaDomain));
+
+    // Traditional Chinese survives the entire TW handoff, including cleanup.
+    NSString *taiwanTicket=@"TW-0123456789abcdef0123456789abcdef-123456789";
+    NSString *taiwanDomain=Domain();
+    assert([TKBattleNetSession acceptTicket:taiwanTicket region:@"tw" locale:@"zhTW"]);
+    assert([TKBattleNetSession handOffForProfile:@"wow-forever" domain:taiwanDomain clearAfter:30].count==3);
+    assert([Value(taiwanDomain,@"REGION") isEqual:@"TW"] && [Value(taiwanDomain,@"LOCALE") isEqual:@"zhTW"]);
+    assert([TKBattleNetSession handOffForProfile:@"wow-forever" domain:taiwanDomain clearAfter:30].count==0);
+    [TKBattleNetSession gameEnded];
+    assert(Empty(taiwanDomain));
 
     // Wire-format fixtures (the game decodes exactly this; not a security boundary).
     NSData *encoded=TKBattleNetEncodeLaunchTicket(ticket,@"testuser");

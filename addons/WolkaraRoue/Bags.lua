@@ -29,10 +29,15 @@ function Bags.Shift()
     local shift = UIParent:GetWidth() * SHIFT
     for _, frame in ipairs(Containers()) do
         if frame:IsShown() and frame:GetNumPoints() > 0 then
+            if ns.TouchLayout and ns.TouchLayout.Active() and ns.Windows then
+                ns.Windows.Watch(frame)
+                ns.Windows.Fit(frame)
+            else
             local point, relative, relativePoint, x, y = frame:GetPoint(1)
             if (relative == nil or relative == UIParent) and relativePoint and relativePoint:find("RIGHT") then
                 frame:ClearAllPoints()
                 frame:SetPoint(point, UIParent, relativePoint, (x or 0) - shift, y or 0)
+            end
             end
         end
     end

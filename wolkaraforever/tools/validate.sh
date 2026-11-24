@@ -225,6 +225,7 @@ fi
 run_step "validation distinguishes known failures from incomplete suites" wolkaraforever/tools/tests/test_validate.sh || failures=$((failures+1))
 run_step "install does the right thing per execution mode" wolkaraforever/tools/tests/test_after_install.sh || failures=$((failures+1))
 run_step "External-JIT diagnostics and termination classification" wolkaraforever/tools/test_external_jit_diagnostics.sh || failures=$((failures+1))
+run_step "host lifetime counters and TLS cleanup (Mac fixtures)" wolkaraforever/tools/test_host_lifetime_diagnostics.sh || failures=$((failures+1))
 run_step "pilot.sh fails closed and keeps its own session" wolkaraforever/tools/tests/test_pilot.sh || failures=$((failures+1))
 run_step "launcher pages (simulator fixture)" wolkaraforever/tools/test_wow_launcher_ui.sh || failures=$((failures+1))
 run_step "input, voice and config rules (simulator fixture)" wolkaraforever/tools/test_voice.sh || failures=$((failures+1))
@@ -272,6 +273,7 @@ run_step "the test-app dispatcher stays on the test app" wolkaraforever/tools/te
 run_step "an .ipa is refused unless it is the External-JIT one" wolkaraforever/tools/tests/test_verify_ipa.sh || failures=$((failures+1))
 run_step "a silent device cannot hang a devicectl call" wolkaraforever/tools/tests/test_xcrun_device_timeout.sh || failures=$((failures+1))
 run_step "External-JIT log classification" wolkaraforever/tools/tests/test_classify_external_jit.sh || failures=$((failures+1))
+run_step "prepared dynamic-code page fixtures (Mac)" wolkaraforever/tools/test_dynamic_code.sh || failures=$((failures+1))
 run_step "the bundled add-on is what its reviewed sources produce" wolkaraforever/tools/test_addon_package.sh || failures=$((failures+1))
 run_step "the mobile add-on's Lua, saves and game API" wolkaraforever/tools/test_mobile_addon.sh || failures=$((failures+1))
 if [ -n "${DEVELOPMENT_TEAM:-}" ]; then

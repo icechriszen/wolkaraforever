@@ -1,0 +1,32 @@
+# Preserve mmap hint semantics for ordinary anonymous mappings.
+# Existing fixed replacement and MAP_JIT image-rewrite compatibility are retained.
+# A hinted address inside the reserved image must not zero or reprotect its pages.
+
+--- a/runtime/NativeGuest.m
++++ b/runtime/NativeGuest.m
+@@ -11,6 +11,7 @@
+ #include "GuestLink.h"
+ #include "NativeCxx.h"
+ #include "MemoryTrace.h"
++#include "ArenaMapping.h"
+ #include "GuestPaths.h"
+ #include "GuestVMBudget.h"
+ #include "GuestSoftwareVM.h"
+@@ -663,7 +664,7 @@
+ }
+ static void *guest_mmap_impl(void *address, size_t size, int prot, int flags, int fd, off_t offset) {
+     if(trace_memory_operations()) LOG("[native] mmap(%p,%#zx,%d,%#x,%d,%lld)\n",address,size,prot,flags,fd,(long long)offset);
+-    if (inside_exec(address,size) && (flags & MAP_ANON) && (flags & MAP_PRIVATE) &&
++    if (inside_exec(address,size) && wk_arena_mapping_replacement(flags) && (flags & MAP_ANON) && (flags & MAP_PRIVATE) &&
+         fd == -1 && offset == 0 && !((uintptr_t)address % GM_PAGE_SIZE) && size && !(size % GM_PAGE_SIZE)) {
+         if (inside_shadow(address,size)) {
+             memset(address,0,size);
+@@ -675,7 +676,7 @@
+         LOG("[signed-image] MAP_JIT remap of signed range satisfied in place\n");
+         return address;
+     }
+-    if (inside(address,size) && (flags & MAP_ANON) && (flags & MAP_PRIVATE) && fd == -1 && offset == 0 &&
++    if (inside(address,size) && wk_arena_mapping_replacement(flags) && (flags & MAP_ANON) && (flags & MAP_PRIVATE) && fd == -1 && offset == 0 &&
+         !((uintptr_t)address % GM_PAGE_SIZE) && size && !(size % GM_PAGE_SIZE)) {
+         void *alias = write_view(address,size); memset(alias,0,size);
+         if (guest_mprotect(address,size,prot)) return MAP_FAILED;

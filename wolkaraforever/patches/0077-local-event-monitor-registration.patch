@@ -1,0 +1,82 @@
+# WolkaraForever: honor local event-monitor registration on ordinary launches.
+# Use the existing dispatcher, copied callback and removal semantics rather than
+# returning nil solely because a development flag was absent. No game edits.
+# Registration logs are bounded and contain no event contents or object bytes.
+
+--- a/translation/AppKit/AppKit.m
++++ b/translation/AppKit/AppKit.m
+@@ -38,18 +38,10 @@
+ PASS(otherMouseDown:) PASS(otherMouseUp:) PASS(otherMouseDragged:)
+ @end
+
+-// Local monitors are experimental and opt-in (launch argument
+-// --appkit-event-monitors): handlers see events before window dispatch, and
+-// one returning nil consumes the event. Off by default, adding a monitor does
+-// nothing, as before: World of Warcraft installs one and was validated so.
+-static BOOL eventMonitorsEnabled(void) {
+-    static BOOL enabled; static dispatch_once_t once;
+-    dispatch_once(&once, ^{
+-        enabled=[NSProcessInfo.processInfo.arguments containsObject:@"--appkit-event-monitors"];
+-        AKLog(@"local event monitors %s", enabled ? "enabled (--appkit-event-monitors)" : "ignored; launch with --appkit-event-monitors to run them");
+-    });
+-    return enabled;
+-}
++// Local monitoring uses the existing in-process dispatcher by default. Returning
++// nil here when a valid handler was supplied exposed an absent monitor token to
++// callers. Global monitoring remains unavailable: other apps' events never enter
++// this process.
+ // Where the pointer is, in screen coordinates (bottom-left origin), as the
+ // last mouse event left it.
+ static NSPoint mouseScreenLocation;
+@@ -84,10 +76,19 @@
+ }
+ - (NSString *)description { return [NSString stringWithFormat:@"<NSEvent type=%lu loc=%@ key=%d>", (unsigned long)_type, NSStringFromCGPoint(_locationInWindow), _keyCode]; }
+ + (id)addLocalMonitorForEventsMatchingMask:(NSUInteger)mask handler:(id)handler {
+-    return eventMonitorsEnabled() ? AKEventMonitorAdd(mask, handler) : nil;
++    id token=AKEventMonitorAdd(mask, handler);
++    static _Atomic unsigned logged;
++    if(atomic_fetch_add(&logged,1)<8)
++        AKLog(@"local event monitor: handler=%s token=%s", handler ? "present" : "missing", token ? "present" : "missing");
++    return token;
+ }
+ // Events of other applications never reach this one.
+-+ (id)addGlobalMonitorForEventsMatchingMask:(NSUInteger)mask handler:(id)handler { (void)mask; (void)handler; return nil; }
+++ (id)addGlobalMonitorForEventsMatchingMask:(NSUInteger)mask handler:(id)handler {
++    (void)mask; (void)handler;
++    static _Atomic unsigned logged;
++    if(atomic_fetch_add(&logged,1)<8) AKLog(@"global event monitor: unavailable; token=missing");
++    return nil;
++}
+ + (void)removeMonitor:(id)monitor { AKEventMonitorRemove(monitor); }
+ @end
+
+--- a/tests/test_event_monitors.m
++++ b/tests/test_event_monitors.m
+@@ -38,5 +38,26 @@
+     id swap=AKEventMonitorAdd(NSUIntegerMax, ^id(id e) { (void)e; return @"replacement"; });
+     assert([AKEventMonitorRun(event,5) isEqual:@"replacement"]);
+     AKEventMonitorRemove(swap);
+-    puts("local event monitors: order, masks, consumption, removal during dispatch: PASS");
++    // A caller may retain the non-owned token through CoreFoundation, then
++    // remove it after its original autorelease pool has drained. Registration
++    // owns the copied stack block; removal stops callbacks before token release.
++    __weak id weakToken=nil;
++    __block unsigned deliveries=0;
++    CFTypeRef held=NULL;
++    @autoreleasepool {
++        id token=AKEventMonitorAdd(1ULL<<10, ^id(id e) { deliveries++; return e; });
++        assert(token);
++        weakToken=token;
++        held=CFRetain((__bridge CFTypeRef)token);
++    }
++    assert(weakToken);
++    assert(AKEventMonitorRun(event,10)==event && deliveries==1);
++    @autoreleasepool {
++        AKEventMonitorRemove((__bridge id)held);
++        assert(AKEventMonitorRun(event,10)==event && deliveries==1);
++        assert(weakToken); // only the caller's retain now keeps it alive
++        CFRelease(held); held=NULL;
++    }
++    assert(!weakToken);
++    puts("local event monitors: order, masks, consumption, removal, CF token lifetime: PASS");
+ } }

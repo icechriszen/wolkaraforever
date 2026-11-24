@@ -12,7 +12,24 @@ Use the launcher to prepare Forever, configure the interface, and recover safely
 2. Start the download. The launcher can resume, verify, repair, and update recorded game data.
 3. Wait for the ready state before selecting **Play**.
 
+China (`cn`) and Simplified Chinese (`zhCN`) are supported by this local build. China uses
+the official China metadata service and its advertised NetEase WoW HTTPS CDN. Fresh China
+installs write `portal "CN"` and the selected text/audio locale; changing language alone preserves
+the existing login portal and account settings. Updating WolkaraForever under the same bundle ID
+keeps the game directory and resumes verified downloaded data. Do not uninstall it to update.
+
 Changing game language can require additional files. App language and game language are separate settings.
+
+Taiwan (`tw`) can be paired with **Traditional Chinese · 繁體中文** (`zhTW`). This choice
+survives configuration export/import and is passed to the experimental Battle.net login;
+the Taiwan login page opens in Chinese. Game access still depends on the selected account.
+
+For a CN/TW compatibility comparison, install a separately signed Wolkara test app with a
+different bundle identifier and its own authorization Keychain group. Its Documents folder,
+preferences, and in-app website session are separate from the existing app. Keep the CN app
+installed. The current launcher does not isolate two regions within one app's game folder:
+changing region there can update that existing installation. Select TW and zhTW in the new
+test app before downloading; changing the language alone does not change the regional client.
 
 ## Choose how a game starts
 
@@ -22,15 +39,32 @@ The launcher starts the game the way it was built to. The app [Install WolkaraFo
 
 In **Game Settings Manager**, open **Battle.net Login (Experimental)**. It is off by default. Enabling it requires acknowledging that it is an experimental compatibility feature, not WolkaraForever's normal login path, and that you use it at your own risk.
 
-When enabled, **Play** completes its usual readiness checks, then opens Battle.net's official sign-in page. Battle.net may hand the browser to your chosen HTTPS identity provider; verify that provider's address before entering credentials. Cancel leaves the game unstarted. A successful result is used once for the immediately following Forever launch. Passwords and authenticators remain on Battle.net's site; WolkaraForever does not save browser sessions or launch tickets. **Disable experimental login** and **Clear sign-in data** both remove the in-memory browser session and any pending result immediately.
+When enabled, **Play** completes its usual readiness checks, then opens Battle.net's official sign-in page. Battle.net may hand the browser to your chosen HTTPS identity provider; verify that provider's address before entering credentials. Cancel leaves the game unstarted. A successful result is used once for the immediately following Forever launch. The in-app browser now keeps a dedicated WebKit website session across app restarts. After signing in there once, later launches can obtain a fresh result without copying a Safari address, while the site session remains valid. Battle.net may still require verification. Launch tickets remain single-use. **Disable experimental login** and **Clear sign-in data** remove this saved in-app website session and any pending result. Safari has a separate session, which these controls do not clear.
 
 **Saving the game password.** The same feature can keep one game password on the device, so a launch on a phone does not mean typing it on a phone keyboard. While the game's own password field has the keyboard, a yellow key appears first on the keyboard's row: tapping it reads the password behind Face ID (or the device passcode), types it into that field and presses Return, and holding the key offers to forget it. The first tap offers to save one. The password is a Keychain item on this device only - it is never synchronised, never written to a log or to the game's files, and it is deleted when experimental login is turned off or **Clear sign-in data** is used. The login row says **password saved** while one is kept, and **Sign in with the saved password** in the same sheet starts the game without opening the browser; **Play** still opens Battle.net's sign-in page unless you choose that row.
+
+For China, the browser opens `account.battlenet.com.cn` in Chinese. Existing China selections
+from the earlier local build retain browser login on upgrade unless it was explicitly disabled.
+For a new setup, enable it in **Game Settings Manager**. Complete login and verification yourself.
+To remember login, complete it inside the app once; an existing Safari session is not imported.
+If the embedded page cannot finish, choose **Safari fallback…**, open the official page, then paste
+its final localhost return address only into the app's masked return field. The app never reads
+Safari cookies or the clipboard automatically. Tap **Continue** (or the keyboard's **Done**).
+A rejected address shows an alert explaining whether it is empty, incomplete, the wrong page,
+or an unsupported result; only that category is logged. Copy the final address again after
+correcting the issue. An omitted `http://` is restored only for an explicitly pasted
+`localhost:0` return address. Never share the address in chat or logs.
+A successful handoff sets the game portal to CN and retains the selected text/audio language.
+A manual China callback has been accepted on the physical phone and the Chinese first-run game
+page has appeared. The saved embedded session and entry into the game world still need their
+own real-device checks; synthetic tests do not prove them. Launcher language remains English,
+German or French.
 
 This feature can stop working without notice. Do not include credentials, tickets, callback URLs, or account details in reports.
 
 ## Change app language or interface
 
-Choose **App language** (the row that reads **App language: …**) in **Game Settings Manager** to change the app's own labels and messages. The **Region / Locale** row in the same box sets the game's region and language; changing the game language can require additional files. Open **Launcher Manager** to choose **iPadOS** or **iOS on Duo**. Interface selection changes the arrangement only; it does not change game data or add-ons.
+Choose **App language** (the row that reads **App language: …**) in **Game Settings Manager** to change the app's own labels and messages. The **Region / Locale** row in the same box sets the game's region and language; changing the game language can require additional files. Open **Launcher Manager** to choose **iPadOS** or **iOS on Duo**. Interface selection changes the arrangement only; it does not change game data or add-ons. Automatic on an iPhone, iOS, and iOS on Duo use the same direct-touch gestures when trackpad mode is off: a tap first moves the pointer to the finger, then clicks when the finger lifts. The touch toolbar and host resolve the same interface setting. This does not change the game resolution or add a fixed tap offset.
 
 ## Optional network-health diagnostics
 
@@ -38,7 +72,122 @@ In **Settings** (the gear at the top right of the home screen), choose **Arm net
 
 ## Manage add-ons
 
-Open **Add-On Manager** to view recorded packages, install the bundled WolkaraRoue package, import a validated archive, or browse a supported provider. An optional provider key stays in the device Keychain. The app removes only add-ons it recorded as managed.
+On the home screen, select **Install Addons (Curse & Direct)** in the **Add-On Manager** card.
+The page opens on **My Add-ons** and includes **WolkaraRoue (bundled)** with its own
+**Install** or **Update** button. Use that row for the package included in this app;
+opening the page does not install anything. You can also view recorded packages,
+import a validated archive, or browse a supported provider. An optional provider key
+stays in the device Keychain. The app removes only add-ons it recorded as managed.
+
+If an older WolkaraRoue copy was installed outside the manager, this bundled
+**Update** action can adopt it. The replacement must contain exactly its existing
+folder names; the update journal restores the old folder and ownership state if
+the replacement fails. It does not require linking a CurseForge project or removing
+the old copy first, and does not replace account SavedVariables.
+
+The bundled touch add-on `WolkaraRoue` now includes Simplified Chinese. Install or
+update it from Add-On Manager after leaving the game; updating the launcher alone
+does not replace an already installed add-on. Its **Mobile UI → Controls → General
+→ Language** selector offers **Follow game**, English, French, Spanish, German and
+简体中文. With no saved language choice, a zhCN client automatically uses Chinese;
+an explicit supported choice is retained. Save and close the panel to reload the
+interface and apply a change. The add-on uses the game's own fonts and its existing
+settings migration. Updating its package does not replace game archives or account
+SavedVariables. Unsupported game locales fall back to English.
+The Chinese menu and shortcut entries use the short labels **法术书** and **地图**,
+even when the client supplies longer window titles for those buttons.
+
+To use the existing add-on's default interface, keep **Mobile UI → General →
+Layout** on **Standard**. This is a saved layout choice within the current
+package, not a different upstream add-on. **Reset positions** restores placement
+without removing skills or changing language. `/mobile reset` resets the add-on's
+settings and positions while retaining its normal wheel/free-button spells;
+on a zhCN client the reset language choice follows the game and remains Chinese.
+Choose Standard again if needed, then close the settings panel to save/reload.
+The Standard chat panel has its own **X** close button. Only an active Duo chat
+pill replaces that button; disabling Duo restores the Standard close action.
+In Standard, write with the app's keyboard button below the chat. The inline
+**Tap to type** row belongs to the active Duo chat button. The add-on's F12
+entry supports both the older `ChatFrame_OpenChat` and newer
+`ChatFrameUtil.OpenChat` client APIs; a missing entry reports an error locally.
+In **Classic direct**, ordinary messages use the conversation selected in the
+add-on. The input and channel are prepared before the app's text events arrive,
+so deferred chat initialization cannot overwrite the new line. The game still
+sends on Return; slash commands retain their existing path. No language or
+layout reset is needed when updating the bundled add-on.
+If sending still produces no visible message, `1.0.5-cn.7` records a bounded
+chat trace in the existing per-character settings. `/mobile chatdiag` prints a
+local summary of input, Return, send API, self-echo and display observations.
+An API count is an attempted call, not proof of delivery; unavailable hooks are
+marked separately in the saved trace. Only counts, lengths, error numbers and
+fixed state labels are saved, never message text, names or recipients. After
+reproducing once, exit the game normally so the trace is saved; the next UI load
+starts a new trace. This diagnostic does not submit or retry messages, reset
+settings, or establish that the remaining chat failure is fixed.
+The host also carries a Unicode input correction: committed Chinese
+and other characters without an ANSI key are queued for the game's public text
+input interface, in order between earlier keys and Return. They no longer rely
+on the game accepting the unmapped `0xFF` key position. A physical iPhone 17
+Chinese-message test confirmed input, one send call, self echo and visible
+display. The diagnostic distinguishes text input from actual delivery; it does
+not automatically send or retry anything.
+If the top Bags, Spells, Map and Menu buttons are absent in Standard, enter
+`/mobile`, select **Spell wheels → Shortcuts**, and set it to **On**. In Simplified
+Chinese these controls are **技能轮盘 → 快捷按钮 → 开启**. This switch restores the
+bar without resetting the layout, assigned spells or language.
+
+The turning wheels expand to fit the default five skill slots where screen space
+allows, while leaving room for the native sticks, opposite wheel and upper HUD.
+Larger banks, or enlarged buttons on a small screen, rotate: swipe along a spell
+icon to bring the other slots into view. Increasing the left or right spell count
+brings the newest slot into view immediately. The limit remains twelve per side;
+this does not reset assigned spells, language or saved positions.
+Outside combat, only the wheel whose spell button started the current left-button
+drag follows the pointer. Releasing outside that moving button, ending a drag,
+hiding the control, changing layout or entering combat ends the preview; it
+settles at the last committed notch. Later pointer or stick movement must not
+resume that preview. Ordinary taps and the existing secure combat swipe remain
+unchanged. No layout reset is needed for this update.
+If a left-wheel plus button is visible but does not respond, check whether the
+movable chat strip overlaps it. Use `/mobile edit` to move the strip clear of the
+wheel and finish editing; this retains skill assignments and language.
+
+Movement comes from the app's on-screen gamepad, separately from the spell wheels.
+Expand the bottom toolbar and enable its gamepad button if the movement sticks are
+absent. The toolbar gear's **Reset to defaults** restores the native controls'
+positions and settings; it does not reset WolkaraRoue or its Chinese language.
+The compact jump button below the camera stick has no visible text; its touch
+area, binding and accessibility label are unchanged.
+For Standard with fixed compact sticks, each Play launch exports the native
+controls' actual positions to the installed add-on. The spell wheels clear the
+stick hit areas; menus, settings, bags and game windows fit between or above the
+controls, with room left for the keyboard toolbar. The export uses a dedicated
+add-on data file and does not reset SavedVariables or saved native positions.
+After moving or resizing native controls, restart the game to refresh the shared
+geometry. Floating sticks and the Duo layout retain their existing arrangements.
+
+Each **Play** launch checks for an attached physical controller after sign-in and
+before the game starts. With a controller, WolkaraRoue does not automatically
+load and the native keyboard/controls toolbar is off. Without a controller, both
+are enabled. Plug in a USB controller or connect Bluetooth before pressing Play;
+connecting or disconnecting during a game applies on the next launch. This does
+not change **Gamepad UI** or its bindings.
+
+The switch retains the installed Chinese package and all saved wheel positions,
+buttons and language choices. It changes only WolkaraRoue's `LoadOnDemand` TOC
+field and its rows in existing character `AddOns.txt` files. The TOC also covers
+new characters without a saved add-on list. The toolbar choice lasts for this app
+process only; stored on-screen control preferences are retained. Other add-ons,
+SavedVariables, login settings and game archives are untouched. An absent
+WolkaraRoue package is not installed automatically. A preparation error stops
+launch so the player can retry after closing the game.
+
+With Chinese selected on a zhCN client, game menu labels use the client's own
+localized strings (for example its spellbook, quest log and logout labels), with
+Chinese fallbacks if a client version omits a string. Spell/item names already
+come from game APIs. The add-on's touch controls have separate translations;
+General settings and the General chat channel have separate wording. An explicit
+English or other supported language choice does not inherit Chinese game labels.
 
 When an add-on folder includes manifests for several WoW clients, the manager uses the manifest explicitly named for Forever or declaring Forever’s interface to show its title and version. It still considers every manifest when reporting compatibility.
 
@@ -86,3 +235,43 @@ If a failure offers **Technical details** in the Settings sheet, copy that messa
 the exact reason, and it matches a line in the log. Do not share credentials, pairing data,
 signing information, account information, or device identifiers, and do not delete the app
 as a first troubleshooting step — the log you need goes with it.
+
+### Memory permission diagnostics
+
+For a runtime permission failure, a private build with `WOLKARA_HOST_DIAGNOSTICS=1`
+also records bounded mapping provenance. Alternatively launch the normal shell with
+`--memory-permission-diagnostics`, then press Play yourself. The runtime retains the
+last 512 mapping operations and reports at most 64 executable or non-null hinted requests plus eight
+failures, with requested permissions, API results, and caller image identifiers.
+An unknown origin means the mapping was not retained or its range changed; it is not
+evidence that no allocation occurred. Only API arguments and existing loader metadata
+are used; no application bytes, stack frames, credentials, or gameplay are inspected.
+The diagnostics preserve API results and errno. They do not enable JIT or claim to
+fix a client crash. Read the runtime log with `wolkaraforever/tools/device_log.sh`.
+
+The explicit `--local-code-swap-probe` diagnostic prepares two pages before any
+game entry, runs only our return-value functions, and tests replacing a writable
+view then restoring an executable view at the **originally prepared address**.
+It is separate from `--local-code-remap-probe`, which tries a new address. Neither
+path is enabled for the game. A Mac pass is not evidence of device execution.
+
+Ordinary anonymous mappings now honor an address as a hint: a hint inside the
+loaded image no longer clears or changes the protection of existing image pages.
+The existing explicit fixed-map and MAP_JIT image-rewrite adapters are retained.
+This corrects mapping ownership; it does not itself grant execution permission to
+new dynamic code on iPhone. Memory diagnostics distinguish the requested hint
+from the returned allocation address.
+
+The same private diagnostics attribute a `CFRetain(NULL)` call to its loaded image
+and caller offset before forwarding it unchanged. They do not turn a missing
+object into a valid object, suppress the system trap, or inspect object contents
+or stacks. This distinguishes an initial CoreFoundation failure from a later
+watchdog termination while the application writes its own crash report.
+
+Local AppKit event monitors now register on ordinary launches. The adapter uses
+its existing in-process event dispatcher and returns a real removable token for
+a valid handler; it no longer returns nil just because `--appkit-event-monitors`
+was absent. Matching callbacks may pass, replace or consume an event. Global
+monitoring of other applications remains unavailable on iOS. Registration logs
+are capped at eight per API and contain only handler/token availability. A unit
+test of monitor ownership does not establish client stability on a device.

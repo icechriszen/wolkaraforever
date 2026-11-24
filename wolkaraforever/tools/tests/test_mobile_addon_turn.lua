@@ -45,6 +45,8 @@ UIParent = { GetWidth = function() return W end, GetHeight = function() return H
     GetEffectiveScale = function() return 1 end }
 local cursor = { 0, 0 }
 GetCursorPosition = function() return cursor[1], cursor[2] end
+local held = true
+IsMouseButtonDown = function(button) assert(button == "LeftButton"); return held end
 
 local handlers = {}
 local ns = { STICK_X = 0.12, STICK_Y = 0.222, WHITE = "white" }
@@ -150,19 +152,19 @@ combat = false
 -- Out of combat the spells follow the finger once it has really moved, then settle on the
 -- secure code's notch.
 local function Cursor(angle) local a = math.rad(angle); cursor = { W + math.cos(a) * 200, math.sin(a) * 200 } end
-Cursor(110); buttons[4].hooks.OnMouseDown()
+Cursor(110); buttons[4].hooks.OnMouseDown(buttons[4], "LeftButton")
 Cursor(110 + step * 0.2); band.scripts.OnUpdate()
 assert(At(11), "the spells moved for a touch")
 Cursor(110 + step * 0.5); band.scripts.OnUpdate()
 assert(At(11.5), "the spells did not follow the finger")
 band:SetAttribute("offset", 0)
-buttons[4].hooks.OnMouseUp()
+buttons[4].hooks.OnMouseUp(buttons[4], "LeftButton")
 assert(At(0) and ns.db.free.turnOffset == 0)
 -- That swipe is marked on the spell, so the add-on's own click handlers ignore it (no picker);
 -- a touch is not marked.
 assert(buttons[4].swiped == true)
 buttons[4].swiped = nil
-Cursor(120); buttons[6].hooks.OnMouseDown(); Cursor(120 + step * 0.2); buttons[6].hooks.OnMouseUp()
+Cursor(120); buttons[6].hooks.OnMouseDown(buttons[6], "LeftButton"); Cursor(120 + step * 0.2); buttons[6].hooks.OnMouseUp(buttons[6], "LeftButton")
 assert(buttons[6].swiped == nil)
 
 -- Arc mode: the band hides, spells cast on the game's own setting, and the snippets do nothing.
@@ -170,7 +172,7 @@ ns.db.free.turn = false
 Turn:Layout()
 assert(not band.shown and band:GetAttribute("turning") == false and buttons[1]:GetAttribute("useOnKeyDown") == nil)
 assert(Swipe(3, 120, 1.6) == nil and band:GetAttribute("offset") == 0)
-buttons[4].hooks.OnMouseDown()
+buttons[4].hooks.OnMouseDown(buttons[4], "LeftButton")
 assert(band.scripts.OnUpdate() == nil and At(0))
 
 -- The left wheel: the right one in a mirror, in the bottom-left corner. Nothing is drawn for
@@ -226,10 +228,155 @@ combat = false
 
 -- Out of combat its spells follow the finger in the mirror, then settle on the notch.
 local function CursorLeft(angle) local a = math.rad(angle); cursor = { -math.cos(a) * 200, math.sin(a) * 200 } end
-CursorLeft(110); lefts[4].hooks.OnMouseDown()
+CursorLeft(110); lefts[4].hooks.OnMouseDown(lefts[4], "LeftButton")
 CursorLeft(110 + step * 0.5); left.scripts.OnUpdate()
 assert(AtLeft(2.5), "the left spells did not follow the finger")
-lefts[4].hooks.OnMouseUp()
+lefts[4].hooks.OnMouseUp(lefts[4], "LeftButton")
 assert(AtLeft(2) and ns.db.freeLeft.turnOffset == 2 and lefts[4].swiped == true)
 
+-- A release can arrive outside the moving button, without its OnMouseUp.
+-- Subsequent pointer motion (including a gamepad cursor) must not drag a wheel.
+ns.db.free.turn = true
+Turn:Layout()
+CursorLeft(110); lefts[4].hooks.OnMouseDown(lefts[4], "LeftButton")
+CursorLeft(110 + step * 0.6); left.scripts.OnUpdate()
+assert(AtLeft(2.6))
+held = false
+Cursor(130); left.scripts.OnUpdate()
+assert(AtLeft(2), "released left wheel kept following the shared cursor")
+for _, move in ipairs({ Cursor, CursorLeft }) do
+    for angle = 95, 175, 10 do
+        move(angle); band.scripts.OnUpdate(); left.scripts.OnUpdate()
+        assert(At(0) and AtLeft(2), "stick/pointer motion moved an idle wheel")
+    end
+end
+
+-- Even if release and the next press occur between updates, one wheel owns
+-- the pointer. A delayed release on the old button cannot end the new drag.
+held = true
+CursorLeft(110); lefts[4].hooks.OnMouseDown(lefts[4], "LeftButton")
+CursorLeft(110 + step * 0.6); left.scripts.OnUpdate()
+Cursor(110); buttons[4].hooks.OnMouseDown(buttons[4], "LeftButton")
+Cursor(110 + step * 0.6); band.scripts.OnUpdate(); left.scripts.OnUpdate()
+assert(At(0.6) and AtLeft(2), "dragging right also dragged left")
+lefts[4].hooks.OnMouseUp(lefts[4], "LeftButton")
+Cursor(110 + step * 0.8); band.scripts.OnUpdate()
+assert(At(0.8) and AtLeft(2), "old release ended the new wheel gesture")
+buttons[4].hooks.OnDragStop(buttons[4])
+CursorLeft(150); band.scripts.OnUpdate(); left.scripts.OnUpdate()
+assert(At(0) and AtLeft(2), "drag-stop left a wheel following the cursor")
+
+-- Camera/right-button presses do not start a wheel gesture. A normal fresh
+-- tap clears the previous swipe marker, so an empty slot still opens its picker.
+Cursor(110); buttons[4].hooks.OnMouseDown(buttons[4], "RightButton")
+Cursor(150); band.scripts.OnUpdate()
+assert(At(0), "right-button camera gesture turned the wheel")
+Cursor(110); buttons[4].hooks.OnMouseDown(buttons[4], "LeftButton")
+assert(buttons[4].swiped == nil, "a stale swipe swallowed the next tap")
+buttons[4].hooks.OnMouseUp(buttons[4], "LeftButton")
+assert(buttons[4].swiped == nil and At(0))
+
+Cursor(110); buttons[4].hooks.OnMouseDown(buttons[4], "LeftButton")
+Cursor(110 + step * 0.6); band.scripts.OnUpdate()
+CursorLeft(110); lefts[4].hooks.OnMouseDown(lefts[4], "LeftButton")
+CursorLeft(110 + step * 0.6); left.scripts.OnUpdate(); band.scripts.OnUpdate()
+assert(At(0) and AtLeft(2.6), "dragging left also dragged right")
+lefts[4].hooks.OnHide(lefts[4])
+Cursor(150); left.scripts.OnUpdate()
+assert(AtLeft(2), "hidden initiating button left an active preview")
+
+-- Layout changes and combat transitions end previews; neither resumes later.
+Cursor(110); buttons[4].hooks.OnMouseDown(buttons[4], "LeftButton")
+Turn:Layout(); Cursor(150); band.scripts.OnUpdate()
+assert(At(0), "relayout resumed an old drag")
+CursorLeft(110); lefts[4].hooks.OnMouseDown(lefts[4], "LeftButton")
+CursorLeft(110 + step * 0.6); left.scripts.OnUpdate()
+assert(AtLeft(2.6))
+combat = true; Turn:CombatStarts(); combat = false
+handlers.PLAYER_REGEN_ENABLED()
+CursorLeft(150); left.scripts.OnUpdate()
+assert(AtLeft(2), "old preview resumed after combat")
+assert(ns.db.free.turnOffset == 0 and ns.db.freeLeft.turnOffset == 2)
+print("mobile add-on wheel gesture ownership: missed release, idle cursor, alternating wheels, drag-stop, camera, fresh tap, layout and combat: PASS")
+
 print(string.format("mobile add-on turning wheels: secure angle within %.2f deg (left %.2f); swipe on a spell turns without casting, touch casts, nothing else caught, arc mode inert, left is the mirror, no shadow: PASS", worst, worstLeft))
+
+-- Actual fixed-control geometry from the iPhone viewport, not the old Duo ratios.
+assert(loadfile((path:gsub("[A-Za-z]+%.lua$", "TouchLayout.lua"))))("WolkaraRoue", ns)
+ns.DuoLayout = function() return false end
+ns.HostTouchLayout = { version = 1, bottom = 81/402 }
+for _, side in ipairs({ "left", "right" }) do
+    local x = side == "left" and 176 or 698
+    local wide = side == "left" and 52 or 146 * math.sin(math.pi / 3)
+    local down = side == "left" and 52 or 146
+    for key, value in pairs({ X=x/874, Y=135/402, Radius=52/402,
+        MinX=(x-wide)/874, MaxX=math.min(874,x+wide)/874,
+        MinY=math.max(0,135-down)/402, MaxY=187/402 }) do ns.HostTouchLayout[side..key] = value end
+end
+assert(ns.TouchLayout.Active())
+
+for _, uiScale in ipairs({ 1, 1.7, 2 }) do
+    W, H = 874 / uiScale, 402 / uiScale
+    for _, buttonScale in ipairs({ 0.5, 1, 1.5 }) do
+        for _, side in ipairs({ "left", "right" }) do
+            local key = side == "left" and "freeLeft" or "free"
+            ns.db[key].turn, ns.db[key].turnOffset, ns.db[key].scale = true, 0, buttonScale * 100
+        end
+        Turn:Layout()
+        for _, pair in ipairs({ { "left", left, lefts }, { "right", band, buttons } }) do
+            local side, owner, list = unpack(pair)
+            local cx, cy, cr = ns.TouchLayout.Stick(side, W, H)
+            assert(math.abs(owner.points[4] - cx) < 1e-6 and math.abs(owner.points[5] - cy) < 1e-6)
+            local visible = 0
+            for _, button in ipairs(list) do
+                local x, y = Where(button)
+                x, y = x * buttonScale, y * buttonScale
+                if math.abs(x) < 10000 then
+                    visible = visible + 1
+                    local half = 32 * buttonScale
+                    local dx, dy = math.max(0, math.abs(x) - half), math.max(0, math.abs(y) - half)
+                    assert(dx*dx + dy*dy > cr*cr, "spell hit box overlaps native stick")
+                    assert(y >= 0, "spell enters the jump sector below the stick")
+                end
+            end
+            assert(visible >= 2 and visible < #list, "wheel does not clip its inactive slots")
+        end
+        combat = true
+        band.GetMousePosition = function() return 0.4, 0.6 end
+        Run(buttons[1], "OnMouseDown"); Run(buttons[1], "OnMouseUp")
+        assert(Run(buttons[1], "OnClick") == nil, "ordinary touch no longer casts")
+        combat = false
+    end
+end
+print("mobile native-aligned wheels: both stick centres, scaled hit-box clearance, inactive slots and secure touch PASS")
+
+-- The phone's Standard 150% UI has a 512-unit-high root. Its five saved
+-- slots must all be on screen, not just the first three of the bank.
+W, H = 874 * 512 / 402, 512
+for _, key in ipairs({ "free", "freeLeft" }) do
+    ns.db[key].count, ns.db[key].scale, ns.db[key].spread, ns.db[key].turnOffset = 5, 100, 100, 0
+end
+Turn:Layout()
+for _, pair in ipairs({ { "left", lefts }, { "right", buttons } }) do
+    local cx, cy = ns.TouchLayout.Stick(pair[1], W, H)
+    for index = 1, 5 do
+        local x, y = Where(pair[2][index])
+        assert(cx + x >= 32 and cx + x <= W - 32 and cy + y >= 32 and cy + y <= H - 80,
+            "a default five-slot wheel hides a configured spell")
+    end
+end
+-- On a small viewport, adding any slot through the 12-slot limit reveals
+-- that slot immediately. Re-layout then preserves its offset and assignment.
+W, H = 437, 201
+for count = 1, 12 do
+    for _, key in ipairs({ "free", "freeLeft" }) do ns.db[key].count = count end
+    Turn:Layout()
+    for _, pair in ipairs({ { "free", buttons }, { "freeLeft", lefts } }) do
+        local x = Where(pair[2][count])
+        assert(math.abs(x) < 10000, "newly added slot is hidden")
+        local saved = ns.db[pair[1]].turnOffset
+        Turn:Layout()
+        assert(ns.db[pair[1]].turnOffset == saved, "ordinary layout rotates the saved bank")
+    end
+end
+print("mobile wheels: five default slots visible; added slots 1-12 revealed on both sides PASS")

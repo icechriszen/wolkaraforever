@@ -12,11 +12,16 @@ NS_ASSUME_NONNULL_BEGIN
 //   3. The launch preferences (WEB_TOKEN, REGION, LOCALE, GAME_ACCOUNT, ACCOUNT_TS)
 //      are cleared as soon as the game removes WEB_TOKEN, when the game returns,
 //      when the ticket's lifetime ends, and on every process start.
+NSURL * _Nullable TKBattleNetLoginURL(NSString *region);
 BOOL TKBattleNetTrustedURL(NSURL *url);
 // Federated identity pages may be outside Blizzard's domains. They are allowed only in the
 // opt-in browser; only a Blizzard-origin page may deliver the game callback.
 BOOL TKBattleNetFederatedURL(NSURL *url);
 NSString * _Nullable TKBattleNetCallbackTicket(NSURL *url);
+// Explicit user paste only: restore Safari's omitted scheme for exact localhost:0.
+// failureCode is a fixed diagnostic category, never input or ticket content.
+NSString * _Nullable TKBattleNetPastedCallbackTicket(NSString *text,
+    NSString * _Nullable * _Nullable failureCode);
 // The game's own handoff wire format (fixed-entropy PBKDF2 + AES-CBC, zero IV). The
 // unmodified game decrypts WEB_TOKEN with exactly this, so it cannot be changed. It is
 // an encoding, not protection: anyone holding the plist can decode it. Protection comes

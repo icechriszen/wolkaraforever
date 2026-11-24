@@ -16,6 +16,23 @@ FOUNDATION_EXPORT NSString *const TKForeverUIEdition;
 // reached by name so this module does not depend on Swift at link time.
 @interface TKForeverUI : NSObject
 
+// Before guest entry only: suppress WolkaraRoue's automatic loading with an
+// external controller, restore it without one. Only its TOC LoadOnDemand field
+// and its rows in existing AddOns.txt files change. SavedVariables, translations,
+// game archives and other add-ons are untouched. Missing addon is a no-op.
++ (BOOL)prepareTouchAddonForPhysicalController:(BOOL)connected
+                           inWorkingDirectory:(NSString *)directory
+                                        error:(NSError **)error;
+
+// Session-only toolbar choice, shared with the AppKit adapter through defaults.
+// Does not overwrite the player's persistent on-screen controls preferences.
++ (void)prepareTouchControlsForPhysicalController:(BOOL)connected defaults:(NSUserDefaults *)defaults;
+
+// Before entry: update only the installed add-on's owned geometry data file.
+// Missing/older add-ons are untouched; nil removes a previous session's geometry.
++ (BOOL)prepareTouchGeometry:(nullable NSDictionary<NSString *, NSNumber *> *)geometry
+         inWorkingDirectory:(NSString *)directory error:(NSError **)error;
+
 // WTF/Config.wtf, with every GamePadEnable assignment normalised to exactly one
 // `SET GamePadEnable "1"`. Other lines keep their bytes. Reads the file back and
 // fails unless exactly one assignment with value 1 is present.

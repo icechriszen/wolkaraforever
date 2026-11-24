@@ -1,0 +1,210 @@
+# WolkaraForever patch 0079: ordered committed Unicode input.
+#
+# The iPhone cn.7 trace observed F12 and Return twice, with focused SAY input,
+# but zero non-empty text changes/API calls. Both user messages were Chinese.
+# UIKit commits unmapped Unicode, while the old host emitted raw key code 0xFF
+# pairs. A raw-key client can ignore those without ever asking to interpret text.
+# Retain these commits in the existing event queue and deliver once through the
+# public NSTextInputClient interface, after preceding keys, before Return.
+# No game code, send API, raw input logging, retries or arbitrary key remapping.
+# Existing ASCII/control key handling and physical key events keep their route.
+#
+# Foundation fixture: modern/legacy clients, once-only delivery, copied text,
+# unavailable client, metadata-only logs and a raw-key client that rejects 0xFF.
+# Both polling and NSApplication-owned dispatch consume the private event.
+# Applies after 0078; platform/ stays byte-identical to its pinned upstream.
+# Upstream: candidate. Chinese input/send/self-echo/display confirmed by a user
+# test and saved metadata on iPhone 17, Developer service, 2026-11-23.
+#
+--- a/translation/AKSupport/TextInput.h
++++ b/translation/AKSupport/TextInput.h
+@@ -1,4 +1,8 @@
+ #import <Foundation/Foundation.h>
++// Private ordered text commits for software-keyboard characters without an ANSI
++// key. These are delivered once to NSTextInputClient, never as fake HID presses.
++void AKSetTextCommit(id event, NSString *text);
++BOOL AKDeliverTextCommit(id event, id client);
+ // AppKit key-binding result delivered to the original NSTextInputClient.
+ void AKInterpretTextKey(id client,NSString *characters,unsigned short keyCode,NSUInteger modifiers);
+ // Software keyboards commit text, not HID presses. Preserve composed Unicode
+--- a/translation/AppKit/TextInput.m
++++ b/translation/AppKit/TextInput.m
+@@ -1,5 +1,38 @@
+ #import "TextInput.h"
+ #import "AKSupport.h"
++#import <objc/runtime.h>
++
++static char AKTextCommitKey;
++void AKSetTextCommit(id event, NSString *text) {
++    if (event && text.length)
++        objc_setAssociatedObject(event, &AKTextCommitKey, [text copy], OBJC_ASSOCIATION_RETAIN_NONATOMIC);
++}
++BOOL AKDeliverTextCommit(id event, id client) {
++    id value = objc_getAssociatedObject(event, &AKTextCommitKey);
++    if (!value) return NO;
++    // Keep a consumed marker so a peeked event later dequeued/dispatched cannot
++    // insert twice or escape as the sentinel key. Clear text before callbacks,
++    // including re-entrant event processing in a text client.
++    if (value == NSNull.null) return YES;
++    objc_setAssociatedObject(event, &AKTextCommitKey, NSNull.null, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
++    NSString *text = value;
++    SEL insert = NSSelectorFromString(@"insertText:replacementRange:");
++    BOOL modern = [client respondsToSelector:insert];
++    BOOL legacy = !modern && [client respondsToSelector:NSSelectorFromString(@"insertText:")];
++    static unsigned logged;
++    if (logged < 16) {
++        logged++;
++        AKLog(@"text commit: units=%lu modern=%d legacy=%d", (unsigned long)text.length, modern, legacy);
++    }
++    if (modern)
++        ((void (*)(id,SEL,id,NSRange))[client methodForSelector:insert])(client,insert,text,NSMakeRange(NSNotFound,0));
++    else if (legacy) {
++        insert = NSSelectorFromString(@"insertText:");
++        ((void (*)(id,SEL,id))[client methodForSelector:insert])(client,insert,text);
++    }
++    return YES;
++}
++
+ void AKEnumerateTextKeys(NSString *text, void (^emit)(NSString *, NSString *, unsigned short, NSUInteger)) {
+     // These are macOS virtual key positions; Unicode is always carried in the
+     // event too. Never turn an unmapped character into an arbitrary key press.
+--- a/translation/AppKit/AppKit.m
++++ b/translation/AppKit/AppKit.m
+@@ -512,12 +512,16 @@
+     [self postMouse:type at:_last button:button clicks:_touchClickCount];
+ }
+ - (void)postTextKey:(unsigned short)code characters:(NSString *)characters unmodified:(NSString *)unmodified modifiers:(NSEventModifierFlags)modifiers {
+-    for (unsigned index = 0; index < 2; index++) {
++    // UIKit already committed these characters. An unmapped Unicode character
++    // has no physical key; retain it as an ordered private text-input item.
++    BOOL committed = code == 0xFF && characters.length > 0;
++    for (unsigned index = 0; index < (committed ? 1u : 2u); index++) {
+         NSEvent *event = [NSEvent new];
+         event.type = index == 0 ? NSEventTypeKeyDown : NSEventTypeKeyUp;
+         event.window = self.nsWindow; event.keyCode = code; event.modifierFlags = modifiers;
+         event.characters = characters; event.charactersIgnoringModifiers = unmodified;
+         event.timestamp = NSProcessInfo.processInfo.systemUptime;
++        if (committed) AKSetTextCommit(event, characters);
+         [NSApp postEvent:event atStart:NO];
+     }
+ }
+@@ -1336,6 +1340,7 @@
+ }
+ - (void)sendEvent:(NSEvent *)e {
+     _currentEvent=e;
++    if (AKDeliverTextCommit(e, (e.window ?: self.keyWindow).firstResponder)) return;
+     e=AKEventMonitorRun(e,e.type);
+     if (!e) return;   // a local monitor consumed it
+     [(e.window ?: self.keyWindow) sendEvent:e];
+@@ -1350,11 +1355,20 @@
+     // Tracking sources must run even when a queued guest event is ready.
+     if ([self.keyWindow ak_needsTrackingEvents]) AKPumpTouchEvents(YES);
+     for (BOOL pumped = NO;; pumped = YES) {
++        BOOL consumedText = NO;
+         for (NSUInteger i = 0; i < _queue.count; i++) {
+             NSEvent *e = _queue[i];
+             if (mask & (1ULL << e.type)) {
+                 if (dq) {
+                     [_queue removeObjectAtIndex:i]; _currentEvent=e;
++                    // A guest may handle raw key codes itself and never call
++                    // interpretKeyEvents for 0xFF. Commit Unicode through its
++                    // public text client, after preceding keys and before Return.
++                    // A peek must not insert or consume any text.
++                    if (AKDeliverTextCommit(e, (e.window ?: self.keyWindow).firstResponder)) {
++                        consumedText = YES;
++                        break;
++                    }
+                     if(e.type==NSEventTypeKeyDown || e.type==NSEventTypeKeyUp) {
+                         double age=NSProcessInfo.processInfo.systemUptime-e.timestamp;
+                         static unsigned loggedDelivery;
+@@ -1367,6 +1381,7 @@
+                 return e;
+             }
+         }
++        if (consumedText) continue;
+         NSTimeInterval left = date ? date.timeIntervalSinceNow : 0;
+         if (pumped && left <= 0) return nil;
+         // Idle polls stay nonblocking; held buttons and native controls also
+--- a/tests/test_text_input.m
++++ b/tests/test_text_input.m
+@@ -12,10 +12,34 @@
+ @interface InputClient : NSObject
+ @property(copy) NSString *text, *command;
+ @property NSRange range;
++@property unsigned insertions;
+ @end
+ @implementation InputClient
+-- (void)insertText:(id)text replacementRange:(NSRange)range { self.text=text;self.range=range; }
++- (void)insertText:(id)text replacementRange:(NSRange)range { self.text=text;self.range=range;self.insertions++; }
+ - (void)doCommandBySelector:(SEL)selector { self.command=NSStringFromSelector(selector); }
++@end
++@interface LegacyInputClient : NSObject
++@property(copy) NSString *text;
++@property unsigned insertions;
++@end
++@implementation LegacyInputClient
++- (void)insertText:(id)text { self.text=text; self.insertions++; }
++@end
++@interface OrderedInputClient : NSObject
++@property BOOL focused;
++@property(copy) NSString *draft, *submitted;
++@end
++@implementation OrderedInputClient
++- (void)insertText:(id)text replacementRange:(NSRange)range {
++    assert(range.location == NSNotFound && range.length == 0);
++    if (self.focused) self.draft = [self.draft stringByAppendingString:text];
++}
++- (void)rawKey:(unsigned short)code text:(NSString *)text {
++    if (code == 111) { self.focused=YES; self.draft=@""; }
++    else if (code == 36) { self.submitted=self.draft; self.focused=NO; }
++    else if (code < 128 && self.focused) self.draft=[self.draft stringByAppendingString:text];
++    // A raw-key client has no key at position 255. Text requires its text API.
++}
+ @end
+ int main(void) { @autoreleasepool {
+     logged = [NSMutableArray new];
+@@ -58,5 +82,43 @@
+     AKInterpretTextKey(client,@"",123,0);assert([client.command isEqual:@"moveLeft:"]);
+     AKInterpretTextKey(client,@"",115,0);assert([client.command isEqual:@"moveToBeginningOfDocument:"]);
+     assert(logged.count==3);
+-    puts("software text keys, composed Unicode, text-client ABI, commands, replacement ranges and function keys: PASS");
++    unsigned prior=client.insertions;
++    NSObject *event=[NSObject new];
++    NSMutableString *committed=[@"中文🙂é" mutableCopy];
++    AKSetTextCommit(event, committed);
++    [committed setString:@"changed after queueing"];
++    assert(client.insertions==prior); // queueing/peeking has no text side effect
++    assert(AKDeliverTextCommit(event,client));
++    assert(client.insertions==prior+1 && [client.text isEqual:@"中文🙂é"]);
++    assert(client.range.location==NSNotFound && client.range.length==0);
++    assert(AKDeliverTextCommit(event,client) && client.insertions==prior+1);
++    LegacyInputClient *legacy=[LegacyInputClient new];
++    event=[NSObject new]; AKSetTextCommit(event,@"中文");
++    assert(AKDeliverTextCommit(event,legacy) && [legacy.text isEqual:@"中文"] && legacy.insertions==1);
++    assert(AKDeliverTextCommit(event,legacy) && legacy.insertions==1);
++    event=[NSObject new]; assert(!AKDeliverTextCommit(event,client));
++    AKSetTextCommit(event,@""); assert(!AKDeliverTextCommit(event,client));
++    AKSetTextCommit(event,@"secret fixture text");
++    assert(AKDeliverTextCommit(event,nil));
++    assert(AKDeliverTextCommit(event,client) && client.insertions==prior+1); // no retry to a later field
++    for (NSString *line in logged) {
++        assert([line rangeOfString:@"中文"].location==NSNotFound);
++        assert([line rangeOfString:@"secret fixture text"].location==NSNotFound);
++    }
++    // Same F12 -> mixed body -> Return ordering as the host queue. The raw-only
++    // path demonstrably loses Unicode; the public text-client path retains it.
++    for (unsigned bridge=0; bridge<2; bridge++) {
++        OrderedInputClient *ordered=[OrderedInputClient new];
++        [ordered rawKey:111 text:@""];
++        AKEnumerateTextKeys(@"中a文🙂", ^(NSString *text, NSString *plain, unsigned short code, NSUInteger mods) {
++            (void)plain; (void)mods;
++            NSObject *queued=[NSObject new];
++            if (code==0xFF && bridge) AKSetTextCommit(queued,text);
++            if (!AKDeliverTextCommit(queued,ordered)) [ordered rawKey:code text:text];
++        });
++        assert(ordered.submitted==nil); // a text commit never sends Return
++        [ordered rawKey:36 text:@"\r"];
++        assert([ordered.submitted isEqual:bridge ? @"中a文🙂" : @"a"]);
++    }
++    puts("software text keys, text-client commits, Unicode ordering, once-only delivery, commands and private metadata: PASS");
+ } }

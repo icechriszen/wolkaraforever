@@ -29,6 +29,33 @@ A command sequence, therefore, is always "prepare, then run the engine's own scr
 prepared tree". The wrappers in `wolkaraforever/tools/` do exactly that, which is why the engine
 scripts under `build/platform/tools/` are never called directly for a normal build.
 
+## C++ allocator ownership
+
+A native application can replace C++ `operator new` and `operator delete`. Binding its own
+imports to those operators is not enough: system-library string operations and C++ thread
+cleanup can otherwise allocate with one implementation and release with another.
+
+The build includes `wkOwnedCxx.dylib`, compiled from the pinned LLVM libc++ string and thread
+sources and the builder's SDK. When the loader finds an application-provided scalar allocation
+or release operator, it configures this module once with the same canonical pair. Covered
+string and thread-local APIs then use that pair. The module exports only its C configuration
+interface; its C++ definitions and allocation operators are hidden, so the launcher's existing
+C++ objects and system-library bindings stay with the host. Application mappings and the module
+remain alive for the process, including thread cleanup after the native entry point returns.
+
+This is scoped API adaptation, not a replacement for every C++ library facility. A missing,
+incompatible, or already-configured module refuses application entry. A program with no
+replacement allocation operators continues through the system library. The pinned source,
+license, and SDK version check are under `wolkaraforever/Cxx/`; the license is included in the
+installed app. Updating the SDK requires revalidating the private thread ABI before changing
+the version check. No game program, configuration, or store is modified by this adapter.
+
+Run `wolkaraforever/tools/test_owned_cxx.sh` on an Apple Silicon Mac. Its independent native
+control and old loader path must respectively pass and reproduce the ownership discrepancy;
+the adapted path must pass string operations, multi-thread cleanup, future readiness, host
+object survival, configuration guards, and ASan/UBSan. These checks are component-level Mac
+evidence; iPhone game stability requires a separate test of the installed build.
+
 ## Execution modes
 
 The runtime can start an application's code in one of three ways. The mode is a device-side
@@ -126,6 +153,14 @@ session that does not act on SIGTERM still closes its stores first where it can.
 `restore`, `selftest`, `controls`, `cycle`. Every command that launches records baselines first, so
 "did it fail?" is answered by comparison — a new file in `Documents/World of Warcraft/_forever_/Errors/`
 or a new crash report means the launch failed.
+An idle launcher opened after a client `_exit` is distinguished from the old session
+only when the log has the complete no-observer exit sequence and the latest client
+report names a different PID from the running app. Missing or ambiguous evidence
+keeps the live-session guard in place; logs are not rewritten for this classification.
+
+For read-only diagnostics, `pilot.sh crash <report.ips>` also accepts an exact listed app
+system-report filename, including CPU resource reports. Selecting a resource report does
+not change crash counts or launch verdicts; see [Send logs](SENDING_LOGS.md).
 
 ## Run in the simulator
 
@@ -214,3 +249,31 @@ authorization, or performance; say which device ran when you report a result.
 
 Read [Compatibility](../COMPATIBILITY.md) for the support boundary, and
 [Security](../SECURITY.md) to report a vulnerability.
+
+For a bounded Developer service crash investigation, prefix the installer with
+`WOLKARA_HOST_DIAGNOSTICS=1`. This enables host counters and runtime-owned TLS
+allocation/release metadata for that build; it is off by default. See
+[host lifetime diagnostics](SENDING_LOGS.md#opt-in-host-lifetime-diagnostics).
+
+## Prepared dynamic-code page probe
+
+`wolkaraforever/tools/test_dynamic_code.sh` runs host-owned arm64 remapping fixtures
+on the Mac, including repeated RW/RX transitions and adjacent-page preservation.
+This does not establish iOS execution permission. On a signed device build,
+`wolkaraforever/tools/launch.sh --local-code-remap-probe` runs the same owned fixture
+in fresh memory prepared by Developer service before the helper detaches. It loads
+no game image. Run only when the app is stopped; afterward use the normal pilot
+stop/launch flow to restore the launcher. A successful memory API return alone
+is not an execution pass: the fixture must return the expected values.
+
+This is a diagnostic, not a guest-memory implementation. On the tested iPhone 17
+(iOS 27.2.1, Developer service), remapping prepared pages to another address passed
+the mapping API, but execution never returned and the process exited with `SIGBUS`.
+Do not use `wk_code_remap` for guest `mprotect`. The original `--jit-probe` separately
+confirmed that alias writes execute at the prepared address, but a direct RW-to-RX
+transition is refused. See [the measured support boundary](../COMPATIBILITY.md).
+
+`pilot.sh state` recognizes a complete host-only `--jit-probe` sequence even when
+iOS ended the sample before a result line. It does not treat that trace as a live
+game. Incomplete probe markers, guest linking/entry, a newer guest launch, or an
+unreadable log retain the conservative live-session guard.

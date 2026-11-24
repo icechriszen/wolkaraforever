@@ -15,11 +15,14 @@ local INNER, OUTER = 0.165, 0.275
 local Free = ns.Register("Free buttons", {})
 local groups = {}
 
-local function Arc(side, index, count, spread)
+local function Arc(side, index, count, spread, scale)
     return function()
         local width, height = UIParent:GetWidth(), UIParent:GetHeight()
         local cx = side == "right" and width * (1 - STICK_X) or width * STICK_X
         local cy = height * STICK_Y
+        local hx, hy, hr
+        if ns.TouchLayout then hx, hy, hr = ns.TouchLayout.Stick(side, width, height) end
+        if hx then cx, cy = hx, hy end
         local radius, slot, slots
         if index <= 4 then
             radius, slot, slots = INNER, index, math.min(4, count)
@@ -30,6 +33,10 @@ local function Arc(side, index, count, spread)
         local t = slots <= 1 and 0.5 or (slot - 1) / (slots - 1)
         local degrees = side == "right" and (90 + 90 * t) or (90 - 90 * t)
         local distance = height * radius * (spread or 100) / 100
+        if hr then
+            local clearance = hr + SIZE * (scale or 1) / math.sqrt(2) + 10
+            distance = math.max(distance, clearance + (index > 4 and SIZE * (scale or 1) * 1.25 or 0))
+        end
         return { "CENTER", "BOTTOMLEFT", cx + math.cos(math.rad(degrees)) * distance,
             cy + math.sin(math.rad(degrees)) * distance }
     end
@@ -51,7 +58,7 @@ local function BuildGroup(side, key, prefix)
         button:SetFrameStrata("LOW")
         button:RegisterForDrag("LeftButton")
         ns.Movable(button, function() return store(index) end, "pos",
-            function() return Arc(side, index, settings().count, settings().spread)() end)
+            function() return Arc(side, index, settings().count, settings().spread, settings().scale / 100)() end)
         button:Hide()
         local since = 0
         button:HookScript("OnUpdate", function(self, elapsed)

@@ -45,7 +45,7 @@ local function Make(info, index)
         end)
     end
     Decorate(button, info.icon, ICON)
-    button.label = ns.Label(button, "GameFontHighlightSmall", ns.T(info.label))
+    button.label = ns.Label(button, "GameFontHighlightSmall", ns.T(info.label, "menu"))
     button.label:SetPoint("TOP", button, "BOTTOM", 0, -1)
     button:Hide()
     return button

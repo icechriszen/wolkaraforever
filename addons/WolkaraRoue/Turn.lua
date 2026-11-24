@@ -33,6 +33,7 @@ local SIDES = {
 }
 local ORDER = { "right", "left" }
 local wheels, attached = {}, {}
+local activeWheel
 
 local function Settings(wheel) return ns.db[wheel.key] end
 
@@ -44,7 +45,29 @@ end
 -- La roue est centrée sur le coin bas ; son rayon passe au-dessus du stick.
 -- Les sorts s'y suivent serrés : d'un centre au suivant, 1,25 taille de sort à « Écart des
 -- sorts » 100 %, de 1,11 (presque bord à bord) à 60 % jusqu'à 1,53 à 180 %.
-function Turn.Geometry(width, height, count, spread)
+function Turn.Geometry(width, height, count, spread, side, scale)
+    if ns.TouchLayout and side then
+        local x, y, stickRadius = ns.TouchLayout.Stick(side, width, height)
+        if x then
+            scale = scale or 1
+            local radius = stickRadius + SIZE * scale / math.sqrt(2) + 10
+            local apart = SIZE * scale * (0.9 + 0.35 * (spread or 100) / 100)
+            -- The compact radius cleared the stick but clipped slots 4 and 5.
+            -- Fit the default five-slot bank when the viewport has room. Larger
+            -- banks still rotate; never squeeze neighbouring hit boxes together.
+            local visible = math.min(count, 5)
+            if visible > 1 then
+                local needed = apart / (2 * math.sin(math.rad((180 - FIRST) / (visible - 1)) / 2))
+                local otherX = ns.TouchLayout.Stick(side == "left" and "right" or "left", width, height)
+                local half = SIZE * scale / 2
+                -- Reserve the upper shortcut/HUD row and the gap between wheels.
+                local available = math.min(height - y - half - 80,
+                    math.abs(otherX - x) / 2 - half - 10)
+                radius = math.max(radius, math.min(needed, available))
+            end
+            return radius, math.deg(2 * math.asin(math.min(1, apart / (2 * radius)))), x, y
+        end
+    end
     local stick = math.sqrt((width * ns.STICK_X) ^ 2 + (height * ns.STICK_Y) ^ 2)
     local radius = stick + height * 0.15
     local apart = SIZE * (0.9 + 0.35 * (spread or 100) / 100)
@@ -59,6 +82,9 @@ function Turn.Angle(index, offset, count, step)
 end
 
 local function Point(wheel, radius, degrees)
+    -- The old corner layout clipped the rest of the wheel off-screen. A wheel
+    -- around a real stick must likewise keep its inactive half out of the game.
+    if wheel.hostCoordinates and (degrees < 90 - 1e-7 or degrees > 180 + 1e-7) then return 100000, 100000 end
     local angle = math.rad(degrees)
     local x, y = radius * math.cos(angle), radius * math.sin(angle)
     if wheel.mirror then x = -x end
@@ -83,8 +109,24 @@ local function CursorAngle(wheel)
     local x, y = GetCursorPosition()
     local scale = UIParent:GetEffectiveScale()
     x, y = x / scale, y / scale
-    local inward = wheel.mirror and x or UIParent:GetWidth() - x
-    return math.deg(math.atan2(y, -inward))
+    local originX = wheel.originX or (wheel.mirror and 0 or UIParent:GetWidth())
+    local inward = wheel.mirror and x - originX or originX - x
+    return math.deg(math.atan2(y - (wheel.originY or 0), -inward))
+end
+
+-- There is one game pointer, even when the native overlay has two sticks.
+-- OnMouseUp is not guaranteed on a button that moved away from that pointer.
+-- End the preview on every release/cancel path and settle at the secure notch.
+local function EndDrag(wheel, cancelled)
+    if not wheel or not wheel.dragging then return end
+    local button = wheel.dragButton
+    wheel.dragging, wheel.dragButton = false, nil
+    if activeWheel == wheel then activeWheel = nil end
+    if cancelled and button then button.swiped = true end
+    if InCombatLockdown() then wheel.settlePending = true; return end
+    local offset = wheel.band:GetAttribute("offset") or 0
+    Place(wheel, offset)
+    Settings(wheel).turnOffset = offset
 end
 
 -- Le même angle dans le code sécurisé, qui n'a que l'arithmétique : la position du doigt sur
@@ -158,11 +200,16 @@ function Turn:Init()
         band:Hide()
         local wheel = { side = side, key = info.key, corner = info.corner, mirror = info.mirror, band = band }
         band:SetScript("OnUpdate", function()
-            if not wheel.dragging or InCombatLockdown() then return end
+            if not wheel.dragging then return end
+            if activeWheel ~= wheel or InCombatLockdown() or not IsMouseButtonDown("LeftButton") then
+                EndDrag(wheel, true)
+                return
+            end
             local turns = (CursorAngle(wheel) - wheel.dragFrom) / (band:GetAttribute("step") or 20)
             if turns < SWIPE and turns > -SWIPE then turns = 0 end
             Place(wheel, wheel.dragOffset + turns)
         end)
+        band:SetScript("OnHide", function() EndDrag(wheel, true) end)
         wheels[side] = wheel
     end
 end
@@ -180,23 +227,27 @@ local function Wrap(wheel)
         SecureHandlerWrapScript(button, "OnMouseDown", band, DOWN)
         SecureHandlerWrapScript(button, "OnMouseUp", band, UP)
         SecureHandlerWrapScript(button, "OnClick", band, CLICK)
-        button:HookScript("OnMouseDown", function()
-            if InCombatLockdown() or not Turn:Enabled(wheel.side) then return end
+        button:HookScript("OnMouseDown", function(_, mouseButton)
+            if mouseButton ~= "LeftButton" or InCombatLockdown() or not Turn:Enabled(wheel.side) then return end
+            EndDrag(activeWheel, true)
+            button.swiped = nil
+            activeWheel, wheel.dragButton = wheel, button
             wheel.dragging, wheel.dragFrom, wheel.dragOffset = true, CursorAngle(wheel), band:GetAttribute("offset") or 0
         end)
-        button:HookScript("OnMouseUp", function()
-            if not wheel.dragging then return end
-            wheel.dragging = false
-            if InCombatLockdown() then return end
+        button:HookScript("OnMouseUp", function(_, mouseButton)
+            if mouseButton ~= "LeftButton" or not wheel.dragging or wheel.dragButton ~= button then return end
             -- Un glissé ne doit pas non plus ouvrir le sélecteur d'une case vide (PostClick).
             local turns = (CursorAngle(wheel) - wheel.dragFrom) / (band:GetAttribute("step") or 20)
             if turns >= SWIPE or turns <= -SWIPE then button.swiped = true end
             -- Le code sécurisé a déjà arrondi au cran le plus proche, ou laissé la roue où elle
             -- était pour un simple toucher ; on s'aligne dessus et on le retient.
-            local offset = band:GetAttribute("offset") or 0
-            Place(wheel, offset)
-            Settings(wheel).turnOffset = offset
+            EndDrag(wheel)
         end)
+        local function cancel()
+            if wheel.dragButton == button then EndDrag(wheel, true) end
+        end
+        button:HookScript("OnDragStop", cancel)
+        button:HookScript("OnHide", cancel)
     end
 end
 
@@ -204,6 +255,7 @@ end
 local function LayoutWheel(wheel)
     local buttons, band = attached[wheel.side], wheel.band
     if not buttons or InCombatLockdown() then return end
+    EndDrag(wheel, true)
     Wrap(wheel)
     local turning = Turn:Enabled(wheel.side)
     band:SetAttribute("turning", turning)
@@ -214,7 +266,13 @@ local function LayoutWheel(wheel)
     if not turning then band:Hide(); return end
     local settings = Settings(wheel)
     local count = math.max(0, math.min(settings.count, #buttons))
-    local radius, step = Turn.Geometry(UIParent:GetWidth(), UIParent:GetHeight(), count, settings.spread)
+    local radius, step, cx, cy = Turn.Geometry(UIParent:GetWidth(), UIParent:GetHeight(), count,
+        settings.spread, wheel.side, (settings.scale or 100) / 100)
+    wheel.hostCoordinates = cx ~= nil
+    wheel.originX, wheel.originY = cx, cy
+    band:ClearAllPoints()
+    if cx then band:SetPoint(wheel.corner, UIParent, "BOTTOMLEFT", cx, cy)
+    else band:SetPoint(wheel.corner, UIParent, wheel.corner) end
     local size = radius + SIZE
     band.radius = radius
     band.buttonScale = (settings.scale or 100) / 100
@@ -225,6 +283,13 @@ local function LayoutWheel(wheel)
     band:SetAttribute("count", count)
     band:SetAttribute("step", step)
     local offset = count > 0 and math.floor(tonumber(settings.turnOffset) or 0) % count or 0
+    -- A count increase must reveal the new slot, even when enlarged controls
+    -- leave room for fewer icons. Do not rotate a saved layout on initial load.
+    if cx and wheel.lastCount and count > wheel.lastCount then
+        offset = (1 - count) % count
+        settings.turnOffset = offset
+    end
+    wheel.lastCount = count
     band:SetAttribute("offset", offset)
     for slot = 0, math.max(0, count - 1) do
         local x, y = Point(wheel, radius, FIRST + slot * step)
@@ -242,6 +307,8 @@ function Turn:Layout()
     end
 end
 
+function Turn:CombatStarts() EndDrag(activeWheel, true) end
+
 -- Le combat fini, le cran où chaque roue s'est arrêtée est retenu.
 ns.On("PLAYER_REGEN_ENABLED", function()
     if not ns.db then return end
@@ -249,6 +316,10 @@ ns.On("PLAYER_REGEN_ENABLED", function()
         local wheel = wheels[side]
         if wheel and attached[side] and Turn:Enabled(side) then
             Settings(wheel).turnOffset = wheel.band:GetAttribute("offset") or 0
+            if wheel.settlePending then
+                wheel.settlePending = nil
+                Place(wheel, Settings(wheel).turnOffset)
+            end
         end
     end
 end)

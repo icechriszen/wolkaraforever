@@ -1859,11 +1859,19 @@ static NSString *BrowseSortLabel(NSInteger field) {
     dispatch_async(dispatch_get_global_queue(QOS_CLASS_UTILITY,0), ^{
         NSError *error=nil;
         TKAddonRecord *existing=[self bundledRecord];
-        BOOL ok=existing
-            ? [self.store updateRecord:existing archiveURL:archive provider:nil
-                            provenance:TKAddonProvenanceFiles error:&error]
-            : [self.store importZIPAtURL:archive provider:nil
+        BOOL ok;
+        if (existing && !existing.managed && !existing.linked) {
+            // The player explicitly selected Update for the verified bundled
+            // package. Migrate an old manually installed copy through the same
+            // journal, without inventing a CurseForge identity or deleting first.
+            ok=[self.store adoptExistingRecord:existing archiveURL:archive error:&error];
+        } else if (existing) {
+            ok=[self.store updateRecord:existing archiveURL:archive provider:nil
+                            provenance:TKAddonProvenanceFiles error:&error];
+        } else {
+            ok=[self.store importZIPAtURL:archive provider:nil
                               provenance:TKAddonProvenanceFiles error:&error];
+        }
         dispatch_async(dispatch_get_main_queue(), ^{
             self.bundledInstalling=NO;
             if (!ok) {

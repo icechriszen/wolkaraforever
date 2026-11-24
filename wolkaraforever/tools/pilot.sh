@@ -17,7 +17,7 @@
 #   wolkaraforever/tools/pilot.sh game              straight into the game, no checks
 #   wolkaraforever/tools/pilot.sh wait [--timeout s] block until it is up, or until it fails
 #   wolkaraforever/tools/pilot.sh view              screenshot, log, whether it crashed or asserted
-#   wolkaraforever/tools/pilot.sh crash             read the newest crash report out loud
+#   wolkaraforever/tools/pilot.sh crash [report.ips] read the newest crash or a named app system report
 #   wolkaraforever/tools/pilot.sh log [lines] [pat] the app's own log, from Documents
 #   wolkaraforever/tools/pilot.sh leave [bundle]    put the app in the background for real
 #   wolkaraforever/tools/pilot.sh return            bring it back to the front
@@ -179,9 +179,13 @@ def age_of(entry):
 files = entries()
 
 app = 0
+app_pid = None
 for line in read(in_session("processes.txt")):
     if re.search(r"Tolkara\.app/Tolkara(\s|$)", line):
         app += 1
+        fields = line.split()
+        if fields and fields[0].isdigit():
+            app_pid = int(fields[0])
         break
 
 # An update in progress: files staged for the next launch, written moments ago. This is
@@ -195,9 +199,10 @@ for entry in files:
     if age is not None and 0 <= age < 120:
         recent += 1
 
-# The names carry their own date, so the last one sorts last and is the newest.
+# Both client assertions and fatal exceptions are evidence. Their names carry
+# their own date, so the last one sorts last and is the newest.
 error_files = sorted(((e.get("relativePath") or ""), age_of(e)) for e in files
-                     if re.search(r"_Error_\d+\.txt$", e.get("relativePath") or ""))
+                     if re.search(r"_(?:Error|Crash)_\d+\.txt$", e.get("relativePath") or ""))
 newest = error_files[-1][0].rsplit("/", 1)[-1] if error_files else "none"
 newest_age = error_files[-1][1] if error_files else None
 
@@ -237,6 +242,43 @@ last = starts[-1].split("startup_return=", 1)[-1].strip() if starts else "none"
 # app is gone. There is deliberately no age bound: a suspended app still holds the session in
 # memory, and taking that away is what this guard exists to prevent.
 running = 1 if (guest_index is not None and not returned) else 0
+# A fatal client exit does not return through startup_return. Its old log can
+# otherwise hold a new, idle launcher open forever. Accept this narrow terminal
+# sequence only with no exit observer, a client report naming the old PID, and a
+# different current PID. Same/unknown PID, an observer or a later log line stay
+# conservative. No timestamp guess and no device log rewrite is needed.
+terminal = [line.strip() for line in guest_lines if line.strip()]
+report_pid = re.search(r"_(?:Error|Crash)_(\d+)\.txt$", newest)
+prior_process_exited = bool(
+    guest_index is not None and app_pid is not None and report_pid and
+    app_pid != int(report_pid.group(1)) and len(terminal) >= 2 and
+    re.fullmatch(r"\[native\] _exit\(-?\d+\) called", terminal[-2]) and
+    terminal[-1] == "[native] exit observer registered=0 already_notified=0")
+if prior_process_exited:
+    running = 0
+    last = "exited (previous process)"
+
+# --jit-probe loads image metadata to size an arena, but its branch executes
+# only owned samples and skips linking, initializers and guest entry. A sample
+# rejected by iOS may leave this log behind when the plain launcher is reopened.
+# Require both complete probe markers in the latest launch, and never override
+# any evidence of a subsequently linked/entered guest or an unreadable copy.
+current_launch = guest_lines[launch_index + 1:] if launch_index is not None else []
+probe_summary = any(re.fullmatch(
+    r"\[jit-probe\] arena: alias=(?:PASS|FAIL) rewrite=(?:PASS|FAIL) direct=(?:PASS|FAIL) "
+    r"after-direct=(?:PASS|FAIL) direct_errno=\d+ rwx_errno=\d+", line.strip())
+    for line in current_launch)
+owned_sample = any(re.fullmatch(
+    r"\[execution\] begin mode=(?:write-then-execute|rwx) page_size=\d+; host sample only",
+    line.strip()) for line in current_launch)
+linked_guest = any("[native] resolved rebases=" in line or
+    "[native-cxx]" in line or "entering original" in line or
+    re.search(r"\[native\].*initializer \d+ .*native=", line)
+    for line in current_launch)
+if guest_ok and guest_index is not None and probe_summary and owned_sample and not linked_guest:
+    running = 0
+    last = "host-only execution probe; guest entry skipped"
+
 # This tool writes this line when it ends a session itself (see
 # clear_ended_guest_session). A killed guest never writes startup_return, so
 # without it the ended session would read as live forever. Only as the last line:
@@ -932,13 +974,39 @@ cmd_log() {
 # turns that into something readable without a trip through Xcode.
 cmd_crash() {
     refresh_state
-    local name; name=$(cat "$SESSION/newest-crash" 2>/dev/null || echo none)
+    local name=${1:-}
+    if [ -n "$name" ]; then
+        [ "$(state_value inspection_ok)" = 1 ] || die "the device could not be inspected; not selecting a report"
+        # Resource reports are useful evidence but must not count as crashes.
+        # An explicit selection must be a listed report for our app, never a path.
+        python3 - "$SESSION/crashes.json" "$name" <<'PY' || die "the requested app report is not in the device listing"
+import json, re, sys
+name = sys.argv[2]
+if not re.fullmatch(r"Tolkara(?:Diagnostics)?(?:\.[a-z_]+)?-\d[\w.-]*\.ips", name, re.ASCII):
+    raise SystemExit(1)
+try:
+    with open(sys.argv[1]) as handle:
+        entries = json.load(handle).get("result", {}).get("files", []) or []
+except (OSError, ValueError, AttributeError):
+    raise SystemExit(1)
+raise SystemExit(0 if any(
+    (entry.get("relativePath") or entry.get("name")) == name and
+    not entry.get("resources", {}).get("isDirectory", False)
+    for entry in entries if isinstance(entry, dict)) else 1)
+PY
+    else
+        name=$(cat "$SESSION/newest-crash" 2>/dev/null || echo none)
+    fi
     [ "$name" = "none" ] && die "no crash reports on the device"
     rm -rf "$CRASH_DIR" && mkdir -p "$CRASH_DIR"
     xcrun devicectl device copy from --device "$DEVICE" --domain-type systemCrashLogs \
         --source "$name" --destination "$CRASH_DIR/$name" >/dev/null 2>&1 \
         || die "could not fetch $name from the device"
-    say "$name, written $(state_value crash_newest_age)s ago"
+    if [ -n "${1:-}" ]; then
+        say "$name (selected system report; not a crash verdict)"
+    else
+        say "$name, written $(state_value crash_newest_age)s ago"
+    fi
     python3 - "$CRASH_DIR/$name" <<'PY'
 import json, sys
 
@@ -1090,7 +1158,7 @@ case "${1:-state}" in
     game)    cmd_launch --game ;;
     wait)    cmd_wait "${2:-}" "${3:-}" ;;
     view)    cmd_view ;;
-    crash)   cmd_crash ;;
+    crash)   cmd_crash "${2:-}" ;;
     log)     cmd_log "${2:-}" "${3:-}" ;;
     leave)   cmd_leave "${2:-}" ;;
     return)  cmd_return ;;  # `return` is a shell keyword; the case label is a plain word here

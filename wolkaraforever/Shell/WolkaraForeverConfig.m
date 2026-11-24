@@ -101,11 +101,11 @@ static NSDictionary<NSString *, NSDictionary *> *TKWolkaraForeverConfigSchema(vo
     dispatch_once(&once, ^{
         schema = @{
             @"WoWProduct": @{@"kind": @"slug"},
-            @"WoWRegion": @{@"kind": @"enum", @"values": @[@"eu", @"us", @"kr", @"tw"]},
+            @"WoWRegion": @{@"kind": @"enum", @"values": @[@"eu", @"us", @"kr", @"tw", @"cn"]},
             // deDE belongs in this list: it was selectable and persisted to the defaults
             // database long before this schema knew it, so the game's German setting was
             // being refused on export and silently dropped on import.
-            @"WoWLocale": @{@"kind": @"enum", @"values": @[@"enUS", @"frFR", @"esES", @"deDE"]},
+            @"WoWLocale": @{@"kind": @"enum", @"values": @[@"enUS", @"frFR", @"esES", @"deDE", @"zhCN", @"zhTW"]},
             @"WolkaraForeverAppLanguage": @{@"kind": @"enum", @"values": @[@"en", @"de", @"fr", @"system"]},
             @"WolkaraForeverGameLanguageOfferShown": @{@"kind": @"bool"},
             @"AKVoiceEnabled": @{@"kind": @"bool"},

@@ -41,6 +41,10 @@ if [ "${TOLKARA_SYSTEM_ROOTS:-YES}" = "NO" ]; then
     exit 2
 fi
 export TOLKARA_SYSTEM_ROOTS=YES
+case "${WOLKARA_HOST_DIAGNOSTICS:-0}" in
+    0|1) ;;
+    *) echo "install: WOLKARA_HOST_DIAGNOSTICS must be 0 or 1." >&2; exit 2;;
+esac
 
 replace_running=0
 force_kill=0
@@ -170,6 +174,11 @@ cat > "$location" <<XCCONFIG
 SYMROOT = $PWD/build/device/Build/Products
 OBJROOT = $PWD/build/device/Build/Intermediates.noindex
 XCCONFIG
+if [ "${WOLKARA_HOST_DIAGNOSTICS:-0}" = 1 ]; then
+    # The same xcconfig reaches nested builds and the generic-device build-only lane.
+    printf '%s\n' 'OTHER_CFLAGS = $(inherited) -DWK_HOST_DIAGNOSTICS=1' >> "$location"
+    echo "   host lifetime diagnostics: enabled for this private build"
+fi
 export XCODE_XCCONFIG_FILE="$location"
 
 # The platform has no build-without-install script, so in build-only mode its own script

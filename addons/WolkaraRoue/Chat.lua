@@ -79,7 +79,16 @@ local TARGETS = {
     { kind = "general", label = "General" }, { kind = "whisper", label = "Reply" },
 }
 
-local WRITE = "To write, tap 'Tap to type' above the chat; Send posts it."
+local function InputHint(name)
+    local inline = ns.DuoLayout and ns.DuoLayout() and ns.ChatTab and ns.ChatTab.Settings().enabled
+    if name then
+        local text = inline and "Whisper to %s: tap 'Tap to type' above the chat."
+            or "Whisper to %s: use the keyboard button below the chat."
+        return ns.T(text):format(name)
+    end
+    return ns.T(inline and "To write, tap 'Tap to type' above the chat; Send posts it."
+        or "To write, use the keyboard button below the chat; Send posts it.")
+end
 
 -- ---------------------------------------------------------------------------------------
 -- Messages
@@ -128,7 +137,7 @@ end
 
 local UpdateChips
 
-local function Add(event, text, author, _, _, _, _, _, channelIndex, channelBase)
+local function Add(event, text, author, _, _, _, _, _, channelIndex, channelBase, _, _, guid)
     local info = EVENTS[event]
     if not info or type(text) ~= "string" then return end
     local r, g, b = Color(event, channelIndex)
@@ -137,6 +146,10 @@ local function Add(event, text, author, _, _, _, _, _, channelIndex, channelBase
         if not (panel and panel:IsShown() and Tab() == "whisper") then unread = unread + 1 end
     end
     Store({ line = Format(info, text, author, channelIndex, channelBase), r = r, g = g, b = b, tabs = info.tabs })
+    if ns.ChatDiagnostics then
+        ns.ChatDiagnostics:Rendered(event, guid, info.tabs[Tab()] and
+            ((ticker and ticker:IsShown()) or (panel and panel:IsShown())))
+    end
     if badge then Chat:UpdateBadge() end
     if info.incoming and UpdateChips then UpdateChips() end
 end
@@ -178,7 +191,36 @@ end
 Chat.Prefix = Prefix
 
 local function OpenInput()
-    if ChatFrame_OpenChat then ChatFrame_OpenChat(Prefix(), DEFAULT_CHAT_FRAME) end
+    if ns.ChatDiagnostics then ns.ChatDiagnostics:Mark("open") end
+    local util = ChatFrameUtil
+    local open = util and util.OpenChat
+    if type(open) ~= "function" then open = ChatFrame_OpenChat end
+    if type(open) ~= "function" then
+        if ns.ChatDiagnostics then ns.ChatDiagnostics:Mark("unavailable") end
+        if ns.Print then ns.Print(ns.T("Chat input is unavailable on this client.")) end
+        return
+    end
+    -- The host queues F12, text and Return together. OpenChat(prefix) defers
+    -- that prefix to the next OnUpdate, which can overwrite the queued text or
+    -- leave it on the previous channel. Activate through the game API, then
+    -- finish only its input initialization synchronously; never send from Lua.
+    local box = open(nil, DEFAULT_CHAT_FRAME)
+    if not box then
+        local active = util and util.GetActiveWindow or ChatEdit_GetActiveWindow
+        if type(active) == "function" then box = active() end
+    end
+    box = box or (DEFAULT_CHAT_FRAME and DEFAULT_CHAT_FRAME.editBox) or _G.ChatFrame1EditBox
+    if ns.ChatDiagnostics then ns.ChatDiagnostics:Attach(box) end
+    if not box or type(box.SetText) ~= "function" or (box.HasFocus and not box:HasFocus()) then
+        if ns.ChatDiagnostics then ns.ChatDiagnostics:Mark("unfocused", box) end
+        if ns.Print then ns.Print(ns.T("Chat input is unavailable on this client.")) end
+        return
+    end
+    box.setText, box.text, box.desiredCursorPosition = 0, nil, nil
+    box:SetText(Prefix())
+    if type(box.ParseText) == "function" then box:ParseText(0, true)
+    elseif type(ChatEdit_ParseText) == "function" then ChatEdit_ParseText(box, 0, true) end
+    if ns.ChatDiagnostics then ns.ChatDiagnostics:Mark("ready", box) end
 end
 
 local function Paint(button, selected)
@@ -452,7 +494,7 @@ function Chat:Init()
         if name then
             target = { kind = "whisper", name = name }
             UpdateChips()
-            hint:SetText((ns.T("Whisper to %s: tap 'Tap to type' above the chat.")):format(Short(name)))
+            hint:SetText(InputHint(Short(name)))
         elseif SetItemRef then
             SetItemRef(link, text, button, self)
         end
@@ -471,16 +513,16 @@ function Chat:Init()
     to = ns.Label(panel, "GameFontNormal", ns.T("To:"))
     chips = {}
     for i, info in ipairs(TARGETS) do
-        local chip = ns.UIButton(panel, ns.T(info.label), 100, ROW, function()
+        local chip = ns.UIButton(panel, ns.T(info.label, "chat"), 100, ROW, function()
             target = { kind = info.kind }
             if info.kind == "whisper" then target.name = lastWhisper end
             UpdateChips()
-            hint:SetText(ns.T(WRITE))
+            hint:SetText(InputHint())
         end)
         chip.kind = info.kind
         chips[i] = chip
     end
-    hint = ns.Label(panel, "GameFontHighlightSmall", ns.T(WRITE))
+    hint = ns.Label(panel, "GameFontHighlightSmall", InputHint())
     hint:SetJustifyH("LEFT")
     if hint.SetWordWrap then hint:SetWordWrap(false) end
 
@@ -512,6 +554,7 @@ function Chat:Layout()
     ticker:PlaceSaved()
     UpdateTabs()
     UpdateChips()
+    hint:SetText(InputHint())
     if settings.custom then
         TuckGameChat(true)
         if not panel:IsShown() then ticker:Show() end
@@ -527,6 +570,7 @@ function Chat:Layout()
         ClearOverrideBindings(opener)
         SetOverrideBindingClick(opener, true, OPEN_KEY, "WolkaraMobileChatOpener", "LeftButton")
     end
+    if ns.ChatDiagnostics then ns.ChatDiagnostics:Binding() end
 end
 
 function Chat:SetEditing(on)

@@ -73,7 +73,7 @@ PLIST
 # The app's own language tables, in the same place the app target puts them: the fixture has to
 # be able to answer "which language" the same way the app does, or the German run below would be
 # testing a bundle nobody builds.
-for LANGUAGE in en de; do
+for LANGUAGE in en de fr; do
     mkdir -p "$APP/$LANGUAGE.lproj"
     cp "launcher/App/$LANGUAGE.lproj/Localizable.strings" "$APP/$LANGUAGE.lproj/"
 done

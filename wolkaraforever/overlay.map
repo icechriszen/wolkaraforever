@@ -18,6 +18,8 @@ wolkaraforever/Shell/ExecutionMode.h launcher/App/ExecutionMode.h replace
 wolkaraforever/Shell/ExecutionMode.m launcher/App/ExecutionMode.m replace
 wolkaraforever/Shell/ExternalJITDiagnostics.h launcher/App/ExternalJITDiagnostics.h add
 wolkaraforever/Shell/ExternalJITDiagnostics.m launcher/App/ExternalJITDiagnostics.m add
+wolkaraforever/Shell/HostLifetimeDiagnostics.h launcher/App/HostLifetimeDiagnostics.h add
+wolkaraforever/Shell/HostLifetimeDiagnostics.m launcher/App/HostLifetimeDiagnostics.m add
 wolkaraforever/Shell/Info.plist launcher/Info.plist replace
 wolkaraforever/Shell/Integrated-Info.plist authorization/App/Integrated-Info.plist replace
 wolkaraforever/Shell/LaunchProgressView.m launcher/App/LaunchProgressView.m replace
@@ -44,6 +46,8 @@ wolkaraforever/Shell/main.m launcher/App/main.m replace
 wolkaraforever/Shell/tests/test_background_pacing.m tests/test_background_pacing.m add
 wolkaraforever/Shell/tests/test_execution_mode.m tests/test_execution_mode.m replace
 wolkaraforever/Shell/tests/test_external_jit_diagnostics.m tests/test_external_jit_diagnostics.m add
+wolkaraforever/Shell/tests/test_host_lifetime_diagnostics.m tests/test_host_lifetime_diagnostics.m add
+wolkaraforever/Shell/tests/test_host_tls_lifetime.c tests/test_host_tls_lifetime.c add
 wolkaraforever/Shell/tests/test_localization.m tests/test_localization.m add
 #
 # WoW: the launcher module, its test script source and its tests
@@ -205,6 +209,8 @@ wolkaraforever/Bridge/BatterySaverPolicy.h launcher/WoW/BatterySaverPolicy.h add
 wolkaraforever/Bridge/BatterySaverPolicy.m translation/Metal/BatterySaverPolicy.m add
 wolkaraforever/Bridge/BatterySaverPolicy.m translation/AppKit/BatterySaverPolicy.m add
 wolkaraforever/Bridge/BatterySaverPolicy.m launcher/WoW/BatterySaverPolicy.m add
+wolkaraforever/Bridge/ControlGeometry.h translation/AppKit/ControlGeometry.h add
+wolkaraforever/Bridge/ControlGeometry.h launcher/WoW/ControlGeometry.h add
 wolkaraforever/Bridge/DisplayRate.m translation/Metal/DisplayRate.m add
 wolkaraforever/Bridge/EnrollmentReference.swift authorization/Storage/EnrollmentReference.swift add
 wolkaraforever/Bridge/LocalServiceRetry.h authorization/App/LocalServiceRetry.h add
@@ -244,6 +250,32 @@ wolkaraforever/NetworkHealth/NetworkHealth.h runtime/NetworkHealth.h add
 wolkaraforever/NetworkHealth/NetworkHealth.m runtime/NetworkHealth.m add
 wolkaraforever/NetworkHealth/tests/test_network_health.m tests/test_network_health.m add
 #
+# Cxx: isolated allocator-owning standard-library APIs and loader policy
+wolkaraforever/Cxx/Allocator.cpp translation/OwnedCxx/Allocator.cpp add
+wolkaraforever/Cxx/NativeCxx.c runtime/NativeCxx.c add
+wolkaraforever/Cxx/NativeCxx.h runtime/NativeCxx.h add
+wolkaraforever/Cxx/OwnedCxx.h runtime/OwnedCxx.h add
+wolkaraforever/Cxx/OwnedCxx.h translation/OwnedCxx/OwnedCxx.h add
+wolkaraforever/Cxx/build.py translation/OwnedCxx/build.py add
+wolkaraforever/Cxx/tests/allocator_fixture.cpp tests/cxx/allocator_fixture.cpp add
+wolkaraforever/Cxx/tests/host_strings.cpp tests/cxx/host_strings.cpp add
+wolkaraforever/Cxx/tests/loader_probe.c tests/cxx/loader_probe.c add
+wolkaraforever/Cxx/tests/policy.c tests/cxx/policy.c add
+wolkaraforever/Cxx/vendor/LICENSE.TXT translation/OwnedCxx/vendor/LICENSE.TXT add
+wolkaraforever/Cxx/vendor/SOURCE.json translation/OwnedCxx/vendor/SOURCE.json add
+wolkaraforever/Cxx/vendor/string.cpp translation/OwnedCxx/vendor/string.cpp add
+wolkaraforever/Cxx/vendor/thread.cpp translation/OwnedCxx/vendor/thread.cpp add
+#
+# Runtime: prepared dynamic-code pages and host-only regression fixtures
+wolkaraforever/Runtime/ArenaMapping.h runtime/ArenaMapping.h add
+wolkaraforever/Runtime/CodeRemap.c runtime/CodeRemap.c add
+wolkaraforever/Runtime/CodeRemap.h runtime/CodeRemap.h add
+wolkaraforever/Runtime/MemoryTrace.c runtime/MemoryTrace.c add
+wolkaraforever/Runtime/MemoryTrace.h runtime/MemoryTrace.h add
+wolkaraforever/Runtime/tests/test_arena_mapping.c tests/test_arena_mapping.c add
+wolkaraforever/Runtime/tests/test_code_remap.c tests/test_code_remap.c add
+wolkaraforever/Runtime/tests/test_memory_trace.c tests/test_memory_trace.c add
+#
 # Input: any button, on any controller, in one stream (diagnostic)
 wolkaraforever/Input/ControllerCommandIngress.h launcher/Input/ControllerCommandIngress.h add
 wolkaraforever/Input/ControllerCommandIngress.m launcher/Input/ControllerCommandIngress.m add
@@ -273,8 +305,8 @@ wolkaraforever/CoreAudio/tests/test_audio_tone.m tests/test_audio_tone.m add
 # reviewed Lua in addons/WolkaraRoue, and the manifest that binds it to its release
 # and to every file's hash. A fixture rebuilds both from the sources and compares,
 # so the archive the app ships cannot drift from the Lua that was reviewed.
-wolkaraforever/Addons/WolkaraRoue-1.0.4.json launcher/Addons/WolkaraRoue-1.0.4.json add
-wolkaraforever/Addons/WolkaraRoue-1.0.4.zip launcher/Addons/WolkaraRoue-1.0.4.zip add
+wolkaraforever/Addons/WolkaraRoue-1.0.5-cn.7.json launcher/Addons/WolkaraRoue-1.0.5-cn.7.json add
+wolkaraforever/Addons/WolkaraRoue-1.0.5-cn.7.zip launcher/Addons/WolkaraRoue-1.0.5-cn.7.zip add
 #
 # Notices: this repository's own licence and notice, which the packaged app must
 # carry. The prepared tree already has a LICENSE and a NOTICE.md at its top level,

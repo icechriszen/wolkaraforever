@@ -735,6 +735,7 @@
 "forever.error.wtfCreate" = "The game's settings folder could not be created.";
 "forever.error.configOutside" = "The game's configuration is outside its working folder.";
 "forever.error.gamepadStore" = "The gamepad setting could not be stored.";
+"forever.error.touchAddonSwitch" = "WolkaraRoue could not be prepared for this controller. Close the game and try again. Your saved add-on settings have not been reset.";
 "forever.error.settingName" = "A setting name is not a bare name.";
 "forever.error.settingValue" = "A setting value contains a space or a quote.";
 "forever.error.settingStore" = "A setting could not be stored.";
@@ -869,15 +870,15 @@
 "login.status.off" = "Off";
 "login.status.on" = "On";
 "login.title" = "Battle.net Login (Experimental)";
-"login.explanation" = "Experimental compatibility feature. This is not WolkaraForever's normal login path. Your password and authenticator stay on Battle.net's official website; the launcher keeps no saved browser session or launch ticket. Use at your own risk.";
+"login.explanation" = "Experimental compatibility feature. The in-app browser remembers Battle.net sign-in on this device and gets a fresh one-use launch result each time. Clear sign-in data removes the saved web session. Safari has a separate session and still needs a manual return.";
 "login.enable" = "Enable experimental login";
 "login.disable" = "Disable experimental login";
 "login.clear" = "Clear sign-in data";
 "login.enable.title" = "Enable experimental login?";
-"login.enable.message" = "This opt-in feature hands a one-use sign-in result to Forever only when you press Play. It may stop working without notice. It is not a replacement for normal in-game login. Use at your own risk.";
+"login.enable.message" = "The in-app browser keeps its website session on this device so future launches can sign in again without copying a Safari address. Battle.net may still require verification. Launch tickets remain single-use. Clear sign-in data removes the saved session.";
 "login.enable.confirm" = "I understand — enable";
 "login.cleared.title" = "Sign-in data cleared";
-"login.cleared.message" = "The in-memory browser session, any pending launch ticket and the saved password were removed.";
+"login.cleared.message" = "The saved in-app browser session, any pending launch ticket and the saved password were removed. Safari's separate website session is unchanged.";
 "login.failed" = "Sign-in did not finish. Cancel and try again.";
 
 /* ---- Saved game password, experimental Battle.net login ---- */
@@ -896,3 +897,26 @@
 "login.savedPassword.failed.title" = "The password was not saved";
 "login.savedPassword.failed" = "This device did not keep the password: it needs a passcode, and the key needs this build's keychain access. The sign-in still happened, but the password will be asked for again.";
 "touch.key.savedPassword" = "Saved password";
+
+"region.cn" = "China";
+"locale.zhCN" = "Simplified Chinese · 简体中文";
+"locale.zhTW" = "Traditional Chinese · 繁體中文";
+
+"login.external" = "Safari fallback…";
+"login.externalHelp" = "Sign in in your browser. The final localhost page cannot open. Copy its full address, return here and paste it below. Keep that address private: it grants access to your account.";
+"login.open" = "Open browser to sign in";
+"login.paste" = "Paste the final browser address";
+"login.privateAddress" = "Private address from the browser";
+"login.continue" = "Continue";
+"login.openFailed" = "The browser could not open. Try again or cancel to use Battle.net email login.";
+"login.invalidPaste" = "Paste the complete final address from your browser. It must start with http://localhost:0/?ST=.";
+"login.configFailed" = "Could not apply the China login region. Please try again.";
+
+/* Explicit Safari return validation. Never interpolate the private address. */
+"login.returnError.title" = "Sign-in address not accepted";
+"login.returnError.empty" = "Paste the complete final address from Safari, then tap Continue.";
+"login.returnError.length" = "The pasted text is too long to be a sign-in return address. Copy only the final address from Safari.";
+"login.returnError.endpoint" = "Copy the final http://localhost:0/ address after signing in, then paste it here. The Battle.net sign-in page address cannot be used.";
+"login.returnError.missing" = "This address has no ST sign-in result. Finish signing in and copy the complete final address.";
+"login.returnError.duplicate" = "This address contains more than one sign-in result. Copy the final address again.";
+"login.returnError.format" = "The sign-in result has an unsupported format. Sign in again. If this repeats, report this message without sharing the address.";

@@ -61,7 +61,11 @@ local box = New("EditBox", "ChatFrame1EditBox", ChatFrame1)
 ChatFrame1.editBox = box
 DEFAULT_CHAT_FRAME = ChatFrame1
 local opened
-ChatFrame_OpenChat = function(text) opened = text end
+local function CaptureOpen(text)
+    if text ~= nil then opened = text end
+    return { SetText = function(_, text) opened = text end }
+end
+ChatFrame_OpenChat = CaptureOpen
 local binding
 ClearOverrideBindings = function() end
 SetOverrideBindingClick = function(_, _, key, button) binding = { key, button } end
@@ -199,6 +203,116 @@ assert(opened == "/p ")
 reply.scripts.OnClick(reply)
 WolkaraMobileChatOpener.scripts.OnClick()
 assert(opened == "/w Bob-Realm ")
+
+-- Current UI clients moved the opener into ChatFrameUtil. Missing the old
+-- global must not silently discard the app's F12 request.
+ChatFrame_OpenChat = nil
+ChatFrameUtil = { OpenChat = function(text, frame)
+    assert(frame == DEFAULT_CHAT_FRAME)
+    return CaptureOpen(text)
+end }
+Tap("Say", panel)
+opened = nil
+WolkaraMobileChatOpener.scripts.OnClick()
+assert(opened == "/s ", "namespaced chat opener was not called")
+
+-- The real OpenChat API defers its initial text to the edit box's next
+-- OnUpdate. The host posts F12, a committed line and Return in one burst.
+-- Model that boundary: a later frame must not overwrite text typed meanwhile,
+-- and the chosen channel must be ready before the first character arrives.
+local function InputBox()
+    local input = { value = "", channel = "GUILD", focus = true }
+    function input:HasFocus() return self.focus end
+    function input:GetText() return self.value end
+    function input:SetText(value) self.value = value end
+    function input:ParseText(send)
+        assert(send == 0, "the opener must never send a chat message")
+        local prefix, rest = self.value:match("^(/%S+) (.*)$")
+        if prefix == "/s" then self.channel, self.value = "SAY", rest
+        elseif prefix == "/p" then self.channel, self.value = "PARTY", rest
+        elseif prefix == "/g" then self.channel, self.value = "GUILD", rest
+        elseif prefix == "/1" then self.channel, self.value = "CHANNEL", rest
+        elseif prefix == "/w" then
+            self.tellTarget, self.value = rest:match("^(%S+) (.*)$")
+            self.channel = "WHISPER"
+        end
+    end
+    function input:NextFrame()
+        if self.setText == 1 then
+            self:SetText(self.text)
+            self.setText = 0
+            self:ParseText(0)
+        end
+    end
+    return input
+end
+for _, api in ipairs({ "modern-return", "modern-active", "legacy-active", "legacy-default", "legacy-parser" }) do
+    local input = InputBox()
+    local function DeferredOpen(text, frame)
+        assert(frame == DEFAULT_CHAT_FRAME)
+        input.focus = true
+        if text ~= nil then input.text, input.setText = text, 1 end
+        if api == "modern-return" then return input end
+    end
+    if api:match("^modern") then
+        ChatFrameUtil = { OpenChat = DeferredOpen, GetActiveWindow = function() return input end }
+        ChatFrame_OpenChat = nil
+    else
+        ChatFrameUtil = nil
+        ChatFrame_OpenChat = DeferredOpen
+        ChatEdit_GetActiveWindow = api == "legacy-active" and function() return input end or nil
+        DEFAULT_CHAT_FRAME.editBox = input
+    end
+    ChatEdit_ParseText = nil
+    if api == "legacy-parser" then
+        ChatEdit_ParseText, input.ParseText = input.ParseText, nil
+    end
+    for _, choice in ipairs({ { "Say", "SAY" }, { "Party", "PARTY" }, { "Guild", "GUILD" },
+            { "General", "CHANNEL" }, { "reply", "WHISPER" } }) do
+        -- Include an earlier pending prefix left by another chat-open action.
+        input.text, input.setText, input.value = "/g ", 1, "old draft"
+        if choice[1] == "reply" then reply.scripts.OnClick(reply) else Tap(choice[1], panel) end
+        WolkaraMobileChatOpener.scripts.OnClick()
+        assert(input.channel == choice[2] and input.value == "",
+            api .. ": the selected conversation was not ready for immediate typing")
+        assert(input.setText ~= 1, api .. ": delayed initialization can still replace the message")
+        input.value = input.value .. "中文 test"
+        input:NextFrame()
+        assert(input.value == "中文 test", api .. ": a later frame erased the committed line")
+        if choice[2] == "WHISPER" then assert(input.tellTarget == "Bob-Realm") end
+    end
+end
+DEFAULT_CHAT_FRAME.editBox = box
+ChatEdit_GetActiveWindow, ChatFrame_OpenChat, ChatEdit_ParseText = nil, nil, nil
+
+local notice
+ns.Print = function(text) notice = text end
+ChatFrameUtil = nil
+WolkaraMobileChatOpener.scripts.OnClick()
+assert(notice == "Chat input is unavailable on this client.", "missing opener is silently ignored")
+local inactive = InputBox()
+inactive.focus, inactive.value = false, "retained"
+ChatFrameUtil = { OpenChat = function() return inactive end }
+notice = nil
+WolkaraMobileChatOpener.scripts.OnClick()
+assert(inactive.value == "retained" and notice, "failed focus erased an unrelated field")
+ChatFrameUtil = nil
+print("mobile chat input initialization: immediate channel selection, no deferred overwrite, modern/legacy APIs, five destinations, focus failure: PASS")
+
+local function HasHint(text)
+    for _, frame in ipairs(frames) do
+        if frame.ftype == "FontString" and frame.parent == panel and rawget(frame, "text") == text then return true end
+    end
+end
+ns.DuoLayout = function() return false end
+Chat:Layout()
+assert(HasHint("To write, use the keyboard button below the chat; Send posts it."), "Standard advertises a Duo-only input row")
+ns.DuoLayout = function() return true end
+ns.ChatTab = { Settings = function() return { enabled = true } end }
+Chat:Layout()
+assert(HasHint("To write, tap 'Tap to type' above the chat; Send posts it."))
+ns.DuoLayout = function() return false end
+Chat:Layout()
 
 -- Touching the strip opens the panel on the same tab; the cross closes it.
 ticker.scripts.OnMouseUp(ticker)
